@@ -1,4 +1,4 @@
-INCLUDE "constants/missiles.asm"
+INCLUDE "constants/constants.asm"
 
 SECTION "Shadow OAM", WRAM0, ALIGN[8]
 

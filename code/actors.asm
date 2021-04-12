@@ -1,4 +1,4 @@
-INCLUDE "constants/missiles.asm"
+INCLUDE "constants/constants.asm"
 
 SECTION "Common Actor Code", ROM0
 

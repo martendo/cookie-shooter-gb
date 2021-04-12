@@ -1,4 +1,5 @@
 INCLUDE "hardware.inc/hardware.inc"
+INCLUDE "constants/constants.asm"
 
 SECTION "Main", ROM0[$0150]
 
