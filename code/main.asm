@@ -15,13 +15,13 @@ EntryPoint::
     xor     a, a
     ldh     [rLCDC], a
     
-    ld      hl, SpriteTiles
-    ld      de, _VRAM8000
+    ld      de, SpriteTiles
+    ld      hl, _VRAM8000
     ld      bc, SpriteTiles.end - SpriteTiles
     call    Memcopy
     
-    ld      hl, DMATransfer
-    ld      de, hDMATransfer
+    ld      de, DMATransfer
+    ld      hl, hDMATransfer
     ld      bc, DMATransfer.end - DMATransfer
     call    Memcopy
     
