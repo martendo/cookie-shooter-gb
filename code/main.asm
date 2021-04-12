@@ -52,7 +52,17 @@ EntryPoint::
     ld      [hl+], a
     ld      [hl], OAMF_XFLIP
     
-    call    ClearMissiles
+    ; a = 0
+    ldh     [hCookieCount], a
+    ld      a, STARTING_TARGET_COOKIE_COUNT
+    ldh     [hTargetCookieCount], a
+    
+    ld      hl, wMissiles
+    ld      b, MAX_MISSILE_COUNT
+    call    ClearActors
+    ld      hl, wCookies
+    ld      b, MAX_COOKIE_COUNT
+    call    ClearActors
     
     ld      a, %11100100
     ldh     [rBGP], a
@@ -125,13 +135,22 @@ Main:
     bit     PADB_A, a
     call    nz, ShootMissile
     
+    ldh     a, [hTargetCookieCount]
+    ld      b, a
+    ldh     a, [hCookieCount]
+    cp      a, b
+    call    c, CreateCookie
+    
     call    UpdateMissiles
+    call    UpdateCookies
     
     ld      a, PLAYER_END_OFFSET / sizeof_OAM_ATTRS
     ldh     [hNextAvailableOAMSlot], a
     call    HideAllActors
     
     ld      de, wMissiles
+    call    CopyActorsToOAM
+    ld      de, wCookies
     call    CopyActorsToOAM
     
     halt
