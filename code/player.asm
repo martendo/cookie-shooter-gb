@@ -17,7 +17,7 @@ MovePlayer:
     
     cp      a, 8
     ret     c   ; Moving out of bounds on the left
-    cp      a, ((SCRN_X - 16) + 8) + 1
+    cp      a, ((SCRN_X - PLAYER_WIDTH) + 8) + 1
     ret     nc  ; Moving out of bounds on the right
     
     ld      [hl], a
