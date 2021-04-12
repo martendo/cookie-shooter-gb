@@ -1,5 +1,4 @@
 INCLUDE "hardware.inc/hardware.inc"
-INCLUDE "constants/player.asm"
 
 SECTION "Main", ROM0[$0150]
 
@@ -33,24 +32,26 @@ EntryPoint::
     ld      bc, DMATransfer.end - DMATransfer
     call    Memcopy
     
+    call    HideAllActors
     ; Set up player
     ld      hl, wOAM + PLAYER_OFFSET
     ld      [hl], PLAYER_DEFAULT_Y
     inc     l
     ld      [hl], PLAYER_DEFAULT_X
     inc     l
-    ld      [hl], PLAYER_TILE
-    inc     l
-    ld      [hl], 0
-    inc     l
+    ASSERT PLAYER_TILE == 0
+    ; a = 0 = PLAYER_TILE
+    ld      [hl+], a
+    ld      [hl+], a
     ld      [hl], PLAYER_DEFAULT_Y
     inc     l
     ld      [hl], PLAYER_DEFAULT_X + 8
     inc     l
-    ld      [hl], PLAYER_TILE
-    inc     l
+    ; a = 0 = PLAYER_TILE
+    ld      [hl+], a
     ld      [hl], OAMF_XFLIP
-    call    ClearAllCookies
+    
+    call    ClearMissiles
     
     ld      a, %11100100
     ldh     [rBGP], a
@@ -118,6 +119,19 @@ Main:
     ldh     a, [hPressedKeys]
     bit     PADB_RIGHT, a
     call    nz, MovePlayerRight
+    
+    ldh     a, [hNewKeys]
+    bit     PADB_A, a
+    call    nz, ShootMissile
+    
+    call    UpdateMissiles
+    
+    ld      a, PLAYER_END_OFFSET / sizeof_OAM_ATTRS
+    ldh     [hNextAvailableOAMSlot], a
+    call    HideAllActors
+    
+    ld      de, wMissiles
+    call    CopyActorsToOAM
     
     halt
     
