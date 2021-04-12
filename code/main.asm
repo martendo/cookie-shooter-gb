@@ -51,7 +51,7 @@ EntryPoint::
     
     xor     a, a
     ldh     [rIF], a
-    inc     a   ; 1 = VBlank interrupt
+    inc     a           ; 1 = VBlank interrupt
     ldh     [rIE], a
     
     ;           +-------- LCD on/off
@@ -76,7 +76,7 @@ Main:
     ldh     a, [c]
     ldh     a, [c]
     
-    or      a, $F0  ; "Erase" high nibble
+    or      a, $F0      ; "Erase" high nibble
     swap    a
     ld      b, a
     
@@ -91,12 +91,12 @@ Main:
     ldh     a, [c]
     
     or      a, $F0
-    xor     a, b    ; Combine buttons + d-pad and complement
+    xor     a, b        ; Combine buttons + d-pad and complement
     
     ld      b, a
     ld      a, [hPressedKeys]
-    xor     a, b    ; a = keys that changed state
-    and     a, b    ; a = keys that changed to pressed
+    xor     a, b        ; a = keys that changed state
+    and     a, b        ; a = keys that changed to pressed
     ld      [hNewKeys], a
     ld      a, b
     ld      [hPressedKeys], a
