@@ -19,6 +19,14 @@ EntryPoint::
     ld      hl, _VRAM8000
     ld      bc, SpriteTiles.end - SpriteTiles
     call    Memcopy
+    ld      hl, _VRAM9000
+    ld      a, $FF
+    ld      b, 8 * 2
+    call    MemsetSmall
+    ld      hl, _SCRN0
+    xor     a, a
+    ld      bc, SCRN_VX_B * SCRN_VY_B
+    call    Memset
     
     ld      de, DMATransfer
     ld      hl, hDMATransfer
