@@ -1,0 +1,3 @@
+INCLUDE "constants/player.asm"
+
+DEF COOKIES_OFFSET EQU PLAYER_END_OFFSET
