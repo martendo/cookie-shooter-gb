@@ -41,7 +41,8 @@ UpdateMissiles::
     ld      a, MISSILE_SPEED
     add     a, [hl]     ; Y position
     ld      [hli], a
-    call    nz, CheckMissileCollide
+    jr      nz, CheckMissileCollide
+.resume
     inc     l           ; Leave X as-is
 .next
     dec     b
@@ -99,7 +100,7 @@ CheckMissileCollide:
     pop     hl
     ld      [hli], a    ; Destroy missile (Y=0)
     pop     bc
-    ret
+    jr      UpdateMissiles.resume
     
 .noCollisionX
     inc     l
@@ -111,4 +112,4 @@ CheckMissileCollide:
     pop     hl
     inc     l
     pop     bc
-    ret
+    jr      UpdateMissiles.resume
