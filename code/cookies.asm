@@ -18,7 +18,7 @@ CreateCookie::
     jr      c, .ok
     sub     a, SCRN_X - 16 + 8
 .ok
-    ld      [hl-], a    ; X position
+    ld      [hld], a    ; X position
     ld      [hl], COOKIE_START_Y ; Y position
     
     ld      bc, MAX_COOKIE_COUNT * ACTOR_SIZE
@@ -27,7 +27,7 @@ CreateCookie::
     ld      b, a
     and     a, COOKIE_SPEED_Y_MASK
     add     a, COOKIE_MIN_SPEED_Y
-    ld      [hl+], a
+    ld      [hli], a
     
     swap    b
     ld      a, b
@@ -68,11 +68,11 @@ UpdateCookies::
     jr      c, .normalY
     ; Past bottom of screen, remove
     xor     a, a
-    ld      [hl+], a
+    ld      [hli], a
     inc     l
     jr      .remove
 .normalY
-    ld      [hl+], a
+    ld      [hli], a
     inc     e
     ld      a, [de]
     add     a, [hl]     ; X position
@@ -83,11 +83,11 @@ UpdateCookies::
     ; Past left/right sides of screen, remove
     xor     a, a
     dec     l
-    ld      [hl+], a
+    ld      [hli], a
     inc     l
     jr      .remove
 .normalX
-    ld      [hl+], a
+    ld      [hli], a
 .next
     dec     b
     jr      nz, .loop

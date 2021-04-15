@@ -12,7 +12,7 @@ ShootMissile::
     ; [hl] = X position
     ld      a, [wOAM + PLAYER_X1_OFFSET]
     add     a, (PLAYER_WIDTH / 2) - (MISSILE_WIDTH / 2)
-    ld      [hl-], a    ; X position
+    ld      [hld], a    ; X position
     ld      [hl], MISSILE_DEFAULT_Y ; Y position
     ret
 
@@ -35,7 +35,7 @@ UpdateMissiles::
     
     ld      a, MISSILE_SPEED
     add     a, [hl]     ; Y position
-    ld      [hl+], a
+    ld      [hli], a
     inc     l           ; Leave X as-is
 .next
     dec     b

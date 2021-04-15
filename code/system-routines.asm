@@ -6,7 +6,7 @@ SECTION "System Routines", ROM0
 ; @param bc Number of bytes to copy
 Memcopy::
     ld      a, [de]
-    ld      [hl+], a
+    ld      [hli], a
     inc     de
     dec     bc
     ld      a, c
@@ -19,7 +19,7 @@ Memcopy::
 ; @param a  Byte value to use
 ; @param b  Number of bytes to set
 MemsetSmall::
-    ld      [hl+], a
+    ld      [hli], a
     dec     b
     jr      nz, MemsetSmall
     ret
@@ -31,7 +31,7 @@ Memset::
     ld      d, a
 .loop
     ld      a, d
-    ld      [hl+], a
+    ld      [hli], a
     dec     bc
     ld      a, c
     or      a, b

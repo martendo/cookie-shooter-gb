@@ -42,14 +42,14 @@ EntryPoint::
     inc     l
     ASSERT PLAYER_TILE == 0
     ; a = 0 = PLAYER_TILE
-    ld      [hl+], a
-    ld      [hl+], a
+    ld      [hli], a
+    ld      [hli], a
     ld      [hl], PLAYER_DEFAULT_Y
     inc     l
     ld      [hl], PLAYER_DEFAULT_X + 8
     inc     l
     ; a = 0 = PLAYER_TILE
-    ld      [hl+], a
+    ld      [hli], a
     ld      [hl], OAMF_XFLIP
     
     ; a = 0

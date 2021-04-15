@@ -22,7 +22,7 @@ HideAllActors::
 ClearActors::
     xor     a, a
 .loop
-    ld      [hl+], a
+    ld      [hli], a
     inc     l
     dec     b
     jr      nz, .loop
@@ -34,7 +34,7 @@ ClearActors::
 ; @return cf Set if no empty slot was found, otherwise reset
 FindEmptyActorSlot::
 .loop
-    ld      a, [hl+]    ; If Y is 0, slot is empty
+    ld      a, [hli]    ; If Y is 0, slot is empty
     and     a, a
     ret     z
     
@@ -66,10 +66,10 @@ CopyMissilesToOAM:
     ld      a, [de]     ; Y position
     and     a, a        ; No missile, skip
     jr      z, .skip
-    ld      [hl+], a
+    ld      [hli], a
     inc     e
     ld      a, [de]     ; X position
-    ld      [hl+], a
+    ld      [hli], a
     inc     e
     ld      [hl], MISSILE_TILE
     inc     l
@@ -92,10 +92,10 @@ CopyCookiesToOAM:
     ld      a, [de]     ; Y position
     and     a, a        ; No cookie, skip
     jr      z, .skip
-    ld      [hl+], a
+    ld      [hli], a
     inc     e
     ld      a, [de]     ; X position
-    ld      [hl+], a
+    ld      [hli], a
     inc     e
     ld      [hl], COOKIE_TILE1
     inc     l
@@ -105,11 +105,11 @@ CopyCookiesToOAM:
     dec     e
     dec     e
     ld      a, [de]     ; Y position
-    ld      [hl+], a
+    ld      [hli], a
     inc     e
     ld      a, [de]     ; X position
     add     a, 8
-    ld      [hl+], a
+    ld      [hli], a
     inc     e
     ld      [hl], COOKIE_TILE2
     inc     l
