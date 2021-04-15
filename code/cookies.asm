@@ -29,28 +29,44 @@ CreateCookie::
     ; [hl] = X position
     call    GetRandomNumber
     cp      a, SCRN_X - 16 + 8
-    jr      c, .ok
+    jr      c, :+
     sub     a, SCRN_X - 16 + 8
-.ok
+:
     ld      [hld], a    ; X position
     ld      [hl], COOKIE_START_Y ; Y position
     
     ld      bc, MAX_COOKIE_COUNT * ACTOR_SIZE
-    add     hl, bc
+    add     hl, bc      ; wCookieSpeedTable
     call    GetRandomNumber
-    ld      b, a
     and     a, COOKIE_SPEED_Y_MASK
     add     a, COOKIE_MIN_SPEED_Y
+    cp      a, COOKIE_MAX_SPEED_Y
+    jr      c, :+
+    sub     a, COOKIE_MAX_SPEED_Y / 2
+:
+    swap    a
     ld      [hli], a
     
-    swap    b
-    ld      a, b
-    and     a, COOKIE_SPEED_X_MASK
-    bit     7, b
-    jr      z, .gotSpeedX
-    cpl
-    inc     a
-.gotSpeedX
+    call    GetRandomNumber
+    ASSERT COOKIE_SPEED_X_MASK == $FF
+    ASSERT COOKIE_MIN_SPEED_X == 0
+:
+    cp      a, COOKIE_MAX_SPEED_X
+    jr      c, :+
+    sub     a, COOKIE_MAX_SPEED_X
+    jr      :-
+:
+    cp      a, -COOKIE_MAX_SPEED_X
+    jr      nc, :+
+    add     a, COOKIE_MAX_SPEED_X
+    jr      :-
+:
+    swap    a
+    ld      [hld], a
+    
+    add     hl, bc      ; wCookieSpeedAccTable
+    xor     a, a
+    ld      [hli], a
     ld      [hl], a
     
     ret
@@ -76,31 +92,84 @@ UpdateCookies::
     sub     e
     ld      d, a
     
-    ld      a, [de]
-    add     a, [hl]     ; Y position
+    ; Y position
+    ld      a, [de]     ; Y speed
+    ld      c, a        ; Save speed in c
+    
+    push    hl
+    
+    ld      a, e
+    add     a, MAX_COOKIE_COUNT * ACTOR_SIZE
+    ld      l, a
+    adc     a, d
+    sub     a, l
+    ld      h, a
+    
+    ld      a, c        ; Get Y speed
+    and     a, $F0      ; Get fractional part
+    add     a, [hl]
+    ld      [hl], a
+    
+    pop     hl
+    
+    ld      a, c        ; Get Y speed again
+    rr      c           ; Save carry from fractional part in c
+    and     a, $0F      ; Get integer part
+    rl      c           ; Restore carry from fractional part
+    adc     a, [hl]     ; Add integer speed + fractional carry to position
+    
     cp      a, SCRN_Y + 16
-    jr      c, .normalY
+    jr      c, .onscreenY
     ; Past bottom of screen, remove
     xor     a, a
     ld      [hli], a
     inc     l
     jr      .remove
-.normalY
+.onscreenY
     ld      [hli], a
     inc     e
-    ld      a, [de]
-    add     a, [hl]     ; X position
+    
+    ; X position
+    ld      a, [de]     ; X speed
+    ld      c, a        ; Save speed in c
+    
+    push    hl
+    
+    ld      a, e
+    add     a, MAX_COOKIE_COUNT * ACTOR_SIZE
+    ld      l, a
+    adc     a, d
+    sub     a, l
+    ld      h, a
+    
+    ld      a, c        ; Get X speed
+    and     a, $F0      ; Get fractional part
+    add     a, [hl]
+    ld      [hl], a
+    
+    pop     hl
+    
+    ld      a, c        ; Get X speed again
+    rr      c           ; Save carry from fractional part in c
+    and     a, $0F      ; Get integer part
+    bit     3, a
+    jr      z, :+
+    or      a, $F0      ; Sign extend
+:
+    rl      c           ; Restore carry from fractional part
+    adc     a, [hl]     ; Add integer speed + fractional carry to position
+    
     cp      a, SCRN_X + 8
-    jr      c, .normalX
+    jr      c, .onscreenX
     cp      a, -16 + 8
-    jr      nc, .normalX
+    jr      nc, .onscreenX
     ; Past left/right sides of screen, remove
     xor     a, a
     dec     l
     ld      [hli], a
     inc     l
     jr      .remove
-.normalX
+.onscreenX
     ld      [hli], a
 .next
     dec     b
