@@ -1,4 +1,9 @@
-INCLUDE "hardware.inc/hardware.inc"
+INCLUDE "defines.inc"
+
+SECTION "Random Number Variables", HRAM
+
+hRandomNumber:
+    DS 1
 
 SECTION "Random Number", ROM0
 

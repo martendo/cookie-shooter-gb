@@ -1,4 +1,9 @@
-INCLUDE "constants/constants.asm"
+INCLUDE "defines.inc"
+
+SECTION "Missile Table", WRAM0
+
+wMissileTable::
+    DS MAX_MISSILE_COUNT * ACTOR_SIZE
 
 SECTION "Missile Code", ROM0
 

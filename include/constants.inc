@@ -1,0 +1,4 @@
+INCLUDE "constants/actors.inc"
+INCLUDE "constants/player.inc"
+INCLUDE "constants/missiles.inc"
+INCLUDE "constants/cookies.inc"

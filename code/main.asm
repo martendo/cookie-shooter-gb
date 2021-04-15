@@ -1,5 +1,4 @@
-INCLUDE "hardware.inc/hardware.inc"
-INCLUDE "constants/constants.asm"
+INCLUDE "defines.inc"
 
 SECTION "Main", ROM0[$0150]
 
@@ -28,9 +27,9 @@ EntryPoint::
     ld      bc, SCRN_VX_B * SCRN_VY_B
     call    Memset
     
-    ld      de, DMATransfer
-    ld      hl, hDMATransfer
-    ld      bc, DMATransfer.end - DMATransfer
+    ld      de, OAMDMA
+    ld      hl, hOAMDMA
+    ld      bc, OAMDMA.end - OAMDMA
     call    Memcopy
     
     call    HideAllActors
@@ -157,7 +156,19 @@ Main:
     
     jr      Main
 
-DMATransfer::
+SECTION "Shadow OAM", WRAM0, ALIGN[8]
+
+wOAM::
+    DS      OAM_COUNT * sizeof_OAM_ATTRS
+
+SECTION "Global Variables", HRAM
+
+hPressedKeys: DS 1
+hNewKeys:     DS 1
+
+SECTION "OAM DMA Routine", ROM0
+
+OAMDMA:
     ldh     [c], a
 .wait
     dec     b
@@ -165,11 +176,7 @@ DMATransfer::
     ret
 .end
 
-INCLUDE "constants/memory/wram.asm"
-INCLUDE "constants/memory/hram.asm"
+SECTION "OAM DMA", HRAM
 
-SECTION "Graphics", ROM0
-
-SpriteTiles:
-INCBIN "res/sprite-tiles.2bpp"
-.end
+hOAMDMA::
+    DS OAMDMA.end - OAMDMA

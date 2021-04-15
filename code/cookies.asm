@@ -1,4 +1,18 @@
-INCLUDE "constants/constants.asm"
+INCLUDE "defines.inc"
+
+SECTION "Cookie Tables", WRAM0
+
+wCookieTable::
+    DS MAX_COOKIE_COUNT * ACTOR_SIZE
+wCookieSpeedTable:
+    DS MAX_COOKIE_COUNT * ACTOR_SIZE
+wCookieSpeedAccTable:
+    DS MAX_COOKIE_COUNT * ACTOR_SIZE
+
+SECTION "Cookie Variables", HRAM
+
+hCookieCount::       DS 1
+hTargetCookieCount:: DS 1
 
 SECTION "Cookie Code", ROM0
 

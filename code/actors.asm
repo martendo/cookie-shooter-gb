@@ -1,4 +1,9 @@
-INCLUDE "constants/constants.asm"
+INCLUDE "defines.inc"
+
+SECTION "Actor Variables", HRAM
+
+hNextAvailableOAMSlot::
+    DS 1
 
 SECTION "Common Actor Code", ROM0
 

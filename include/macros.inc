@@ -1,5 +1,3 @@
-INCLUDE "hardware.inc/hardware.inc"
-
 MACRO lb
     IF LOW(\2) != \2
         WARN "lb: Value \2 is not 8-bit!"

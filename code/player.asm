@@ -1,4 +1,4 @@
-INCLUDE "constants/constants.asm"
+INCLUDE "defines.inc"
 
 SECTION "Player Code", ROM0
 
