@@ -56,7 +56,7 @@ CopyActorsToOAM::
     ld      l, a
     
     ld      a, e
-    cp      a, LOW(wCookies)
+    cp      a, LOW(wCookieTable)
     jr      z, CopyCookiesToOAM
     ; Fallthrough
 

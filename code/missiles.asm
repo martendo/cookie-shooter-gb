@@ -3,7 +3,7 @@ INCLUDE "constants/constants.asm"
 SECTION "Missile Code", ROM0
 
 ShootMissile::
-    ld      hl, wMissiles
+    ld      hl, wMissileTable
     ld      b, MAX_MISSILE_COUNT
     
     call    FindEmptyActorSlot
@@ -18,7 +18,7 @@ ShootMissile::
 
 ; Update missiles' positions
 UpdateMissiles::
-    ld      hl, wMissiles
+    ld      hl, wMissileTable
     ld      b, MAX_MISSILE_COUNT
 .loop
     ld      a, [hl]

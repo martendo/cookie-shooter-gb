@@ -57,10 +57,10 @@ EntryPoint::
     ld      a, STARTING_TARGET_COOKIE_COUNT
     ldh     [hTargetCookieCount], a
     
-    ld      hl, wMissiles
+    ld      hl, wMissileTable
     ld      b, MAX_MISSILE_COUNT
     call    ClearActors
-    ld      hl, wCookies
+    ld      hl, wCookieTable
     ld      b, MAX_COOKIE_COUNT
     call    ClearActors
     
@@ -148,9 +148,9 @@ Main:
     ldh     [hNextAvailableOAMSlot], a
     call    HideAllActors
     
-    ld      de, wMissiles
+    ld      de, wMissileTable
     call    CopyActorsToOAM
-    ld      de, wCookies
+    ld      de, wCookieTable
     call    CopyActorsToOAM
     
     halt

@@ -6,7 +6,7 @@ CreateCookie::
     ld      hl, hCookieCount
     inc     [hl]
     
-    ld      hl, wCookies
+    ld      hl, wCookieTable
     ld      b, MAX_COOKIE_COUNT
     
     call    FindEmptyActorSlot
@@ -43,7 +43,7 @@ CreateCookie::
 
 ; Update cookies' positions
 UpdateCookies::
-    ld      hl, wCookies
+    ld      hl, wCookieTable
     ld      b, MAX_COOKIE_COUNT
 .loop
     ld      a, [hl]

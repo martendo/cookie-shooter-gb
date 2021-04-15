@@ -7,10 +7,10 @@ wOAM::
 
 SECTION "Actor RAM", WRAM0
 
-wMissiles::
+wMissileTable::
     DS      MAX_MISSILE_COUNT * ACTOR_SIZE
 
-wCookies::
+wCookieTable::
     DS      MAX_COOKIE_COUNT * ACTOR_SIZE
-wCookieSpeeds::
+wCookieSpeedTable::
     DS      MAX_COOKIE_COUNT * ACTOR_SIZE
