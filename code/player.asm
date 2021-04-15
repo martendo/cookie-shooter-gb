@@ -1,5 +1,12 @@
 INCLUDE "defines.inc"
 
+SECTION "Player Variables", HRAM
+
+hPlayerLives::
+    DS 1
+hPlayerInvCountdown::
+    DS 1
+
 SECTION "Player Code", ROM0
 
 MovePlayerLeft::

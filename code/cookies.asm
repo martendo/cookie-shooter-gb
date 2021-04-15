@@ -82,7 +82,7 @@ UpdateCookies::
     ; No cookie, skip
     inc     l
     inc     l
-    jr      .next
+    jp      .next
     
 .update
     ld      a, l
@@ -170,10 +170,64 @@ UpdateCookies::
     inc     l
     jr      .destroy
 .onscreenX
-    ld      [hli], a
+    ld      [hld], a
+    ld      e, a
+    ld      d, [hl]
+    inc     l
+    inc     l
+    
+    ; Check if colliding with the player
+    ldh     a, [hPlayerInvCountdown]
+    inc     a           ; a = $FF
+    jr      nz, .next   ; Player is invincible, don't bother
+    
+    push    bc
+    ld      a, e
+    add     a, COOKIE_HITBOX_X
+    ld      e, a        ; e = cookie.hitbox.left
+    ld      a, d
+    add     a, COOKIE_HITBOX_Y
+    ld      d, a        ; d = cookie.hitbox.top
+    
+    push    hl
+    ld      hl, wOAM + PLAYER_Y_OFFSET
+    
+    ld      a, [hli]
+    ld      b, a
+    add     a, PLAYER_HITBOX_Y
+    cp      a, d        ; player.hitbox.bottom < cookie.hitbox.top
+    jr      c, .noCollision
+    
+    ld      a, d
+    add     a, COOKIE_HITBOX_HEIGHT
+    cp      a, b        ; cookie.hitbox.bottom < player.hitbox.top
+    jr      c, .noCollision
+    
+    ld      a, [hli]
+    ld      b, a
+    add     a, PLAYER_HITBOX_X
+    cp      a, e        ; player.hitbox.right < cookie.hitbox.left
+    jr      c, .noCollision
+    
+    ld      a, e
+    add     a, COOKIE_HITBOX_WIDTH
+    cp      a, b        ; cookie.hitbox.right < player.hitbox.left
+    jr      c, .noCollision
+    
+    ; Cookie and player are colliding!
+    ld      hl, hPlayerLives
+    dec     [hl]
+    ASSERT hPlayerInvCountdown == hPlayerLives + 1
+    inc     l           ; hPlayerInvCountdown
+    ld      [hl], PLAYER_INV_FRAMES
+    
+.noCollision
+    pop     hl
+    pop     bc
+    
 .next
     dec     b
-    jr      nz, .loop
+    jp      nz, .loop
     ret
 .destroy
     ldh     a, [hCookieCount]

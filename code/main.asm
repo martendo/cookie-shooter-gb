@@ -53,8 +53,12 @@ EntryPoint::
     
     ; a = 0
     ldh     [hCookieCount], a
+    dec     a   ; a = $FF
+    ldh     [hPlayerInvCountdown], a
     ld      a, STARTING_TARGET_COOKIE_COUNT
     ldh     [hTargetCookieCount], a
+    ld      a, PLAYER_START_LIVES
+    ldh     [hPlayerLives], a
     
     ld      hl, wMissileTable
     ld      b, MAX_MISSILE_COUNT
@@ -140,8 +144,22 @@ Main:
     cp      a, b
     call    c, CreateCookie
     
+    ld      hl, hPlayerInvCountdown
+    ld      a, [hl]
+    inc     a       ; a = $FF
+    jr      z, :+
+    dec     [hl]
+:
+    
     call    UpdateMissiles
     call    UpdateCookies
+    
+    ldh     a, [hPlayerLives]
+    and     a, a
+    jr      z, GameOver
+    ; It's possible for 2 cookies to hit the player in the same frame
+    bit     7, a
+    jr      nz, GameOver
     
     ld      a, PLAYER_END_OFFSET / sizeof_OAM_ATTRS
     ldh     [hNextAvailableOAMSlot], a
@@ -155,6 +173,10 @@ Main:
     halt
     
     jr      Main
+
+GameOver:
+    ; TODO: Make game over screen
+    jr      GameOver
 
 SECTION "Shadow OAM", WRAM0, ALIGN[8]
 
