@@ -148,9 +148,22 @@ Main:
     ld      a, [hl]
     inc     a       ; a = $FF
     jr      z, :+
-    dec     [hl]
-:
     
+    dec     [hl]
+    
+    bit     PLAYER_INV_FLASH_BIT, [hl]
+    jr      nz, .hidePlayer
+    ld      a, PLAYER_INV_TILE
+    jr      .writePlayerTile
+.hidePlayer
+    ld      a, PLAYER_TILE
+.writePlayerTile
+    ld      hl, wOAM + PLAYER_TILE1_OFFSET
+    ld      [hl], a
+    ld      l, LOW(wOAM + PLAYER_TILE2_OFFSET)
+    ld      [hl], a
+    
+:
     call    UpdateMissiles
     call    UpdateCookies
     
@@ -172,7 +185,7 @@ Main:
     
     halt
     
-    jr      Main
+    jp      Main
 
 GameOver:
     ; TODO: Make game over screen
