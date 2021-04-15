@@ -41,8 +41,74 @@ UpdateMissiles::
     ld      a, MISSILE_SPEED
     add     a, [hl]     ; Y position
     ld      [hli], a
+    call    nz, CheckMissileCollide
     inc     l           ; Leave X as-is
 .next
     dec     b
     jr      nz, .loop
+    ret
+
+; Check for collision between a missile and a cookie
+; @param hl Pointer to missile's X position
+; @param a  Missile's Y position
+CheckMissileCollide:
+    push    bc
+    
+    add     a, MISSILE_HITBOX_Y
+    ld      d, a        ; d = missile.hitbox.top
+    ld      a, [hld]
+    push    hl
+    add     a, MISSILE_HITBOX_X
+    ld      e, a        ; e = missile.hitbox.left
+    
+    ld      hl, wCookieTable
+    ld      c, MAX_COOKIE_COUNT
+.loop
+    ld      a, [hli]
+    and     a, a
+    jr      z, .noCollisionY
+    
+    add     a, COOKIE_HITBOX_Y
+    ld      b, a
+    add     a, COOKIE_HITBOX_HEIGHT
+    cp      a, d        ; cookie.hitbox.bottom < missile.hitbox.top
+    jr      c, .noCollisionY
+    
+    ld      a, d
+    add     a, MISSILE_HITBOX_HEIGHT
+    cp      a, b        ; missile.hitbox.bottom < cookie.hitbox.top
+    jr      c, .noCollisionY
+    
+    ld      a, [hld]
+    add     a, COOKIE_HITBOX_X
+    ld      b, a
+    add     a, COOKIE_HITBOX_WIDTH
+    cp      a, e        ; cookie.hitbox.right < missile.hitbox.left
+    jr      c, .noCollisionX
+    
+    ld      a, e
+    add     a, MISSILE_HITBOX_WIDTH
+    cp      a, b        ; missile.hitbox.right < cookie.hitbox.left
+    jr      c, .noCollisionX
+    
+    ; Missile and cookie are colliding!
+    xor     a, a
+    ld      [hl], a     ; Remove cookie (Y=0)
+    ld      hl, hCookieCount
+    dec     [hl]
+    pop     hl
+    ld      [hli], a     ; Remove missile (Y=0)
+    pop     bc
+    ret
+    
+.noCollisionX
+    inc     l
+.noCollisionY
+    inc     l
+    dec     c
+    jr      nz, .loop
+    
+    pop     hl
+    inc     l
+    pop     bc
     ret
