@@ -193,8 +193,9 @@ UpdateCookies::
     ld      hl, wOAM + PLAYER_Y_OFFSET
     
     ld      a, [hli]
-    ld      b, a
     add     a, PLAYER_HITBOX_Y
+    ld      b, a
+    add     a, PLAYER_HITBOX_HEIGHT
     cp      a, d        ; player.hitbox.bottom < cookie.hitbox.top
     jr      c, .noCollision
     
@@ -204,8 +205,9 @@ UpdateCookies::
     jr      c, .noCollision
     
     ld      a, [hli]
-    ld      b, a
     add     a, PLAYER_HITBOX_X
+    ld      b, a
+    add     a, PLAYER_HITBOX_WIDTH
     cp      a, e        ; player.hitbox.right < cookie.hitbox.left
     jr      c, .noCollision
     
