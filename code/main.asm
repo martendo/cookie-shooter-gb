@@ -178,6 +178,36 @@ Main:
     ldh     [hNextAvailableOAMSlot], a
     call    HideAllActors
     
+    ; a = 0
+    ld      b, a
+    ld      hl, wOAM + PLAYER_END_OFFSET
+.drawHeartsLoop
+    ld      a, HEART_START_Y
+    ld      c, b
+    inc     c
+:
+    dec     c
+    jr      z, :+
+    add     a, HEART_HEIGHT
+    jr      :-
+:
+    ld      [hli], a
+    ld      [hl], HEART_X
+    inc     l
+    ld      [hl], HEART_TILE
+    inc     l
+    ld      [hl], 0
+    inc     l
+    
+    inc     b
+    ldh     a, [hPlayerLives]
+    cp      a, b
+    jr      nz, .drawHeartsLoop
+    
+    ld      hl, hNextAvailableOAMSlot
+    add     a, [hl]
+    ld      [hl], a
+    
     ld      de, wMissileTable
     call    CopyActorsToOAM
     ld      de, wCookieTable
