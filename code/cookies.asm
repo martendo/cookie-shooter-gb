@@ -120,11 +120,11 @@ UpdateCookies::
     
     cp      a, SCRN_Y + 16
     jr      c, .onscreenY
-    ; Past bottom of screen, remove
+    ; Past bottom of screen, destroy
     xor     a, a
     ld      [hli], a
     inc     l
-    jr      .remove
+    jr      .destroy
 .onscreenY
     ld      [hli], a
     inc     e
@@ -163,19 +163,19 @@ UpdateCookies::
     jr      c, .onscreenX
     cp      a, -16 + 8
     jr      nc, .onscreenX
-    ; Past left/right sides of screen, remove
+    ; Past left/right sides of screen, destroy
     xor     a, a
     dec     l
     ld      [hli], a
     inc     l
-    jr      .remove
+    jr      .destroy
 .onscreenX
     ld      [hli], a
 .next
     dec     b
     jr      nz, .loop
     ret
-.remove
+.destroy
     ldh     a, [hCookieCount]
     dec     a
     ldh     [hCookieCount], a

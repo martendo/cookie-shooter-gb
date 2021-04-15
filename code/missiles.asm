@@ -93,11 +93,11 @@ CheckMissileCollide:
     
     ; Missile and cookie are colliding!
     xor     a, a
-    ld      [hl], a     ; Remove cookie (Y=0)
+    ld      [hl], a     ; Destroy cookie (Y=0)
     ld      hl, hCookieCount
     dec     [hl]
     pop     hl
-    ld      [hli], a     ; Remove missile (Y=0)
+    ld      [hli], a    ; Destroy missile (Y=0)
     pop     bc
     ret
     
