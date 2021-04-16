@@ -28,8 +28,14 @@ EntryPoint::
     ; Background map
     ld      hl, _SCRN0
     xor     a, a
-    ld      bc, SCRN_VX_B * SCRN_VY_B
-    call    Memset
+    ld      c, SCRN_Y_B
+    ld      de, SCRN_VX_B - SCRN_X_B
+:
+    ld      b, SCRN_X_B
+    call    MemsetSmall
+    add     hl, de
+    dec     c
+    jr      nz, :-
     
     ; Copy OAM DMA routine to HRAM
     ld      de, OAMDMA
