@@ -80,6 +80,8 @@ EntryPoint::
     
     ; Reset variables
     ; a = 0
+    ldh     [hPressedKeys], a
+    ldh     [hNewKeys], a
     ldh     [hCookieCount], a
     ld      hl, hScore
     ld      [hli], a
@@ -135,42 +137,6 @@ EntryPoint::
     ei
 
 Main:
-    ; Read joypad
-    ld      c, LOW(rP1)
-    ld      a, P1F_5    ; D-pad
-    ldh     [c], a
-    
-    ldh     a, [c]
-    ldh     a, [c]
-    
-    or      a, $F0      ; "Erase" high nibble
-    swap    a
-    ld      b, a
-    
-    ld      a, P1F_4    ; Buttons
-    ldh     [c], a
-    
-    ldh     a, [c]
-    ldh     a, [c]
-    ldh     a, [c]
-    ldh     a, [c]
-    ldh     a, [c]
-    ldh     a, [c]
-    
-    or      a, $F0
-    xor     a, b        ; Combine buttons + d-pad and complement
-    
-    ld      b, a
-    ld      a, [hPressedKeys]
-    xor     a, b        ; a = keys that changed state
-    and     a, b        ; a = keys that changed to pressed
-    ld      [hNewKeys], a
-    ld      a, b
-    ld      [hPressedKeys], a
-    
-    ld      a, P1F_5 | P1F_4
-    ldh     [c], a
-    
     ; Player movement
     ldh     a, [hPressedKeys]
     bit     PADB_LEFT, a
@@ -285,10 +251,10 @@ wOAM::
 
 SECTION "Global Variables", HRAM
 
-hPressedKeys: DS 1
-hNewKeys:     DS 1
+hPressedKeys:: DS 1
+hNewKeys::     DS 1
 
-hVBlankFlag:: DS 1
+hVBlankFlag::  DS 1
 
 hScore::
 .0:: DS 1

@@ -15,6 +15,7 @@ VBlankHandler:
     ld      a, HIGH(wOAM)
     lb      bc, 41, LOW(rDMA)
     call    hOAMDMA
+    
     ; Disable objects for status bar
     ld      hl, rLCDC
     res     1, [hl]
@@ -25,11 +26,32 @@ VBlankHandler:
     ld      de, hCookiesBlasted.end - 1
     ld      hl, COOKIES_BLASTED_ADDR
     ld      c, hCookiesBlasted.end - hCookiesBlasted
-    call    .drawBCD
+    call    DrawBCD
     ASSERT hScore.end == hCookiesBlasted
     ld      hl, SCORE_ADDR
     ld      c, hScore.end - hScore
-    call    .drawBCD
+    call    DrawBCD
+    
+    ; Read joypad
+    ld      a, P1F_GET_DPAD
+    call    .readPadNibble
+    swap    a           ; Move directions to high nibble
+    ld      b, a
+    
+    ld      a, P1F_GET_BTN
+    call    .readPadNibble
+    xor     a, b        ; Combine buttons and directions + complement
+    ld      b, a
+    
+    ld      a, [hPressedKeys]
+    xor     a, b        ; a = keys that changed state
+    and     a, b        ; a = keys that changed to pressed
+    ld      [hNewKeys], a
+    ld      a, b
+    ld      [hPressedKeys], a
+    
+    ld      a, P1F_GET_NONE
+    ldh     [rP1], a
     
     pop     hl
     pop     de
@@ -37,23 +59,17 @@ VBlankHandler:
     pop     af
     reti
 
-.drawBCD
-    ASSERT NUMBER_TILES_START == 1
-    ld      a, [de]
-    dec     e
-    ld      b, a
-    ; High nibble
-    swap    a
-    and     a, $0F
-    inc     a       ; add a, NUMBER_TILES_START
-    ld      [hli], a
-    ld      a, b
-    ; Low nibble
-    and     a, $0F
-    inc     a       ; add a, NUMBER_TILES_START
-    ld      [hli], a
-    dec     c
-    jr      nz, .drawBCD
+; @param a  Byte to write to rP1
+; @return a  Reading from rP1, ignoring non-input bits
+.readPadNibble
+    ldh     [rP1], a
+    ; Burn 16 cycles between write and read
+    call    .ret        ; 10 cycles
+    ldh     a, [rP1]    ; 3 cycles
+    ldh     a, [rP1]    ; 3 cycles
+    ldh     a, [rP1]    ; Read
+    or      a, $F0      ; Ignore non-input bits
+.ret
     ret
 
 SECTION "STAT Interrupt", ROM0[$0048]
