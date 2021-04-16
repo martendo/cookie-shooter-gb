@@ -14,7 +14,7 @@ FIXFLAGS = -v -p $(PADVALUE) -i "$(MFRCODE)" -k "$(LICENSEE)" -l $(OLDLIC) -m $(
 GFXFLAGS = -hu -f
 
 SRCS = $(wildcard $(SRCDIR)/*.asm)
-GFX = $(RESDIR)/sprite-tiles.2bpp $(RESDIR)/bg-tiles.2bpp $(RESDIR)/status-bar.tilemap
+GFX = $(RESDIR)/sprite-tiles.2bpp $(RESDIR)/bg-tiles.2bpp $(RESDIR)/status-bar.tilemap $(RESDIR)/game-over.tilemap
 
 # Project configuration
 include project.mk
@@ -50,8 +50,8 @@ $(RESDIR)/%.pal.json: $(GFXDIR)/%.png
 	superfamiconv palette -v -M gb -R -i $< -j $@
 $(RESDIR)/%.2bpp: $(GFXDIR)/%.png $(RESDIR)/%.pal.json
 	@mkdir -p $(@D)
-	superfamiconv tiles -v -M gb -B 2 -R -i $< -p $(RESDIR)/$*.pal.json -d $@
+	superfamiconv tiles -v -M gb -B 2 -R -F -i $< -p $(RESDIR)/$*.pal.json -d $@
 
 $(RESDIR)/%.tilemap: $(GFXDIR)/%.png $(RESDIR)/bg-tiles.2bpp $(RESDIR)/bg-tiles.pal.json
 	@mkdir -p $(@D)
-	superfamiconv map -v -M gb -B 2 -i $< -t $(RESDIR)/bg-tiles.2bpp -p $(RESDIR)/bg-tiles.pal.json -d $@
+	superfamiconv map -v -M gb -B 2 -F -i $< -t $(RESDIR)/bg-tiles.2bpp -p $(RESDIR)/bg-tiles.pal.json -d $@

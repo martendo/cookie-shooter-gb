@@ -3,12 +3,20 @@ INCLUDE "defines.inc"
 SECTION "Fade Variables", HRAM
 
 hFadeState:: DS 1
+hFadeMidwayCall:
+.lo DS 1
+.hi DS 1
 
 SECTION "Fade Code", ROM0
 
+; @param hl Address to call midway through the fade
 StartFade::
     ld      a, FADE_OUT | FADE_PHASE_FRAMES
     ldh     [hFadeState], a
+    ld      a, l
+    ldh     [hFadeMidwayCall.lo], a
+    ld      a, h
+    ldh     [hFadeMidwayCall.hi], a
     ret
 
 UpdateFade::
@@ -36,11 +44,20 @@ UpdateFade::
     ld      a, [hl]
     inc     a       ; a = $FF = all black
     jr      nz, .fadeOutFinished
-    ; Midway - increment game state
+    
+    ; Midway - increment game state, call subroutine
     ld      l, LOW(hGameState)
     inc     [hl]
     ; Switch to fade in
-    jr      .fadeInFinished
+    ld      l, LOW(hFadeState)
+    ld      [hl], FADE_IN | FADE_PHASE_FRAMES
+    
+    ASSERT hFadeMidwayCall == hFadeState + 1
+    inc     l
+    ld      a, [hli]
+    ld      h, [hl]
+    ld      l, a
+    jp      hl
     
 .fadeIn
     ; Fade in: Shift colours, add lighter colour to end

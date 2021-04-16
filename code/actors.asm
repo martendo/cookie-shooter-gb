@@ -7,12 +7,12 @@ hNextAvailableOAMSlot::
 
 SECTION "Common Actor Code", ROM0
 
-; Hide all objects in OAM that aren't the player by zeroing their Y
-; positions
-HideAllActors::
-    ld      hl, wOAM + PLAYER_END_OFFSET
+; Hide all objects in OAM by zeroing their Y positions
+HideAllObjects::
+    ld      hl, wOAM
+    ld      d, OAM_COUNT
+.skip
     ld      bc, sizeof_OAM_ATTRS
-    ld      d, OAM_COUNT - (PLAYER_END_OFFSET / sizeof_OAM_ATTRS)
     xor     a, a
 .loop
     ld      [hl], a
@@ -20,6 +20,12 @@ HideAllActors::
     dec     d
     jr      nz, .loop
     ret
+
+; Hide all objects that aren't the player
+HideAllActors::
+    ld      hl, wOAM + PLAYER_END_OFFSET
+    ld      d, OAM_COUNT - PLAYER_OBJ_COUNT
+    jr      HideAllObjects.skip
 
 ; Clear actors
 ; @param hl Pointer to actor data to clear

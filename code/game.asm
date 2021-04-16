@@ -61,6 +61,7 @@ InGame::
     ld      hl, hGameState
     ASSERT GAME_STATE_FADE_GAME_OVER == GAME_STATE_IN_GAME + 1
     inc     [hl]
+    ld      hl, LoadGameOverScreen
     call    StartFade
     jp      Main
 :

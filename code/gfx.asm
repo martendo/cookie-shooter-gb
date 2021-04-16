@@ -12,6 +12,9 @@ INCBIN "res/bg-tiles.2bpp"
 StatusBarMap::
 INCBIN "res/status-bar.tilemap"
 
+GameOverMap::
+INCBIN "res/game-over.tilemap"
+
 SECTION "Graphics Code", ROM0
 
 ; Draw a BCD number onto the background map
