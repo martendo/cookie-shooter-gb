@@ -22,9 +22,8 @@ CreateCookie::
     
     ld      hl, wCookieTable
     ld      b, MAX_COOKIE_COUNT
-    
     call    FindEmptyActorSlot
-    ret     c
+    ret     c           ; No empty slots
     
     ; [hl] = X position
     call    GetRandomNumber

@@ -10,15 +10,14 @@ SECTION "Missile Code", ROM0
 ShootMissile::
     ld      hl, wMissileTable
     ld      b, MAX_MISSILE_COUNT
-    
     call    FindEmptyActorSlot
-    ret     c
+    ret     c           ; No empty slots
     
     ; [hl] = X position
     ld      a, [wOAM + PLAYER_X1_OFFSET]
     add     a, (PLAYER_WIDTH / 2) - (MISSILE_WIDTH / 2)
     ld      [hld], a    ; X position
-    ld      [hl], MISSILE_DEFAULT_Y ; Y position
+    ld      [hl], MISSILE_START_Y ; Y position
     ret
 
 ; Update missiles' positions
@@ -36,7 +35,7 @@ UpdateMissiles::
     
 .update
     ; Missiles will automatically become disabled after reaching Y = 0
-    ASSERT MISSILE_DEFAULT_Y % -MISSILE_SPEED == 0
+    ASSERT MISSILE_START_Y % -MISSILE_SPEED == 0
     
     ld      a, MISSILE_SPEED
     add     a, [hl]     ; Y position
@@ -66,7 +65,7 @@ CheckMissileCollide:
     ld      c, MAX_COOKIE_COUNT
 .loop
     ld      a, [hli]
-    and     a, a
+    and     a, a        ; No cookie
     jr      z, .noCollisionY
     
     add     a, COOKIE_HITBOX_Y
