@@ -32,6 +32,8 @@ VBlankHandler:
     ld      c, hScore.end - hScore
     call    DrawBCD
     
+    call    UpdateFade
+    
     ; Read joypad
     ld      a, P1F_GET_DPAD
     call    .readPadNibble

@@ -93,6 +93,7 @@ EntryPoint::
     ld      [hli], a
     dec     a           ; a = $FF
     ldh     [hPlayerInvCountdown], a
+    ldh     [hFadeState], a ; Not fading
     ld      a, STARTING_TARGET_COOKIE_COUNT
     ldh     [hTargetCookieCount], a
     ld      a, PLAYER_START_LIVES
