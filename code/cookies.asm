@@ -29,7 +29,7 @@ CreateCookie::
     call    GetRandomNumber
     cp      a, SCRN_X - 16 + 8
     jr      c, :+
-    sub     a, SCRN_X - 16 + 8
+    sub     a, (SCRN_X - 16) / 2
 :
     ld      [hld], a    ; X position
     ld      [hl], COOKIE_START_Y ; Y position
@@ -49,9 +49,11 @@ CreateCookie::
     call    GetRandomNumber
     ASSERT COOKIE_SPEED_X_MASK == $FF
     ASSERT COOKIE_MIN_SPEED_X == 0
+    bit     7, a
+    jr      nz, :++
 :
     cp      a, COOKIE_MAX_SPEED_X
-    jr      c, :+
+    jr      c, :++
     sub     a, COOKIE_MAX_SPEED_X
     jr      :-
 :
