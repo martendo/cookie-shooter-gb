@@ -36,7 +36,9 @@ UpdateFade::
     ld      a, [hl]
     inc     a       ; a = $FF = all black
     jr      nz, .fadeOutFinished
-    ; TODO: Change something here, midway
+    ; Midway - increment game state
+    ld      l, LOW(hGameState)
+    inc     [hl]
     ; Switch to fade in
     jr      .fadeInFinished
     
