@@ -79,7 +79,16 @@ EntryPoint::
     ld      [hl], OAMF_XFLIP
     
     ; Reset variables
-    ldh     [hCookieCount], a   ; a = 0
+    ; a = 0
+    ldh     [hCookieCount], a
+    ld      hl, hScore
+    ld      [hli], a
+    ld      [hli], a
+    ld      [hli], a
+    ld      [hli], a
+    ASSERT hScore.end == hCookiesBlasted
+    ld      [hli], a
+    ld      [hli], a
     dec     a           ; a = $FF
     ldh     [hPlayerInvCountdown], a
     ld      a, STARTING_TARGET_COOKIE_COUNT
@@ -280,6 +289,18 @@ hPressedKeys: DS 1
 hNewKeys:     DS 1
 
 hVBlankFlag:: DS 1
+
+hScore::
+.0:: DS 1
+.1:: DS 1
+.2:: DS 1
+.3:: DS 1
+.end::
+
+hCookiesBlasted::
+.lo:: DS 1
+.hi:: DS 1
+.end::
 
 SECTION "OAM DMA Routine", ROM0
 

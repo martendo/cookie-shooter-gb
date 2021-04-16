@@ -99,9 +99,55 @@ CheckMissileCollide:
     ld      [hl], a     ; Destroy cookie (Y=0)
     ld      hl, hCookieCount
     dec     [hl]
+    
+    ; Add points to score
+    ld      l, LOW(hScore)
+    ld      b, a        ; b = 0
+    ld      a, [hl]
+    add     a, COOKIE_POINTS    ; TODO: Have varying cookie sizes
+    daa
+    ld      [hli], a
+    jr      nc, .doneScore
+    
+    ld      a, [hl]
+    adc     a, b
+    daa
+    ld      [hli], a
+    jr      nc, .doneScore
+    
+    ld      a, [hl]
+    adc     a, b
+    daa
+    ld      [hli], a
+    jr      nc, .doneScore
+    
+    ld      a, [hl]
+    adc     a, b
+    daa
+    ld      [hl], a
+    
+.doneScore
+    ; Increment cookies blasted counter
+    ld      l, LOW(hCookiesBlasted.lo)
+    ld      a, [hl]
+    and     a, a        ; Clear carry flag
+    inc     a
+    daa
+    ld      [hli], a
+    jr      nc, .finished
+    
+    ld      a, [hl]     ; hCookiesBlasted.hi
+    and     a, a        ; Clear carry flag
+    inc     a
+    daa
+    ld      [hli], a
+    
+.finished
     pop     hl
+    xor     a, a
     ld      [hli], a    ; Destroy missile (Y=0)
     pop     bc
+    
     jr      UpdateMissiles.resume
     
 .noCollisionX
