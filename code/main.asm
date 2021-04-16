@@ -16,7 +16,8 @@ EntryPoint::
     
     ldh     [hVBlankFlag], a
     
-    ASSERT GAME_STATE_IN_GAME == 0
+    ASSERT GAME_STATE_IN_GAME == 1
+    inc     a   ; a = 1
     ldh     [hGameState], a
     
     ; Copy graphics data to VRAM
@@ -44,17 +45,6 @@ EntryPoint::
     pop     de
     dec     c
     jr      nz, :-
-    ; Background map
-    ld      hl, _SCRN0 + (STATUS_BAR_TILE_HEIGHT * SCRN_VX_B)
-    xor     a, a
-    ld      c, SCRN_Y_B - STATUS_BAR_TILE_HEIGHT
-    ld      de, SCRN_VX_B - SCRN_X_B
-:
-    ld      b, SCRN_X_B
-    call    MemsetSmall
-    add     hl, de
-    dec     c
-    jr      nz, :-
     
     ; Copy OAM DMA routine to HRAM
     ld      de, OAMDMA
@@ -62,59 +52,20 @@ EntryPoint::
     ld      b, OAMDMA.end - OAMDMA
     call    MemcopySmall
     
-    call    HideAllActors
-    ; Set up player
-    ld      hl, wOAM + PLAYER_OFFSET
-    ; Object 1
-    ld      [hl], PLAYER_Y
-    inc     l
-    ld      [hl], PLAYER_START_X
-    inc     l
-    ASSERT PLAYER_TILE == 0
-    ld      [hli], a    ; a = 0 = PLAYER_TILE
-    ld      [hli], a    ; a = 0
-    ; Object 2
-    ld      [hl], PLAYER_Y
-    inc     l
-    ld      [hl], PLAYER_START_X + 8
-    inc     l
-    ld      [hli], a    ; a = 0 = PLAYER_TILE
-    ld      [hl], OAMF_XFLIP
-    
     ; Reset variables
-    ; a = 0
+    xor     a, a
     ldh     [hPressedKeys], a
     ldh     [hNewKeys], a
-    ldh     [hCookieCount], a
-    ld      hl, hScore
-    ld      [hli], a
-    ld      [hli], a
-    ld      [hli], a
-    ld      [hli], a
-    ASSERT hScore.end == hCookiesBlasted
-    ld      [hli], a
-    ld      [hli], a
-    dec     a           ; a = $FF
-    ldh     [hPlayerInvCountdown], a
+    dec     a   ; a = $FF
     ldh     [hFadeState], a ; Not fading
-    ld      a, STARTING_TARGET_COOKIE_COUNT
-    ldh     [hTargetCookieCount], a
-    ld      a, PLAYER_START_LIVES
-    ldh     [hPlayerLives], a
-    
-    ; Clear actor tables
-    ld      hl, wMissileTable
-    ld      b, MAX_MISSILE_COUNT
-    call    ClearActors
-    ld      hl, wCookieTable
-    ld      b, MAX_COOKIE_COUNT
-    call    ClearActors
     
     ; Set palettes
     ld      a, %11100100
     ldh     [rBGP], a
     ld      a, %10010011
     ldh     [rOBP0], a
+    
+    call    SetUpGame
     
     ; Set up interrupts
     ld      a, STATUS_BAR_HEIGHT - 1
@@ -142,8 +93,11 @@ EntryPoint::
 
 Main::
     ldh     a, [hGameState]
-    ; GAME_STATE_IN_GAME
+    ; GAME_STATE_FADE_IN_GAME
     and     a, a
+    jr      z, EmptyLoop
+    ; GAME_STATE_IN_GAME
+    dec     a
     jp      z, InGame
     ; GAME_STATE_FADE_GAME_OVER
     dec     a
@@ -153,15 +107,17 @@ Main::
     jp      z, GameOver
 
 EmptyLoop:
+    call    HaltVBlank
+    jr      Main
+
+HaltVBlank::
     halt
-    
     ldh     a, [hVBlankFlag]
     and     a, a
-    jr      z, EmptyLoop
+    jr      z, HaltVBlank
     xor     a, a
     ldh     [hVBlankFlag], a
-    
-    jr      Main
+    ret
 
 SECTION "Shadow OAM", WRAM0, ALIGN[8]
 

@@ -1,3 +1,5 @@
+INCLUDE "defines.inc"
+
 SECTION "System Routines", ROM0
 
 ; Copy a block of memory from one place to another
@@ -71,4 +73,17 @@ MemsetSmall::
     ld      [hli], a
     dec     b
     jr      nz, MemsetSmall
+    ret
+
+; @param hl Pointer to destination
+; @param b  Byte value to use
+; @param c  Number of bytes to set
+LCDMemsetSmall::
+    ldh     a, [rSTAT]
+    and     a, STATF_BUSY
+    jr      nz, LCDMemsetSmall
+    ld      a, b
+    ld      [hli], a
+    dec     c
+    jr      nz, LCDMemsetSmall
     ret

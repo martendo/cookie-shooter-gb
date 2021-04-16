@@ -11,5 +11,16 @@ LoadGameOverScreen::
     jp      HideAllObjects
 
 GameOver::
-    ; TODO: Make game over screen
+    ldh     a, [hNewKeys]
+    and     a, PADF_A | PADF_START
+    jr      z, :+
+    
+    ld      a, GAME_STATE_FADE_IN_GAME
+    ldh     [hGameState], a
+    ld      hl, SetUpGame
+    call    StartFade
+    jp      Main
+    
+:
+    call    HaltVBlank
     jp      Main

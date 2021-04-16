@@ -2,6 +2,66 @@ INCLUDE "defines.inc"
 
 SECTION "In-Game Code", ROM0
 
+SetUpGame::
+    ; Background map
+    ld      hl, _SCRN0 + (STATUS_BAR_TILE_HEIGHT * SCRN_VX_B)
+    ld      b, 0
+    lb      de, SCRN_Y_B - STATUS_BAR_TILE_HEIGHT, SCRN_VX_B - SCRN_X_B
+:
+    ld      c, SCRN_X_B
+    call    LCDMemsetSmall
+    ld      a, d
+    ld      d, 0
+    add     hl, de
+    ld      d, a
+    dec     d
+    jr      nz, :-
+    
+    call    HideAllActors
+    ; Set up player
+    ld      hl, wOAM + PLAYER_OFFSET
+    ; Object 1
+    ld      [hl], PLAYER_Y
+    inc     l
+    ld      [hl], PLAYER_START_X
+    inc     l
+    ASSERT PLAYER_TILE == 0
+    ld      [hli], a    ; a = 0 = PLAYER_TILE
+    ld      [hli], a    ; a = 0
+    ; Object 2
+    ld      [hl], PLAYER_Y
+    inc     l
+    ld      [hl], PLAYER_START_X + 8
+    inc     l
+    ld      [hli], a    ; a = 0 = PLAYER_TILE
+    ld      [hl], OAMF_XFLIP
+    
+    ; a = 0
+    ldh     [hCookieCount], a
+    ld      hl, hScore
+    ld      [hli], a
+    ld      [hli], a
+    ld      [hli], a
+    ld      [hli], a
+    ASSERT hScore.end == hCookiesBlasted
+    ld      [hli], a
+    ld      [hli], a
+    dec     a           ; a = $FF
+    ldh     [hPlayerInvCountdown], a
+    
+    ld      a, STARTING_TARGET_COOKIE_COUNT
+    ldh     [hTargetCookieCount], a
+    ld      a, PLAYER_START_LIVES
+    ldh     [hPlayerLives], a
+    
+    ; Clear actor tables
+    ld      hl, wMissileTable
+    ld      b, MAX_MISSILE_COUNT
+    call    ClearActors
+    ld      hl, wCookieTable
+    ld      b, MAX_COOKIE_COUNT
+    jp      ClearActors
+
 InGame::
     ; Player movement
     ldh     a, [hPressedKeys]
@@ -104,13 +164,6 @@ InGame::
     ld      de, wCookieTable
     call    CopyActorsToOAM
     
-    ; Wait for VBlank
-.waitVBL
-    halt
-    ldh     a, [hVBlankFlag]
-    and     a, a
-    jr      z, .waitVBL
-    xor     a, a
-    ldh     [hVBlankFlag], a
+    call    HaltVBlank
     
     jp      Main
