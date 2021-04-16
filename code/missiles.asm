@@ -34,11 +34,14 @@ UpdateMissiles::
     jr      .next
     
 .update
-    ; Missiles will automatically become disabled after reaching Y = 0
-    ASSERT MISSILE_START_Y % -MISSILE_SPEED == 0
-    
     ld      a, MISSILE_SPEED
     add     a, [hl]     ; Y position
+    cp      a, STATUS_BAR_HEIGHT - MISSILE_HEIGHT + 16
+    jr      nc, :+
+    xor     a, a        ; Out of sight, destroy
+    ld      [hli], a
+    jr      .resume
+:
     ld      [hli], a
     jr      nz, CheckMissileCollide
 .resume

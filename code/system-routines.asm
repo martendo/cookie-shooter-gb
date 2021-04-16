@@ -13,17 +13,18 @@ Memcopy::
     or      a, b
     jr      nz, Memcopy
     ret
-
-; Set a block of memory to a single byte value
+; @param de Pointer to beginning of block to copy
 ; @param hl Pointer to destination
-; @param a  Byte value to use
-; @param b  Number of bytes to set
-MemsetSmall::
+; @param b  Number of bytes to copy
+MemcopySmall::
+    ld      a, [de]
     ld      [hli], a
+    inc     de
     dec     b
-    jr      nz, MemsetSmall
+    jr      nz, MemcopySmall
     ret
 
+; Set a block of memory to a single byte value
 ; @param hl Pointer to destination
 ; @param a  Byte value to use
 ; @param bc Number of bytes to set
@@ -36,4 +37,12 @@ Memset::
     ld      a, c
     or      a, b
     jr      nz, .loop
+    ret
+; @param hl Pointer to destination
+; @param a  Byte value to use
+; @param b  Number of bytes to set
+MemsetSmall::
+    ld      [hli], a
+    dec     b
+    jr      nz, MemsetSmall
     ret

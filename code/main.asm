@@ -14,21 +14,37 @@ EntryPoint::
     xor     a, a
     ldh     [rLCDC], a
     
+    ldh     [hVBlankFlag], a
+    
     ; Copy graphics data to VRAM
     ; Sprites
     ld      de, SpriteTiles
     ld      hl, _VRAM8000
-    ld      bc, SpriteTiles.end - SpriteTiles
-    call    Memcopy
+    ld      b, SpriteTiles.end - SpriteTiles
+    call    MemcopySmall
     ; Background tiles
     ld      hl, _VRAM9000
-    ld      a, $FF
-    ld      b, 8 * 2
-    call    MemsetSmall
-    ; Background map
+    ld      de, BackgroundTiles
+    ld      bc, BackgroundTiles.end - BackgroundTiles
+    call    Memcopy
+    
+    ; Status bar
     ld      hl, _SCRN0
+    ld      de, StatusBarMap
+    ld      c, STATUS_BAR_TILE_HEIGHT
+:
+    ld      b, SCRN_X_B
+    call    MemcopySmall
+    push    de
+    ld      de, SCRN_VX_B - SCRN_X_B
+    add     hl, de
+    pop     de
+    dec     c
+    jr      nz, :-
+    ; Background map
+    ld      hl, _SCRN0 + (STATUS_BAR_TILE_HEIGHT * SCRN_VX_B)
     xor     a, a
-    ld      c, SCRN_Y_B
+    ld      c, SCRN_Y_B - STATUS_BAR_TILE_HEIGHT
     ld      de, SCRN_VX_B - SCRN_X_B
 :
     ld      b, SCRN_X_B
@@ -40,8 +56,8 @@ EntryPoint::
     ; Copy OAM DMA routine to HRAM
     ld      de, OAMDMA
     ld      hl, hOAMDMA
-    ld      bc, OAMDMA.end - OAMDMA
-    call    Memcopy
+    ld      b, OAMDMA.end - OAMDMA
+    call    MemcopySmall
     
     call    HideAllActors
     ; Set up player
@@ -86,9 +102,14 @@ EntryPoint::
     ldh     [rOBP0], a
     
     ; Set up interrupts
+    ld      a, STATUS_BAR_HEIGHT - 1
+    ldh     [rLYC], a
+    ld      a, STATF_LYC
+    ldh     [rSTAT], a
+    
     xor     a, a
     ldh     [rIF], a
-    inc     a           ; 1 = VBlank interrupt
+    ld      a, IEF_VBLANK | IEF_LCDC
     ldh     [rIE], a
     
     ;           +-------- LCD on/off
@@ -234,7 +255,13 @@ Main:
     call    CopyActorsToOAM
     
     ; Wait for VBlank
+.waitVBL
     halt
+    ldh     a, [hVBlankFlag]
+    and     a, a
+    jr      z, .waitVBL
+    xor     a, a
+    ldh     [hVBlankFlag], a
     
     jp      Main
 
@@ -251,6 +278,8 @@ SECTION "Global Variables", HRAM
 
 hPressedKeys: DS 1
 hNewKeys:     DS 1
+
+hVBlankFlag:: DS 1
 
 SECTION "OAM DMA Routine", ROM0
 

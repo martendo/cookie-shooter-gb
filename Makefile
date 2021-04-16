@@ -5,7 +5,7 @@ RESDIR := res
 
 ROM = $(BINDIR)/$(ROMNAME).$(ROMEXT)
 
-INCDIRS := $(SRCDIR) include
+INCDIRS = $(SRCDIR) include
 WARNINGS := all extra
 
 ASFLAGS  = -h $(addprefix -i,$(INCDIRS)) -p $(PADVALUE) $(addprefix -W,$(WARNINGS))
@@ -14,8 +14,7 @@ FIXFLAGS = -v -p $(PADVALUE) -i "$(MFRCODE)" -k "$(LICENSEE)" -l $(OLDLIC) -m $(
 GFXFLAGS = -hu -f
 
 SRCS = $(wildcard $(SRCDIR)/*.asm)
-OBJS = $(patsubst $(SRCDIR)/%.asm,$(BINDIR)/%.o,$(SRCS))
-GFX = $(wildcard $(GFXDIR)/*.png)
+GFX = $(RESDIR)/sprite-tiles.2bpp $(RESDIR)/bg-tiles.2bpp $(RESDIR)/status-bar.tilemap
 
 # Project configuration
 include project.mk
@@ -31,9 +30,9 @@ clean:
 rebuild: clean all
 
 # Build the ROM, along with map and symbol files
-$(BINDIR)/%.$(ROMEXT) $(BINDIR)/%.sym $(BINDIR)/%.map: $(patsubst $(GFXDIR)/%.png,$(RESDIR)/%.2bpp,$(GFX)) $(OBJS)
+$(BINDIR)/%.$(ROMEXT) $(BINDIR)/%.sym $(BINDIR)/%.map: $(GFX) $(patsubst $(SRCDIR)/%.asm,$(BINDIR)/%.o,$(SRCS))
 	@mkdir -p $(@D)
-	rgblink $(LDFLAGS) -m $(BINDIR)/$*.map -n $(BINDIR)/$*.sym -o $(BINDIR)/$*.$(ROMEXT) $(OBJS)
+	rgblink $(LDFLAGS) -m $(BINDIR)/$*.map -n $(BINDIR)/$*.sym -o $(BINDIR)/$*.$(ROMEXT) $(patsubst $(SRCDIR)/%.asm,$(BINDIR)/%.o,$(SRCS))
 	rgbfix $(FIXFLAGS) $(BINDIR)/$*.$(ROMEXT)
 
 # Assemble an assembly file
@@ -41,7 +40,18 @@ $(BINDIR)/%.o: $(SRCDIR)/%.asm
 	@mkdir -p $(@D)
 	rgbasm $(ASFLAGS) -o $(BINDIR)/$*.o $<
 
-# Convert a PNG file
-$(RESDIR)/%.2bpp: $(GFXDIR)/%.png
+# Graphics conversion
+$(RESDIR)/sprite-tiles.2bpp: $(GFXDIR)/sprite-tiles.png
 	@mkdir -p $(@D)
-	rgbgfx -d 2 $(GFXFLAGS) -o $(RESDIR)/$*.2bpp $<
+	rgbgfx -d 2 $(GFXFLAGS) -o $(RESDIR)/sprite-tiles.2bpp $<
+
+$(RESDIR)/%.pal.json: $(GFXDIR)/%.png
+	@mkdir -p $(@D)
+	superfamiconv palette -v -M gb -R -i $< -j $@
+$(RESDIR)/%.2bpp: $(GFXDIR)/%.png $(RESDIR)/%.pal.json
+	@mkdir -p $(@D)
+	superfamiconv tiles -v -M gb -B 2 -R -i $< -p $(RESDIR)/$*.pal.json -d $@
+
+$(RESDIR)/%.tilemap: $(GFXDIR)/%.png $(RESDIR)/bg-tiles.2bpp $(RESDIR)/bg-tiles.pal.json
+	@mkdir -p $(@D)
+	superfamiconv map -v -M gb -B 2 -i $< -t $(RESDIR)/bg-tiles.2bpp -p $(RESDIR)/bg-tiles.pal.json -d $@
