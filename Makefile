@@ -47,11 +47,11 @@ $(RESDIR)/sprite-tiles.2bpp: $(GFXDIR)/sprite-tiles.png
 
 $(RESDIR)/%.pal.json: $(GFXDIR)/%.png
 	@mkdir -p $(@D)
-	superfamiconv palette -v -M gb -R -i $< -j $@
+	superfamiconv palette -M gb -R -i $< -j $@
 $(RESDIR)/%.2bpp: $(GFXDIR)/%.png $(RESDIR)/%.pal.json
 	@mkdir -p $(@D)
-	superfamiconv tiles -v -M gb -B 2 -R -F -i $< -p $(RESDIR)/$*.pal.json -d $@
+	superfamiconv tiles -M gb -B 2 -R -F -i $< -p $(RESDIR)/$*.pal.json -d $@
 
 $(RESDIR)/%.tilemap: $(GFXDIR)/%.png $(RESDIR)/bg-tiles.2bpp $(RESDIR)/bg-tiles.pal.json
 	@mkdir -p $(@D)
-	superfamiconv map -v -M gb -B 2 -F -i $< -t $(RESDIR)/bg-tiles.2bpp -p $(RESDIR)/bg-tiles.pal.json -d $@
+	superfamiconv map -M gb -B 2 -F -i $< -t $(RESDIR)/bg-tiles.2bpp -p $(RESDIR)/bg-tiles.pal.json -d $@
