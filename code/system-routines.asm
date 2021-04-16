@@ -24,6 +24,32 @@ MemcopySmall::
     jr      nz, MemcopySmall
     ret
 
+; Copy an arbitrary number of rows of map data to the visible background
+; map, even if the LCD is on
+; @param de Pointer to map data
+; @param hl Pointer to destination
+; @param c  Number of rows to copy
+LCDMemcopyMap::
+    ld      b, SCRN_X_B
+.rowLoop
+    ldh     a, [rSTAT]
+    and     a, STATF_BUSY
+    jr      nz, .rowLoop
+    
+    ld      a, [de]
+    ld      [hli], a
+    inc     de
+    dec     b
+    jr      nz, .rowLoop
+    
+    push    de
+    ld      de, SCRN_VX_B - SCRN_X_B
+    add     hl, de
+    pop     de
+    dec     c
+    jr      nz, LCDMemcopyMap
+    ret
+
 ; Set a block of memory to a single byte value
 ; @param hl Pointer to destination
 ; @param a  Byte value to use
