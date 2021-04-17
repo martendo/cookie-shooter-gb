@@ -8,7 +8,7 @@ LoadTitleScreen::
     ld      c, SCRN_Y_B
     call    LCDMemcopyMap
     
-    jp      HideAllActors
+    jp      HideAllObjects
 
 TitleScreen::
     ldh     a, [hNewKeys]
