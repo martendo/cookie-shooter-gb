@@ -34,7 +34,8 @@ ClearActors::
     xor     a, a
 .loop
     ld      [hli], a
-    inc     l
+    ASSERT HIGH(wMissileTable.end) != HIGH(wMissileTable) || HIGH(wCookieTable.end) != HIGH(wCookieTable)
+    inc     hl
     dec     b
     jr      nz, .loop
     ret
@@ -44,14 +45,14 @@ ClearActors::
 ; @param  b  Maximum number of actors
 ; @return cf Set if no empty slot was found, otherwise reset
 FindEmptyActorSlot::
-.loop
+    ASSERT HIGH(wMissileTable.end) != HIGH(wMissileTable) || HIGH(wCookieTable.end) != HIGH(wCookieTable)
     ld      a, [hli]    ; If Y is 0, slot is empty
     and     a, a
     ret     z
     
-    inc     l
+    inc     hl
     dec     b
-    jr      nz, .loop
+    jr      nz, FindEmptyActorSlot
     ; No more slots
     scf
     ret     z
@@ -72,16 +73,17 @@ CopyActorsToOAM::
     ; Fallthrough
 
 CopyMissilesToOAM:
+    ASSERT HIGH(wMissileTable.end) != HIGH(wMissileTable)
     ld      b, MAX_MISSILE_COUNT
 .loop
     ld      a, [de]     ; Y position
     and     a, a        ; No missile, skip
     jr      z, .skip
     ld      [hli], a
-    inc     e
+    inc     de
     ld      a, [de]     ; X position
     ld      [hli], a
-    inc     e
+    inc     de
     ld      [hl], MISSILE_TILE
     inc     l
     ld      [hl], 0
@@ -89,8 +91,8 @@ CopyMissilesToOAM:
     inc     c
     jr      .next
 .skip
-    inc     e
-    inc     e
+    inc     de
+    inc     de
 .next
     dec     b
     jr      nz, .loop

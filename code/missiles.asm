@@ -4,6 +4,7 @@ SECTION "Missile Table", WRAM0
 
 wMissileTable::
     DS MAX_MISSILE_COUNT * ACTOR_SIZE
+.end::
 
 SECTION "Missile Code", ROM0
 
@@ -22,6 +23,7 @@ ShootMissile::
 
 ; Update missiles' positions
 UpdateMissiles::
+    ASSERT HIGH(wMissileTable.end) != HIGH(wMissileTable)
     ld      hl, wMissileTable
     ld      b, MAX_MISSILE_COUNT
 .loop
@@ -29,8 +31,8 @@ UpdateMissiles::
     and     a, a
     jr      nz, .update
     ; No missile, skip
-    inc     l
-    inc     l
+    inc     hl
+    inc     hl
     jr      .next
     
 .update
@@ -45,7 +47,7 @@ UpdateMissiles::
     ld      [hli], a
     jr      nz, CheckMissileCollide
 .resume
-    inc     l           ; Leave X as-is
+    inc     hl          ; Leave X as-is
 .next
     dec     b
     jr      nz, .loop
@@ -180,6 +182,6 @@ CheckMissileCollide:
     jr      nz, .loop
     
     pop     hl
-    inc     l
+    inc     hl
     pop     bc
     jp      UpdateMissiles.resume

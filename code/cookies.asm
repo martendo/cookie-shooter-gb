@@ -4,6 +4,7 @@ SECTION "Cookie Tables", WRAM0
 
 wCookieTable::
     DS MAX_COOKIE_COUNT * ACTOR_SIZE
+.end::
 wCookieSpeedTable:
     DS MAX_COOKIE_COUNT * ACTOR_SIZE
 wCookieSpeedAccTable:
