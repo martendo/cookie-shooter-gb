@@ -69,60 +69,80 @@ CheckMissileCollide:
 .loop
     ld      a, [hli]
     and     a, a        ; No cookie
-    jr      z, .noCollisionY
+    jr      z, .skip
     
-    add     a, COOKIE_HITBOX_Y
     ld      b, a
-    add     a, COOKIE_HITBOX_HEIGHT
+    ld      a, [hld]
+    ldh     [hScratch], a
+    push    hl
+    
+    call    PointHLToCookieHitbox
+    
+    ld      a, b        ; cookie.y
+    add     a, [hl]     ; cookie.hitbox.y
+    ld      b, a
+    inc     l
+    add     a, [hl]     ; cookie.hitbox.height
     cp      a, d        ; cookie.hitbox.bottom < missile.hitbox.top
-    jr      c, .noCollisionY
+    jr      c, .noCollision
     
     ld      a, d
     add     a, MISSILE_HITBOX_HEIGHT
     cp      a, b        ; missile.hitbox.bottom < cookie.hitbox.top
-    jr      c, .noCollisionY
+    jr      c, .noCollision
     
-    ld      a, [hld]
-    add     a, COOKIE_HITBOX_X
+    ldh     a, [hScratch]   ; cookie.x
+    inc     l
+    add     a, [hl]     ; cookie.hitbox.x
     ld      b, a
-    add     a, COOKIE_HITBOX_WIDTH
+    inc     l
+    add     a, [hl]     ; cookie.hitbox.width
     cp      a, e        ; cookie.hitbox.right < missile.hitbox.left
-    jr      c, .noCollisionX
+    jr      c, .noCollision
     
     ld      a, e
     add     a, MISSILE_HITBOX_WIDTH
     cp      a, b        ; missile.hitbox.right < cookie.hitbox.left
-    jr      c, .noCollisionX
+    jr      c, .noCollision
     
     ; Missile and cookie are colliding!
+    pop     hl
     xor     a, a
+    ld      d, a        ; d = 0
     ld      [hl], a     ; Destroy cookie (Y=0)
+    
+    call    GetCookieSize
+    add     a, LOW(CookiePointsTable)
+    ld      l, a
+    ASSERT HIGH(CookiePointsTable.end - 1) == HIGH(CookiePointsTable)
+    ld      h, HIGH(CookiePointsTable)
+    ld      a, [hli]
+    ld      b, [hl]
+    ld      c, a        ; bc = points
+    
     ld      hl, hCookieCount
     dec     [hl]
     
     ; Add points to score
     ld      l, LOW(hScore)
-    ld      b, a        ; b = 0
-    ld      a, [hl]
-    add     a, COOKIE_POINTS    ; TODO: Have varying cookie sizes
+    ld      a, c
+    add     a, [hl]
+    daa
+    ld      [hli], a
+    ld      a, b
+    adc     a, [hl]
     daa
     ld      [hli], a
     jr      nc, .doneScore
     
     ld      a, [hl]
-    adc     a, b
+    adc     a, d        ; d = 0
     daa
     ld      [hli], a
     jr      nc, .doneScore
     
     ld      a, [hl]
-    adc     a, b
-    daa
-    ld      [hli], a
-    jr      nc, .doneScore
-    
-    ld      a, [hl]
-    adc     a, b
+    adc     a, d
     daa
     ld      [hl], a
     
@@ -150,9 +170,10 @@ CheckMissileCollide:
     
     jr      UpdateMissiles.resume
     
-.noCollisionX
+.noCollision
+    pop     hl
     inc     l
-.noCollisionY
+.skip
     inc     l
     dec     c
     jr      nz, .loop
@@ -160,4 +181,4 @@ CheckMissileCollide:
     pop     hl
     inc     l
     pop     bc
-    jr      UpdateMissiles.resume
+    jp      UpdateMissiles.resume

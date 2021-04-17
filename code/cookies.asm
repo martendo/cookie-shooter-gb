@@ -8,13 +8,57 @@ wCookieSpeedTable:
     DS MAX_COOKIE_COUNT * ACTOR_SIZE
 wCookieSpeedAccTable:
     DS MAX_COOKIE_COUNT * ACTOR_SIZE
+wCookieSizeTable::
+    DS MAX_COOKIE_COUNT
 
 SECTION "Cookie Variables", HRAM
 
 hCookieCount::       DS 1
 hTargetCookieCount:: DS 1
 
+SECTION "Cookie Data", ROM0
+
+CookieHitboxTable::
+    ;       Y,  H, X,  W
+    DB      2, 12, 2, 12    ; COOKIE_SIZE_16
+.end::
+
+; Points values in BCD
+CookiePointsTable::
+    DW      $50     ; COOKIE_SIZE_16
+.end::
+
 SECTION "Cookie Code", ROM0
+
+; Get a cookie's size using its position in wCookieTable
+; @param hl Pointer to the cookie's entry in wCookieTable
+; @return a  Cookie size type (see COOKIE_SIZE_* constants)
+GetCookieSize::
+    ld      a, l
+    sub     a, LOW(wCookieTable)
+    srl     a           ; wCookieTable entry = 2 bytes, wCookieSizeTable entry = 1 byte
+    add     a, LOW(wCookieSizeTable)
+    ld      l, a
+    ASSERT HIGH(wCookieSizeTable) == HIGH(wCookieSizeTable + MAX_COOKIE_COUNT - 1)
+    ld      h, HIGH(wCookieSizeTable)
+    ld      a, [hl]     ; a = cookie size
+    ret
+
+; Get a pointer to the dimensions of a certain cookie's hitbox based on
+; its size using its position in wCookieTable
+; @param hl Pointer to the cookie's entry in wCookieTable
+; @return hl Pointer to the cookie's size's hitbox in CookieHitboxTable
+PointHLToCookieHitbox::
+    call    GetCookieSize
+    ; Get cookie's size's hitbox
+    add     a, a
+    add     a, a        ; * 4: Y, H, X, W
+    add     a, LOW(CookieHitboxTable)
+    ld      l, a
+    ASSERT HIGH(CookieHitboxTable.end - 1) == HIGH(CookieHitboxTable)
+    ld      h, HIGH(CookieHitboxTable)
+    
+    ret
 
 CreateCookie::
     ld      hl, hCookieCount
@@ -68,7 +112,15 @@ CreateCookie::
     add     hl, bc      ; wCookieSpeedAccTable
     xor     a, a
     ld      [hli], a
-    ld      [hl], a
+    ld      [hld], a
+    
+    ld      bc, -wCookieSpeedAccTable & $FFFF
+    add     hl, bc
+    srl     l           ; wCookieSpeedAccTable entry = 2 bytes, wCookieSizeTable entry = 1 byte
+    ld      bc, wCookieSizeTable
+    add     hl, bc
+    ; TODO: Add more cookie sizes
+    ld      [hl], COOKIE_SIZE_16
     
     ret
 
@@ -174,24 +226,35 @@ UpdateCookies::
     ld      [hld], a
     ld      e, a
     ld      d, [hl]
-    inc     l
-    inc     l
     
     ; Check if colliding with the player
     ldh     a, [hPlayerInvCountdown]
     inc     a           ; a = $FF
-    jr      nz, .next   ; Player is invincible, don't bother
-    
-    push    bc
-    ld      a, e
-    add     a, COOKIE_HITBOX_X
-    ld      e, a        ; e = cookie.hitbox.left
-    ld      a, d
-    add     a, COOKIE_HITBOX_Y
-    ld      d, a        ; d = cookie.hitbox.top
+    ; Player is invincible, don't bother
+    jr      nz, .skipCollision
     
     push    hl
+    call    PointHLToCookieHitbox
+    ld      a, e
+    inc     l
+    inc     l
+    add     a, [hl]     ; cookie.hitbox.x
+    ld      e, a        ; e = cookie.hitbox.left
+    ld      a, d
+    dec     l
+    dec     l
+    add     a, [hl]     ; cookie.hitbox.y
+    ld      d, a        ; d = cookie.hitbox.top
+    
+    inc     l
+    ld      a, [hli]    ; cookie.hitbox.height
+    ld      c, a
+    inc     l
+    ld      a, [hl]     ; cookie.hitbox.width
+    ldh     [hScratch], a
+    
     ld      hl, wOAM + PLAYER_Y_OFFSET
+    push    bc
     
     ld      a, [hli]
     add     a, PLAYER_HITBOX_Y
@@ -201,7 +264,7 @@ UpdateCookies::
     jr      c, .noCollision
     
     ld      a, d
-    add     a, COOKIE_HITBOX_HEIGHT
+    add     a, c        ; cookie.hitbox.height
     cp      a, b        ; cookie.hitbox.bottom < player.hitbox.top
     jr      c, .noCollision
     
@@ -212,8 +275,8 @@ UpdateCookies::
     cp      a, e        ; player.hitbox.right < cookie.hitbox.left
     jr      c, .noCollision
     
-    ld      a, e
-    add     a, COOKIE_HITBOX_WIDTH
+    ldh     a, [hScratch]   ; cookie.hitbox.width
+    add     a, e
     cp      a, b        ; cookie.hitbox.right < player.hitbox.left
     jr      c, .noCollision
     
@@ -225,8 +288,11 @@ UpdateCookies::
     ld      [hl], PLAYER_INV_FRAMES
     
 .noCollision
-    pop     hl
     pop     bc
+    pop     hl
+.skipCollision
+    inc     l
+    inc     l
     
 .next
     dec     b
