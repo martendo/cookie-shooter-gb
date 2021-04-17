@@ -23,7 +23,7 @@ VBlankHandler:
     ld      [hl], h ; Non-zero
     
     ldh     a, [hGameState]
-    cp      a, GAME_STATE_IN_GAME
+    cp      a, GAME_STATE_WAIT
     jr      c, .noStatusBar
     ; Update score and cookies blasted
     ld      de, hCookiesBlasted.end - 1

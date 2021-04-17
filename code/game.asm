@@ -65,7 +65,11 @@ SetUpGame::
     call    ClearActors
     ld      hl, wCookieTable
     ld      b, MAX_COOKIE_COUNT
-    jp      ClearActors
+    call    ClearActors
+    
+    ld      a, GAME_START_DELAY_FRAMES
+    ldh     [hWaitCountdown], a
+    ret
 
 InGame::
     ; Player movement
@@ -132,10 +136,23 @@ InGame::
 :
     
     call    HideAllActors
+    call    DrawHearts
+    ; Copy actor data to OAM
+    ld      de, wMissileTable
+    call    CopyActorsToOAM
+    ld      de, wCookieTable
+    call    CopyActorsToOAM
     
-    ; Draw hearts to show player's remaining lives
-    ; a = 0
-    ld      b, a
+    call    HaltVBlank
+    
+    jp      Main
+
+; Draw hearts to show player's remaining lives
+; NOTE: hNextAvailableOAMSlot is overridden, call this before
+; CopyActorsToOAM!
+; @param a  0
+DrawHearts::
+    ld      b, a    ; a = 0
     ld      hl, wOAM + PLAYER_END_OFFSET
 .drawHeartsLoop
     ld      a, HEART_START_Y
@@ -162,13 +179,4 @@ InGame::
     
     add     a, PLAYER_OBJ_COUNT
     ldh     [hNextAvailableOAMSlot], a
-    
-    ; Copy actor data to OAM
-    ld      de, wMissileTable
-    call    CopyActorsToOAM
-    ld      de, wCookieTable
-    call    CopyActorsToOAM
-    
-    call    HaltVBlank
-    
-    jp      Main
+    ret

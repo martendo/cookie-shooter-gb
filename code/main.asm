@@ -88,6 +88,9 @@ Main::
     ; GAME_STATE_FADE_IN_GAME
     dec     a
     jr      z, EmptyLoop
+    ; GAME_STATE_WAIT
+    dec     a
+    jr      z, Wait
     ; GAME_STATE_IN_GAME
     dec     a
     jp      z, InGame
@@ -110,6 +113,22 @@ HaltVBlank::
     xor     a, a
     ldh     [hVBlankFlag], a
     ret
+
+Wait:
+    xor     a, a
+    call    DrawHearts
+    
+    ld      hl, hWaitCountdown
+    dec     [hl]
+    jr      nz, :+
+    
+    ld      l, LOW(hGameState)
+    inc     [hl]
+    jr      Main
+    
+:
+    call    HaltVBlank
+    jr      Main
 
 SECTION "Shadow OAM", WRAM0, ALIGN[8]
 
@@ -136,6 +155,8 @@ hCookiesBlasted::
 .lo:: DS 1
 .hi:: DS 1
 .end::
+
+hWaitCountdown:: DS 1
 
 SECTION "OAM DMA Routine", ROM0
 
