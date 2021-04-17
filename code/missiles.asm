@@ -112,6 +112,7 @@ CheckMissileCollide:
     ld      [hl], a     ; Destroy cookie (Y=0)
     
     call    GetCookieSize
+    add     a, a        ; 1 entry = 2 bytes
     add     a, LOW(CookiePointsTable)
     ld      l, a
     ASSERT HIGH(CookiePointsTable.end - 1) == HIGH(CookiePointsTable)
