@@ -103,12 +103,31 @@ CopyCookiesToOAM:
     ld      a, [de]     ; Y position
     and     a, a        ; No cookie, skip
     jr      z, .skip
+    
+    push    bc
+    push    hl
+    ; Get cookie's size's tiles
+    ld      l, e
+    ld      h, d
+    call    GetCookieSize
+    add     a, LOW(CookieTileTable)
+    ld      l, a
+    ASSERT HIGH(CookieTileTable.end - 1) == HIGH(CookieTileTable)
+    ld      h, HIGH(CookieTileTable)
+    ld      c, [hl]
+    ld      b, c
+    inc     b
+    inc     b
+    ; c = first tile, b = second tile
+    pop     hl
+    
+    ld      a, [de]     ; Y position
     ld      [hli], a
     inc     e
     ld      a, [de]     ; X position
     ld      [hli], a
     inc     e
-    ld      [hl], COOKIE_TILE1
+    ld      [hl], c     ; First tile
     inc     l
     ld      [hl], 0
     inc     l
@@ -122,11 +141,12 @@ CopyCookiesToOAM:
     add     a, 8
     ld      [hli], a
     inc     e
-    ld      [hl], COOKIE_TILE2
+    ld      [hl], b     ; Second tile
     inc     l
     ld      [hl], 0
     inc     l
     
+    pop     bc
     inc     c
     inc     c
     jr      .next

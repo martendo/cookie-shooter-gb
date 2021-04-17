@@ -23,8 +23,8 @@ EntryPoint::
     ; Sprites
     ld      de, SpriteTiles
     ld      hl, _VRAM8000
-    ld      b, SpriteTiles.end - SpriteTiles
-    call    MemcopySmall
+    ld      bc, SpriteTiles.end - SpriteTiles
+    call    Memcopy
     ; Background tiles
     ld      hl, _VRAM9000
     ld      de, BackgroundTiles

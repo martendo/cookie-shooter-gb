@@ -18,14 +18,30 @@ hTargetCookieCount:: DS 1
 
 SECTION "Cookie Data", ROM0
 
+CookieTileTable::
+    DB      4   ; COOKIE_SIZE_16
+    DB      8   ; COOKIE_SIZE_14
+    DB      12  ; COOKIE_SIZE_12
+    DB      16  ; COOKIE_SIZE_10
+    DB      20  ; COOKIE_SIZE_8
+.end::
+
 CookieHitboxTable::
     ;       Y,  H, X,  W
     DB      2, 12, 2, 12    ; COOKIE_SIZE_16
+    DB      3, 10, 3, 10    ; COOKIE_SIZE_14
+    DB      4,  8, 4,  8    ; COOKIE_SIZE_12
+    DB      5,  6, 5,  6    ; COOKIE_SIZE_10
+    DB      6,  4, 6,  4    ; COOKIE_SIZE_8
 .end::
 
 ; Points values in BCD
 CookiePointsTable::
-    DW      $50     ; COOKIE_SIZE_16
+    DW      $25     ; COOKIE_SIZE_16
+    DW      $50     ; COOKIE_SIZE_14
+    DW      $75     ; COOKIE_SIZE_12
+    DW      $100    ; COOKIE_SIZE_10
+    DW      $125    ; COOKIE_SIZE_8
 .end::
 
 SECTION "Cookie Code", ROM0
@@ -119,8 +135,14 @@ CreateCookie::
     srl     l           ; wCookieSpeedAccTable entry = 2 bytes, wCookieSizeTable entry = 1 byte
     ld      bc, wCookieSizeTable
     add     hl, bc
-    ; TODO: Add more cookie sizes
-    ld      [hl], COOKIE_SIZE_16
+    call    GetRandomNumber
+    and     a, COOKIE_SIZE_MASK
+    ASSERT COOKIE_SIZE_MASK != COOKIE_SIZE_COUNT - 1
+    cp      a, COOKIE_SIZE_COUNT
+    jr      c, :+
+    sub     a, COOKIE_SIZE_COUNT
+:
+    ld      [hl], a
     
     ret
 
