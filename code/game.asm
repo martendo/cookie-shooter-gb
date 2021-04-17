@@ -121,12 +121,8 @@ InGame::
     ; Check for game over - no more lives left
     ldh     a, [hPlayerLives]
     and     a, a
-    jr      z, .gameOver
-    ; It's possible for 2 cookies to hit the player in the same frame
-    bit     7, a
-    jr      z, :+
+    jr      nz, :+
     
-.gameOver
     ld      hl, hGameState
     ASSERT GAME_STATE_FADE_GAME_OVER == GAME_STATE_IN_GAME + 1
     inc     [hl]
