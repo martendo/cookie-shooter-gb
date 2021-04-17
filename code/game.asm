@@ -16,6 +16,11 @@ SetUpGame::
     ld      d, a
     dec     d
     jr      nz, :-
+    ; Status bar
+    ld      hl, _SCRN0
+    ld      de, StatusBarMap
+    ld      c, STATUS_BAR_TILE_HEIGHT
+    call    LCDMemcopyMap
     
     call    HideAllActors
     ; Set up player
@@ -92,12 +97,12 @@ InGame::
     dec     [hl]
     
     ; Flash player to show invincibility
+    ASSERT PLAYER_TILE == 0
+    xor     a, a
     bit     PLAYER_INV_FLASH_BIT, [hl]
-    jr      nz, .hidePlayer
-    ld      a, PLAYER_INV_TILE
-    jr      .writePlayerTile
-.hidePlayer
-    ld      a, PLAYER_TILE
+    jr      nz, .writePlayerTile
+    ASSERT PLAYER_INV_TILE == LOW(-1)
+    dec     a
 .writePlayerTile
     ld      hl, wOAM + PLAYER_TILE1_OFFSET
     ld      [hl], a

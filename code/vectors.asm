@@ -22,6 +22,9 @@ VBlankHandler:
     ld      l, LOW(hVBlankFlag)
     ld      [hl], h ; Non-zero
     
+    ldh     a, [hGameState]
+    cp      a, GAME_STATE_IN_GAME
+    jr      c, .noStatusBar
     ; Update score and cookies blasted
     ld      de, hCookiesBlasted.end - 1
     ld      hl, COOKIES_BLASTED_ADDR
@@ -31,6 +34,7 @@ VBlankHandler:
     ld      hl, SCORE_ADDR
     ld      c, hScore.end - hScore
     call    DrawBCD
+.noStatusBar
     
     call    UpdateFade
     

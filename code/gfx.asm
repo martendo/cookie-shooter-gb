@@ -12,6 +12,12 @@ INCBIN "res/bg-tiles.2bpp"
 StatusBarMap::
 INCBIN "res/status-bar.tilemap"
 
+TitleScreenTiles::
+INCBIN "res/title-screen.2bpp"
+.end::
+TitleScreenMap::
+INCBIN "res/title-screen.tilemap"
+
 GameOverMap::
 INCBIN "res/game-over.tilemap"
 

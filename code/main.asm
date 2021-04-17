@@ -16,8 +16,7 @@ EntryPoint::
     
     ldh     [hVBlankFlag], a
     
-    ASSERT GAME_STATE_IN_GAME == 1
-    inc     a   ; a = 1
+    ASSERT GAME_STATE_TITLE_SCREEN == 0
     ldh     [hGameState], a
     
     ; Copy graphics data to VRAM
@@ -31,20 +30,10 @@ EntryPoint::
     ld      de, BackgroundTiles
     ld      bc, BackgroundTiles.end - BackgroundTiles
     call    Memcopy
-    
-    ; Status bar
-    ld      hl, _SCRN0
-    ld      de, StatusBarMap
-    ld      c, STATUS_BAR_TILE_HEIGHT
-:
-    ld      b, SCRN_X_B
-    call    MemcopySmall
-    push    de
-    ld      de, SCRN_VX_B - SCRN_X_B
-    add     hl, de
-    pop     de
-    dec     c
-    jr      nz, :-
+    ld      hl, _VRAM8800
+    ld      de, TitleScreenTiles
+    ld      bc, TitleScreenTiles.end - TitleScreenTiles
+    call    Memcopy
     
     ; Copy OAM DMA routine to HRAM
     ld      de, OAMDMA
@@ -65,7 +54,7 @@ EntryPoint::
     ld      a, %10010011
     ldh     [rOBP0], a
     
-    call    SetUpGame
+    call    LoadTitleScreen
     
     ; Set up interrupts
     ld      a, STATUS_BAR_HEIGHT - 1
@@ -93,8 +82,11 @@ EntryPoint::
 
 Main::
     ldh     a, [hGameState]
-    ; GAME_STATE_FADE_IN_GAME
+    ; GAME_STATE_TITLE_SCREEN
     and     a, a
+    jp      z, TitleScreen
+    ; GAME_STATE_FADE_IN_GAME
+    dec     a
     jr      z, EmptyLoop
     ; GAME_STATE_IN_GAME
     dec     a
