@@ -33,7 +33,9 @@ clean:
 	rm -rf $(DEPDIR)
 	rm -rf $(RESDIR)
 
-rebuild: clean all
+rebuild:
+	$(MAKE) clean
+	$(MAKE) all
 
 # Build the ROM, along with map and symbol files
 $(BINDIR)/%.$(ROMEXT) $(BINDIR)/%.sym $(BINDIR)/%.map: $(GFX) $(patsubst $(SRCDIR)/%.asm,$(OBJDIR)/%.o,$(SRCS))
