@@ -53,7 +53,7 @@ SetUpGame::
     dec     a           ; a = $FF
     ldh     [hPlayerInvCountdown], a
     
-    ld      a, STARTING_TARGET_COOKIE_COUNT
+    ld      a, START_TARGET_COOKIE_COUNT
     ldh     [hTargetCookieCount], a
     ld      a, PLAYER_START_LIVES
     ldh     [hPlayerLives], a
@@ -96,7 +96,7 @@ InGame::
     ccf
     ld      a, 0    ; Preserve carry
     adc     a, b
-    add     a, STARTING_TARGET_COOKIE_COUNT
+    add     a, START_TARGET_COOKIE_COUNT
     cp      a, MAX_COOKIE_COUNT + 1
     jr      c, :+   ; a <= MAX_COOKIE_COUNT
     ld      a, MAX_COOKIE_COUNT
