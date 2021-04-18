@@ -23,7 +23,7 @@ ShootMissile::
 
 ; Update missiles' positions
 UpdateMissiles::
-    ASSERT HIGH(wMissileTable.end) != HIGH(wMissileTable)
+    ASSERT HIGH(wMissileTable.end - 1) != HIGH(wMissileTable)
     ld      hl, wMissileTable
     ld      b, MAX_MISSILE_COUNT
 .loop
@@ -79,6 +79,7 @@ CheckMissileCollide:
     push    hl
     
     call    PointHLToCookieHitbox
+    ASSERT HIGH(CookieHitboxTable.end - 1) == HIGH(CookieHitboxTable)
     
     ld      a, b        ; cookie.y
     add     a, [hl]     ; cookie.hitbox.y

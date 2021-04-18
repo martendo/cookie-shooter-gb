@@ -149,6 +149,7 @@ CreateCookie::
 
 ; Update cookies' positions
 UpdateCookies::
+    ASSERT HIGH(wCookieTable.end - 1) == HIGH(wCookieTable)
     ld      hl, wCookieTable
     ld      b, MAX_COOKIE_COUNT
 .loop
@@ -258,6 +259,7 @@ UpdateCookies::
     
     push    hl
     call    PointHLToCookieHitbox
+    ASSERT HIGH(CookieHitboxTable.end - 1) == HIGH(CookieHitboxTable)
     ld      a, e
     inc     l
     inc     l
