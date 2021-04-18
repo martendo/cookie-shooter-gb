@@ -1,6 +1,8 @@
 SRCDIR := code
 GFXDIR := gfx
 BINDIR := bin
+OBJDIR := obj
+DEPDIR := dep
 RESDIR := res
 
 ROM = $(BINDIR)/$(ROMNAME).$(ROMEXT)
@@ -25,20 +27,22 @@ all: $(ROM)
 
 clean:
 	rm -rf $(BINDIR)
+	rm -rf $(OBJDIR)
+	rm -rf $(DEPDIR)
 	rm -rf $(RESDIR)
 
 rebuild: clean all
 
 # Build the ROM, along with map and symbol files
-$(BINDIR)/%.$(ROMEXT) $(BINDIR)/%.sym $(BINDIR)/%.map: $(GFX) $(patsubst $(SRCDIR)/%.asm,$(BINDIR)/%.o,$(SRCS))
+$(BINDIR)/%.$(ROMEXT) $(BINDIR)/%.sym $(BINDIR)/%.map: $(GFX) $(patsubst $(SRCDIR)/%.asm,$(OBJDIR)/%.o,$(SRCS))
 	@mkdir -p $(@D)
-	rgblink $(LDFLAGS) -m $(BINDIR)/$*.map -n $(BINDIR)/$*.sym -o $(BINDIR)/$*.$(ROMEXT) $(patsubst $(SRCDIR)/%.asm,$(BINDIR)/%.o,$(SRCS))
+	rgblink $(LDFLAGS) -m $(BINDIR)/$*.map -n $(BINDIR)/$*.sym -o $(BINDIR)/$*.$(ROMEXT) $(patsubst $(SRCDIR)/%.asm,$(OBJDIR)/%.o,$(SRCS))
 	rgbfix $(FIXFLAGS) $(BINDIR)/$*.$(ROMEXT)
 
-# Assemble an assembly file
-$(BINDIR)/%.o: $(SRCDIR)/%.asm
-	@mkdir -p $(@D)
-	rgbasm $(ASFLAGS) -o $(BINDIR)/$*.o $<
+# Assemble an assembly file, save dependencies
+$(OBJDIR)/%.o $(DEPDIR)/%.mk: $(GFX) $(SRCDIR)/%.asm
+	@mkdir -p $(OBJDIR) $(DEPDIR)
+	rgbasm $(ASFLAGS) -M $(DEPDIR)/$*.mk -MG -MP -MQ $(OBJDIR)/$*.o -MQ $(DEPDIR)/$*.mk -o $(OBJDIR)/$*.o $(SRCDIR)/$*.asm
 
 # Graphics conversion
 $(RESDIR)/sprite-tiles.2bpp: $(GFXDIR)/sprite-tiles.png
@@ -59,3 +63,7 @@ $(RESDIR)/title-screen.tilemap: $(GFXDIR)/title-screen.png $(RESDIR)/title-scree
 $(RESDIR)/%.tilemap: $(GFXDIR)/%.png $(RESDIR)/bg-tiles.2bpp $(RESDIR)/bg-tiles.pal.json
 	@mkdir -p $(@D)
 	superfamiconv map -M gb -B 2 -F -i $< -t $(RESDIR)/bg-tiles.2bpp -p $(RESDIR)/bg-tiles.pal.json -d $@
+
+ifneq ($(MAKECMDGOALS),clean)
+-include $(patsubst $(SRCDIR)/%.asm,$(DEPDIR)/%.mk,$(SRCS))
+endif

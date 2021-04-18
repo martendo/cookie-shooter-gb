@@ -1,3 +1,5 @@
 # Built output files
 /bin/
+/obj/
+/dep/
 /res/
