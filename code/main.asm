@@ -58,15 +58,7 @@ EntryPoint::
     ld      a, IEF_VBLANK | IEF_LCDC
     ldh     [rIE], a
     
-    ;           +-------- LCD on/off
-    ;           |+------- Window tilemap - 0: $9800; 1: $9C00
-    ;           ||+------ Window on/off
-    ;           |||+----- BG tile data   - 0: $9000; 1: $8000
-    ;           ||||+---- BG tilemap     - 0: $9800; 1: $9C00
-    ;           |||||+--- OBJ size       - 0: 8x8;   1: 8x16
-    ;           ||||||+-- OBJ on/off
-    ;           |||||||+- BG Priority on/off
-    ld      a, %11000111
+    ld      a, LCDCF_ON | LCDCF_WINOFF | LCDCF_BG8800 | LCDCF_BG9800 | LCDCF_OBJ16 | LCDCF_OBJON | LCDCF_BGON
     ldh     [rLCDC], a
     
     ei
