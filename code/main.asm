@@ -25,15 +25,6 @@ EntryPoint::
     ld      hl, _VRAM8000
     ld      bc, SpriteTiles.end - SpriteTiles
     call    Memcopy
-    ; Background tiles
-    ld      hl, _VRAM9000
-    ld      de, BackgroundTiles
-    ld      bc, BackgroundTiles.end - BackgroundTiles
-    call    Memcopy
-    ld      hl, _VRAM8800
-    ld      de, TitleScreenTiles
-    ld      bc, TitleScreenTiles.end - TitleScreenTiles
-    call    Memcopy
     
     ; Copy OAM DMA routine to HRAM
     ld      de, OAMDMA

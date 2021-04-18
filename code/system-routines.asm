@@ -26,6 +26,24 @@ MemcopySmall::
     jr      nz, MemcopySmall
     ret
 
+; Copy a block of memory from one place to another, even if the LCD is
+; on
+; @param de Pointer to beginning of block to copy
+; @param hl Pointer to destination
+; @param bc Number of bytes to copy
+LCDMemcopy::
+    ldh     a, [rSTAT]
+    and     a, STATF_BUSY
+    jr      nz, LCDMemcopy
+    ld      a, [de]
+    ld      [hli], a
+    inc     de
+    dec     bc
+    ld      a, c
+    or      a, b
+    jr      nz, LCDMemcopy
+    ret
+
 ; Copy an arbitrary number of rows of map data to the visible background
 ; map, even if the LCD is on
 ; @param de Pointer to map data

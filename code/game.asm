@@ -3,6 +3,12 @@ INCLUDE "defines.inc"
 SECTION "In-Game Code", ROM0
 
 SetUpGame::
+    ; Tiles
+    ld      de, InGameTiles
+    ld      hl, _VRAM9000
+    ld      bc, InGameTiles.end - InGameTiles
+    call    LCDMemcopy
+.skipTiles::
     ; Background map
     ld      hl, _SCRN0 + (STATUS_BAR_TILE_HEIGHT * SCRN_VX_B)
     ld      b, 0
@@ -17,8 +23,8 @@ SetUpGame::
     dec     d
     jr      nz, :-
     ; Status bar
-    ld      hl, _SCRN0
     ld      de, StatusBarMap
+    ld      hl, _SCRN0
     ld      c, STATUS_BAR_TILE_HEIGHT
     call    LCDMemcopyMap
     
