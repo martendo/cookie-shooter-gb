@@ -148,7 +148,6 @@ hScore::
 .0:: DS 1
 .1:: DS 1
 .2:: DS 1
-.3:: DS 1
 .end::
 
 hCookiesBlasted::

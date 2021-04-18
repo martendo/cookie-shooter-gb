@@ -47,7 +47,6 @@ SetUpGame::
     ld      [hli], a
     ld      [hli], a
     ld      [hli], a
-    ld      [hli], a
     ASSERT hScore.end == hCookiesBlasted
     ld      [hli], a
     ld      [hli], a
@@ -85,11 +84,28 @@ InGame::
     bit     PADB_A, a
     call    nz, ShootMissile
     
-    ; Cookie count is too low, create a new cookie
-    ldh     a, [hTargetCookieCount]
+    ; Update target cookie count based on score
+    ld      hl, hScore.2
+    ld      a, [hld]
+    ASSERT 10000 / ADD_COOKIE_RATE == 2
+    add     a, a
     ld      b, a
+    ld      a, [hl] ; hScore.1
+    ASSERT ADD_COOKIE_RATE / 1000 < 10 && ADD_COOKIE_RATE / 1000 >= 0
+    cp      a, (ADD_COOKIE_RATE / 1000) << 4
+    ccf
+    ld      a, 0    ; Preserve carry
+    adc     a, b
+    add     a, STARTING_TARGET_COOKIE_COUNT
+    cp      a, MAX_COOKIE_COUNT + 1
+    jr      c, :+   ; a <= MAX_COOKIE_COUNT
+    ld      a, MAX_COOKIE_COUNT
+:
+    ld      l, LOW(hTargetCookieCount)
+    ld      [hl], a
+    ; Cookie count is too low, create a new cookie
     ldh     a, [hCookieCount]
-    cp      a, b
+    cp      a, [hl]
     call    c, CreateCookie
     
     ; Update player invincibility

@@ -110,7 +110,6 @@ CheckMissileCollide:
     ; Missile and cookie are colliding!
     pop     hl
     xor     a, a
-    ld      d, a        ; d = 0
     ld      [hl], a     ; Destroy cookie (Y=0)
     
     call    GetCookieSize
@@ -128,24 +127,19 @@ CheckMissileCollide:
     
     ; Add points to score
     ld      l, LOW(hScore)
-    ld      a, c
-    add     a, [hl]
+    ld      a, [hl]
+    add     a, c
     daa
     ld      [hli], a
-    ld      a, b
-    adc     a, [hl]
+    
+    ld      a, [hl]
+    adc     a, b
     daa
     ld      [hli], a
     jr      nc, .doneScore
     
     ld      a, [hl]
-    adc     a, d        ; d = 0
-    daa
-    ld      [hli], a
-    jr      nc, .doneScore
-    
-    ld      a, [hl]
-    adc     a, d
+    adc     a, 0
     daa
     ld      [hl], a
     
