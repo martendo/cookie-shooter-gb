@@ -91,9 +91,35 @@ STATHandler:
     ldh     a, [rSTAT]
     and     a, %11      ; Mode 0 - HBlank
     jr      nz, .waitHBL
-    ; Enable objects - end of status bar
+    
     ld      hl, rLCDC
+    ldh     a, [rLY]
+    cp      a, STATUS_BAR_HEIGHT - 1
+    jr      z, .endOfStatusBar
+    cp      a, PAUSED_STRIP_Y - 1
+    jr      z, .startOfPausedStrip
+    
+    ; End of "paused" strip
+    ld      a, STATUS_BAR_HEIGHT - 1
+    ldh     [rLYC], a
+    jr      .enableObj
+.endOfStatusBar
+    ldh     a, [hGameState]
+    cp      a, GAME_STATE_PAUSED
+    jr      nz, .enableObj
+    ; Game is paused, set rLYC for "paused" strip
+    ld      a, PAUSED_STRIP_Y - 1
+    ldh     [rLYC], a
+.enableObj
+    ; Enable objects - end of status bar or "paused" strip
     set     1, [hl]
+    jr      .finished
+.startOfPausedStrip
+    ld      a, PAUSED_STRIP_Y + PAUSED_STRIP_HEIGHT - 1
+    ldh     [rLYC], a
+    ; Disable objects - start of "paused" strip
+    res     1, [hl]
+.finished
     pop     hl
     pop     af
     reti

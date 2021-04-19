@@ -16,7 +16,8 @@ FIXFLAGS = -v -p $(PADVALUE) -i "$(MFRCODE)" -k "$(LICENSEE)" -l $(OLDLIC) -m $(
 GFXFLAGS = -hu -f
 
 SRCS = $(wildcard $(SRCDIR)/*.asm)
-GFX = $(RESDIR)/sprite-tiles.2bpp $(RESDIR)/in-game-tiles.2bpp $(RESDIR)/status-bar.tilemap $(RESDIR)/game-over.2bpp $(RESDIR)/game-over-numbers.2bpp $(RESDIR)/game-over.tilemap $(RESDIR)/title-screen.2bpp $(RESDIR)/title-screen.tilemap
+GFX = $(RESDIR)/sprite-tiles.2bpp $(RESDIR)/in-game-tiles.2bpp $(RESDIR)/game-over.2bpp $(RESDIR)/game-over-numbers.2bpp $(RESDIR)/game-over.tilemap $(RESDIR)/title-screen.2bpp $(RESDIR)/title-screen.tilemap $(IN_GAME_SUBMAPS)
+IN_GAME_SUBMAPS = $(RESDIR)/status-bar.tilemap $(RESDIR)/paused-strip.tilemap
 
 # Project configuration
 include project.mk
@@ -60,7 +61,7 @@ $(RESDIR)/%.2bpp: $(GFXDIR)/%.png $(RESDIR)/%.pal.json
 	@mkdir -p $(@D)
 	superfamiconv tiles -M gb -B 2 -R -F -T 256 -i $< -p $(RESDIR)/$*.pal.json -d $@
 
-$(RESDIR)/status-bar.tilemap: $(GFXDIR)/status-bar.png $(RESDIR)/in-game-tiles.2bpp $(RESDIR)/in-game-tiles.pal.json
+$(IN_GAME_SUBMAPS): $(RESDIR)/%.tilemap: $(GFXDIR)/%.png $(RESDIR)/in-game-tiles.2bpp $(RESDIR)/in-game-tiles.pal.json
 	@mkdir -p $(@D)
 	superfamiconv map -M gb -B 2 -F -i $< -t $(RESDIR)/in-game-tiles.2bpp -p $(RESDIR)/in-game-tiles.pal.json -d $@
 

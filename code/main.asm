@@ -120,6 +120,9 @@ Main::
     ; GAME_STATE_GAME_OVER
     dec     a
     jp      z, GameOver
+    ; GAME_STATE_PAUSED
+    dec     a
+    jp      z, Paused
 
 EmptyLoop:
     call    HaltVBlank

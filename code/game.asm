@@ -11,7 +11,7 @@ SetUpGame::
 .skipTiles::
     ; Background map
     ld      hl, _SCRN0 + (STATUS_BAR_TILE_HEIGHT * SCRN_VX_B)
-    ld      b, 0
+    ld      b, IN_GAME_BACKGROUND_TILE
     lb      de, SCRN_Y_B - STATUS_BAR_TILE_HEIGHT, SCRN_VX_B - SCRN_X_B
 :
     ld      c, SCRN_X_B
@@ -91,6 +91,19 @@ InGame::
     jp      Main
     
 .notWaiting
+    ; Pause the game
+    ldh     a, [hNewKeys]
+    bit     PADB_START, a
+    jr      z, :+
+    
+    ; Don't immediately resume the game
+    res     PADB_START, a
+    ldh     [hNewKeys], a
+    
+    call    PauseGame
+    jp      Main
+    
+:
     ; Player movement
     ldh     a, [hPressedKeys]
     bit     PADB_LEFT, a
