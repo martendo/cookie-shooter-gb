@@ -106,22 +106,17 @@ EntryPoint::
     ei
 
 Main::
+    ldh     a, [hFadeState]
+    inc     a               ; a = $FF
+    jr      nz, EmptyLoop   ; Currently fading
+    
     ldh     a, [hGameState]
     ; GAME_STATE_TITLE_SCREEN
     and     a, a
     jp      z, TitleScreen
-    ; GAME_STATE_FADE_IN_GAME
-    dec     a
-    jr      z, EmptyLoop
-    ; GAME_STATE_WAIT
-    dec     a
-    jr      z, Wait
     ; GAME_STATE_IN_GAME
     dec     a
     jp      z, InGame
-    ; GAME_STATE_FADE_GAME_OVER
-    dec     a
-    jr      z, EmptyLoop
     ; GAME_STATE_GAME_OVER
     dec     a
     jp      z, GameOver
@@ -138,22 +133,6 @@ HaltVBlank::
     xor     a, a
     ldh     [hVBlankFlag], a
     ret
-
-Wait:
-    xor     a, a
-    call    DrawHearts
-    
-    ld      hl, hWaitCountdown
-    dec     [hl]
-    jr      nz, :+
-    
-    ld      l, LOW(hGameState)
-    inc     [hl]
-    jr      Main
-    
-:
-    call    HaltVBlank
-    jr      Main
 
 SECTION "Shadow OAM", WRAM0, ALIGN[8]
 

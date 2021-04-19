@@ -72,11 +72,25 @@ SetUpGame::
     ld      b, MAX_COOKIE_COUNT
     call    ClearActors
     
+    ; a = 0
+    call    DrawHearts
+    
     ld      a, GAME_START_DELAY_FRAMES
     ldh     [hWaitCountdown], a
     ret
 
 InGame::
+    ; Wait before starting the game
+    ldh     a, [hWaitCountdown]
+    and     a, a
+    jr      z, .notWaiting
+    
+    dec     a
+    ldh     [hWaitCountdown], a
+    call    HaltVBlank
+    jp      Main
+    
+.notWaiting
     ; Player movement
     ldh     a, [hPressedKeys]
     bit     PADB_LEFT, a
@@ -145,9 +159,6 @@ InGame::
     and     a, a
     jr      nz, :+
     
-    ld      hl, hGameState
-    ASSERT GAME_STATE_FADE_GAME_OVER == GAME_STATE_IN_GAME + 1
-    inc     [hl]
     ld      hl, LoadGameOverScreen
     call    StartFade
     jp      Main

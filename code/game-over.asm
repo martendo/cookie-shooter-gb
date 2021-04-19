@@ -112,8 +112,10 @@ GameOver::
     and     a, PADF_A | PADF_START
     jr      z, :+
     
-    ld      a, GAME_STATE_FADE_IN_GAME
+    ; Reset game, as if coming from the title screen
+    ld      a, GAME_STATE_TITLE_SCREEN
     ldh     [hGameState], a
+    
     ld      hl, SetUpGame.skipTiles
     call    StartFade
     jp      Main

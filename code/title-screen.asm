@@ -23,8 +23,6 @@ TitleScreen::
     and     a, PADF_A | PADF_START
     jr      z, :+
     
-    ld      hl, hGameState
-    inc     [hl]
     ld      hl, SetUpGame
     call    StartFade
     jp      Main
