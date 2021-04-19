@@ -1,6 +1,6 @@
 INCLUDE "defines.inc"
 
-SECTION "Missile Table", WRAM0
+SECTION "Missile Table", WRAM0, ALIGN[8]
 
 wMissileTable::
     DS MAX_MISSILE_COUNT * ACTOR_SIZE
@@ -23,7 +23,6 @@ ShootMissile::
 
 ; Update missiles' positions
 UpdateMissiles::
-    ASSERT HIGH(wMissileTable.end - 1) != HIGH(wMissileTable)
     ld      hl, wMissileTable
     ld      b, MAX_MISSILE_COUNT
 .loop
@@ -31,8 +30,8 @@ UpdateMissiles::
     and     a, a
     jr      nz, .update
     ; No missile, skip
-    inc     hl
-    inc     hl
+    inc     l
+    inc     l
     jr      .next
     
 .update
@@ -47,7 +46,7 @@ UpdateMissiles::
     ld      [hli], a
     jr      nz, CheckMissileCollide
 .resume
-    inc     hl          ; Leave X as-is
+    inc     l           ; Leave X as-is
 .next
     dec     b
     jr      nz, .loop
@@ -79,7 +78,6 @@ CheckMissileCollide:
     push    hl
     
     call    PointHLToCookieHitbox
-    ASSERT HIGH(CookieHitboxTable.end - 1) == HIGH(CookieHitboxTable)
     
     ld      a, b        ; cookie.y
     add     a, [hl]     ; cookie.hitbox.y
@@ -177,6 +175,6 @@ CheckMissileCollide:
     jr      nz, .loop
     
     pop     hl
-    inc     hl
+    inc     l
     pop     bc
     jp      UpdateMissiles.resume

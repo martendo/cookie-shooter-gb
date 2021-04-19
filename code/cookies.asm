@@ -1,16 +1,29 @@
 INCLUDE "defines.inc"
 
-SECTION "Cookie Tables", WRAM0
+SECTION "Cookie Table", WRAM0, ALIGN[8]
 
 wCookieTable::
     DS MAX_COOKIE_COUNT * ACTOR_SIZE
 .end::
+
+DS $100 - (MAX_COOKIE_COUNT * ACTOR_SIZE)
+
 wCookieSpeedTable:
     DS MAX_COOKIE_COUNT * ACTOR_SIZE
+
+DS $100 - (MAX_COOKIE_COUNT * ACTOR_SIZE)
+
 wCookieSpeedAccTable:
     DS MAX_COOKIE_COUNT * ACTOR_SIZE
+
+DS $100 - (MAX_COOKIE_COUNT * ACTOR_SIZE)
+
 wCookieSizeTable::
     DS MAX_COOKIE_COUNT
+
+ASSERT wCookieSpeedTable == wCookieTable + (1 << 8)
+ASSERT wCookieSpeedAccTable == wCookieSpeedTable + (1 << 8)
+ASSERT wCookieSizeTable == wCookieSpeedAccTable + (1 << 8)
 
 SECTION "Cookie Variables", HRAM
 
@@ -51,12 +64,7 @@ SECTION "Cookie Code", ROM0
 ; @param hl Pointer to the cookie's entry in wCookieTable
 ; @return a  Cookie size type (see COOKIE_SIZE_* constants)
 GetCookieSize::
-    ld      a, l
-    sub     a, LOW(wCookieTable)
-    srl     a           ; wCookieTable entry = 2 bytes, wCookieSizeTable entry = 1 byte
-    add     a, LOW(wCookieSizeTable)
-    ld      l, a
-    ASSERT HIGH(wCookieSizeTable) == HIGH(wCookieSizeTable + MAX_COOKIE_COUNT - 1)
+    srl     l           ; wCookieTable entry = 2 bytes, wCookieSizeTable entry = 1 byte
     ld      h, HIGH(wCookieSizeTable)
     ld      a, [hl]     ; a = cookie size
     ret
@@ -95,8 +103,7 @@ CreateCookie::
     ld      [hld], a    ; X position
     ld      [hl], COOKIE_START_Y ; Y position
     
-    ld      bc, MAX_COOKIE_COUNT * ACTOR_SIZE
-    add     hl, bc      ; wCookieSpeedTable
+    inc     h           ; wCookieSpeedTable
     call    GetRandomNumber
     and     a, COOKIE_SPEED_Y_MASK
     add     a, COOKIE_MIN_SPEED_Y
@@ -126,16 +133,13 @@ CreateCookie::
     swap    a
     ld      [hld], a
     
-    add     hl, bc      ; wCookieSpeedAccTable
+    inc     h           ; wCookieSpeedAccTable
     xor     a, a
     ld      [hli], a
     ld      [hld], a
     
-    ld      bc, -wCookieSpeedAccTable & $FFFF
-    add     hl, bc
     srl     l           ; wCookieSpeedAccTable entry = 2 bytes, wCookieSizeTable entry = 1 byte
-    ld      bc, wCookieSizeTable
-    add     hl, bc
+    inc     h           ; wCookieSizeTable
     call    GetRandomNumber
     and     a, COOKIE_SIZE_MASK
     ASSERT COOKIE_SIZE_MASK != COOKIE_SIZE_COUNT - 1
@@ -149,7 +153,6 @@ CreateCookie::
 
 ; Update cookies' positions
 UpdateCookies::
-    ASSERT HIGH(wCookieTable.end - 1) == HIGH(wCookieTable)
     ld      hl, wCookieTable
     ld      b, MAX_COOKIE_COUNT
 .loop
@@ -162,32 +165,24 @@ UpdateCookies::
     jp      .next
     
 .update
-    ld      a, l
-    add     a, MAX_COOKIE_COUNT * ACTOR_SIZE
-    ld      e, a
-    adc     a, h
-    sub     e
-    ld      d, a
+    ld      e, l
+    ld      d, h
+    inc     d           ; wCookieSpeedTable
     
     ; Y position
     ld      a, [de]     ; Y speed
     ld      c, a        ; Save speed in c
     
-    push    hl
-    
-    ld      a, e
-    add     a, MAX_COOKIE_COUNT * ACTOR_SIZE
-    ld      l, a
-    adc     a, d
-    sub     a, l
-    ld      h, a
+    inc     h
+    inc     h           ; wCookieSpeedAccTable
     
     ld      a, c        ; Get Y speed
     and     a, $F0      ; Get fractional part
     add     a, [hl]
     ld      [hl], a
     
-    pop     hl
+    dec     h
+    dec     h           ; wCookieTable
     
     ld      a, c        ; Get Y speed again
     rr      c           ; Save carry from fractional part in c
@@ -204,27 +199,22 @@ UpdateCookies::
     jr      .destroy
 .onscreenY
     ld      [hli], a
-    inc     e
     
     ; X position
+    inc     e
     ld      a, [de]     ; X speed
     ld      c, a        ; Save speed in c
     
-    push    hl
-    
-    ld      a, e
-    add     a, MAX_COOKIE_COUNT * ACTOR_SIZE
-    ld      l, a
-    adc     a, d
-    sub     a, l
-    ld      h, a
+    inc     h
+    inc     h           ; wCookieSpeedAccTable
     
     ld      a, c        ; Get X speed
     and     a, $F0      ; Get fractional part
     add     a, [hl]
     ld      [hl], a
     
-    pop     hl
+    dec     h
+    dec     h           ; wCookieTable
     
     ld      a, c        ; Get X speed again
     rr      c           ; Save carry from fractional part in c

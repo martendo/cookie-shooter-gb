@@ -34,8 +34,7 @@ ClearActors::
     xor     a, a
 .loop
     ld      [hli], a
-    ASSERT HIGH(wMissileTable.end - 1) != HIGH(wMissileTable) || HIGH(wCookieTable.end - 1) != HIGH(wCookieTable)
-    inc     hl
+    inc     l
     dec     b
     jr      nz, .loop
     ret
@@ -45,12 +44,11 @@ ClearActors::
 ; @param  b  Maximum number of actors
 ; @return cf Set if no empty slot was found, otherwise reset
 FindEmptyActorSlot::
-    ASSERT HIGH(wMissileTable.end - 1) != HIGH(wMissileTable) || HIGH(wCookieTable.end - 1) != HIGH(wCookieTable)
     ld      a, [hli]    ; If Y is 0, slot is empty
-    and     a, a
+    and     a, a        ; Clears carry
     ret     z
     
-    inc     hl
+    inc     l
     dec     b
     jr      nz, FindEmptyActorSlot
     ; No more slots
@@ -60,30 +58,29 @@ FindEmptyActorSlot::
 ; Make objects with actor data and put them in OAM
 ; @param de Pointer to actor data
 CopyActorsToOAM::
-    ld      h, HIGH(wOAM)
     ldh     a, [hNextAvailableOAMSlot]
     ld      c, a
     add     a, a
     add     a, a        ; * sizeof_OAM_ATTRS
     ld      l, a
+    ld      h, HIGH(wOAM)
     
-    ld      a, e
-    cp      a, LOW(wCookieTable)
+    ld      a, d
+    cp      a, HIGH(wCookieTable)
     jr      z, CopyCookiesToOAM
     ; Fallthrough
 
 CopyMissilesToOAM:
-    ASSERT HIGH(wMissileTable.end - 1) != HIGH(wMissileTable)
     ld      b, MAX_MISSILE_COUNT
 .loop
     ld      a, [de]     ; Y position
     and     a, a        ; No missile, skip
     jr      z, .skip
     ld      [hli], a
-    inc     de
+    inc     e
     ld      a, [de]     ; X position
     ld      [hli], a
-    inc     de
+    inc     e
     ld      [hl], MISSILE_TILE
     inc     l
     ld      [hl], 0
@@ -91,8 +88,8 @@ CopyMissilesToOAM:
     inc     c
     jr      .next
 .skip
-    inc     de
-    inc     de
+    inc     e
+    inc     e
 .next
     dec     b
     jr      nz, .loop
@@ -100,7 +97,6 @@ CopyMissilesToOAM:
     jr      EndCopyActors
 
 CopyCookiesToOAM:
-    ASSERT HIGH(wCookieTable.end - 1) == HIGH(wCookieTable)
     ld      b, MAX_COOKIE_COUNT
 .loop
     ld      a, [de]     ; Y position
