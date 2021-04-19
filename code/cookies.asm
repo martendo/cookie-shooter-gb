@@ -1,6 +1,6 @@
 INCLUDE "defines.inc"
 
-SECTION "Cookie Table", WRAM0, ALIGN[8]
+SECTION "Cookie Tables", WRAM0, ALIGN[8]
 
 wCookiePosTable::
     DS MAX_COOKIE_COUNT * ACTOR_SIZE
