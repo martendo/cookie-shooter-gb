@@ -73,7 +73,7 @@ LoadGameOverScreen::
     ; d unchanged
     ld      e, LOW(sHighScore.end - 1)
 .drawHighScore
-    ld      hl, GAME_OVER_HIGH_SCORE_ADDR
+    ld      hl, vHighScore
     ld      c, sHighScore.end - sHighScore
 .drawHighScoreLoop
     ldh     a, [rSTAT]

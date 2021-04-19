@@ -27,11 +27,11 @@ VBlankHandler:
     jr      c, .noStatusBar
     ; Update score and cookies blasted
     ld      de, hCookiesBlasted.end - 1
-    ld      hl, COOKIES_BLASTED_ADDR
+    ld      hl, vCookiesBlasted
     ld      c, hCookiesBlasted.end - hCookiesBlasted
     call    DrawBCD
     ASSERT hScore.end == hCookiesBlasted
-    ld      hl, SCORE_ADDR
+    ld      hl, vScore
     ld      c, hScore.end - hScore
     call    DrawBCD
 .noStatusBar

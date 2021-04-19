@@ -7,7 +7,7 @@ PauseGame::
     ldh     [hGameState], a
     
     ld      de, PausedStripMap
-    ld      hl, PAUSED_STRIP_ADDR
+    ld      hl, vPausedStrip
     ld      bc, SCRN_X_B
     jr      LCDMemcopy
 
@@ -23,7 +23,7 @@ Paused::
     ld      a, GAME_STATE_IN_GAME
     ldh     [hGameState], a
     
-    ld      hl, PAUSED_STRIP_ADDR
+    ld      hl, vPausedStrip
     lb      bc, IN_GAME_BACKGROUND_TILE, SCRN_X_B
     call    LCDMemsetSmall
     jp      Main
