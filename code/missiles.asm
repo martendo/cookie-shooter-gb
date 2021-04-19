@@ -146,15 +146,13 @@ CheckMissileCollide:
     ; Increment cookies blasted counter
     ld      l, LOW(hCookiesBlasted.lo)
     ld      a, [hl]
-    and     a, a        ; Clear carry flag
-    inc     a
+    add     a, 1        ; `inc` does not affect carry flag
     daa
     ld      [hli], a
     jr      nc, .finished
     
     ld      a, [hl]     ; hCookiesBlasted.hi
-    and     a, a        ; Clear carry flag
-    inc     a
+    add     a, 1
     daa
     ld      [hli], a
     
