@@ -16,7 +16,7 @@ FIXFLAGS = -v -p $(PADVALUE) -i "$(MFRCODE)" -k "$(LICENSEE)" -l $(OLDLIC) -m $(
 GFXFLAGS = -hu -f
 
 SRCS = $(wildcard $(SRCDIR)/*.asm)
-GFX = $(RESDIR)/sprite-tiles.2bpp $(RESDIR)/in-game-tiles.2bpp $(RESDIR)/status-bar.tilemap $(RESDIR)/game-over.2bpp $(RESDIR)/game-over.tilemap $(RESDIR)/title-screen.2bpp $(RESDIR)/title-screen.tilemap
+GFX = $(RESDIR)/sprite-tiles.2bpp $(RESDIR)/in-game-tiles.2bpp $(RESDIR)/status-bar.tilemap $(RESDIR)/game-over.2bpp $(RESDIR)/game-over-numbers.2bpp $(RESDIR)/game-over.tilemap $(RESDIR)/title-screen.2bpp $(RESDIR)/title-screen.tilemap
 
 # Project configuration
 include project.mk

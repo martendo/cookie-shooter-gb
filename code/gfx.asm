@@ -23,6 +23,8 @@ INCBIN "res/title-screen.tilemap"
 
 GameOverTiles::
 INCBIN "res/game-over.2bpp"
+.numberTiles::
+INCBIN "res/game-over-numbers.2bpp"
 .end::
 GameOverMap::
 INCBIN "res/game-over.tilemap"

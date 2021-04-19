@@ -39,6 +39,48 @@ EntryPoint::
     dec     a   ; a = $FF
     ldh     [hFadeState], a ; Not fading
     
+    ; Check save data header
+    ld      a, CART_SRAM_ENABLE
+    ld      [rRAMG], a
+    ld      hl, sSaveDataHeader
+    ld      de, SaveDataHeader
+    ld      b, STRLEN(SAVE_DATA_HEADER)
+    ASSERT HIGH(sSaveDataHeader) == HIGH(sSaveDataHeader.end)
+    ASSERT HIGH(SaveDataHeader) == HIGH(SaveDataHeader.end)
+.checkSaveDataHeaderLoop
+    ld      a, [de]
+    cp      a, [hl]
+    jr      nz, .initSRAM
+    inc     e
+    inc     l
+    dec     b
+    jr      nz, .checkSaveDataHeaderLoop
+    
+    ; Save header is correct
+    jr      :+
+    
+.initSRAM
+    ; Write save data header
+    ld      l, LOW(sSaveDataHeader)
+    ld      e, LOW(SaveDataHeader)
+    ld      b, STRLEN(SAVE_DATA_HEADER)
+.writeSaveDataHeaderLoop
+    ld      a, [de]
+    ld      [hli], a
+    inc     e
+    dec     b
+    jr      nz, .writeSaveDataHeaderLoop
+    ; Clear high score
+    xor     a, a
+    ASSERT sHighScore == sSaveDataHeader.end
+    ld      [hli], a
+    ld      [hli], a
+    ld      [hli], a
+    
+:
+    xor     a, a    ; CART_SRAM_DISABLE
+    ld      [rRAMG], a
+    
     ; Set palettes
     ld      a, %11100100
     ldh     [rBGP], a
@@ -156,3 +198,21 @@ SECTION "OAM DMA", HRAM
 
 hOAMDMA::
     DS OAMDMA.end - OAMDMA
+
+SECTION "Save Data Header", ROM0
+
+SaveDataHeader:
+    DB SAVE_DATA_HEADER
+.end
+
+SECTION "Save Data", SRAM
+
+sSaveDataHeader:
+    DS STRLEN(SAVE_DATA_HEADER)
+.end
+
+sHighScore::
+.0:: DS 1
+.1:: DS 1
+.2:: DS 1
+.end::
