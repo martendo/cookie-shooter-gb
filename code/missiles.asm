@@ -2,14 +2,14 @@ INCLUDE "defines.inc"
 
 SECTION "Missile Table", WRAM0, ALIGN[8]
 
-wMissileTable::
+wMissilePosTable::
     DS MAX_MISSILE_COUNT * ACTOR_SIZE
 .end::
 
 SECTION "Missile Code", ROM0
 
 ShootMissile::
-    ld      hl, wMissileTable
+    ld      hl, wMissilePosTable
     ld      b, MAX_MISSILE_COUNT
     call    FindEmptyActorSlot
     ret     c           ; No empty slots
@@ -23,7 +23,7 @@ ShootMissile::
 
 ; Update missiles' positions
 UpdateMissiles::
-    ld      hl, wMissileTable
+    ld      hl, wMissilePosTable
     ld      b, MAX_MISSILE_COUNT
 .loop
     ld      a, [hl]
@@ -65,7 +65,7 @@ CheckMissileCollide:
     add     a, MISSILE_HITBOX_X
     ld      e, a        ; e = missile.hitbox.left
     
-    ld      hl, wCookieTable
+    ld      hl, wCookiePosTable
     ld      c, MAX_COOKIE_COUNT
 .loop
     ld      a, [hli]

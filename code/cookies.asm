@@ -2,7 +2,7 @@ INCLUDE "defines.inc"
 
 SECTION "Cookie Table", WRAM0, ALIGN[8]
 
-wCookieTable::
+wCookiePosTable::
     DS MAX_COOKIE_COUNT * ACTOR_SIZE
 .end::
 
@@ -21,7 +21,7 @@ DS $100 - (MAX_COOKIE_COUNT * ACTOR_SIZE)
 wCookieSizeTable::
     DS MAX_COOKIE_COUNT
 
-ASSERT wCookieSpeedTable == wCookieTable + (1 << 8)
+ASSERT wCookieSpeedTable == wCookiePosTable + (1 << 8)
 ASSERT wCookieSpeedAccTable == wCookieSpeedTable + (1 << 8)
 ASSERT wCookieSizeTable == wCookieSpeedAccTable + (1 << 8)
 
@@ -60,18 +60,18 @@ CookiePointsTable::
 
 SECTION "Cookie Code", ROM0
 
-; Get a cookie's size using its position in wCookieTable
-; @param hl Pointer to the cookie's entry in wCookieTable
+; Get a cookie's size using its position in wCookiePosTable
+; @param hl Pointer to the cookie's entry in wCookiePosTable
 ; @return a  Cookie size type (see COOKIE_SIZE_* constants)
 GetCookieSize::
-    srl     l           ; wCookieTable entry = 2 bytes, wCookieSizeTable entry = 1 byte
+    srl     l           ; wCookiePosTable entry = 2 bytes, wCookieSizeTable entry = 1 byte
     ld      h, HIGH(wCookieSizeTable)
     ld      a, [hl]     ; a = cookie size
     ret
 
 ; Get a pointer to the dimensions of a certain cookie's hitbox based on
-; its size using its position in wCookieTable
-; @param hl Pointer to the cookie's entry in wCookieTable
+; its size using its position in wCookiePosTable
+; @param hl Pointer to the cookie's entry in wCookiePosTable
 ; @return hl Pointer to the cookie's size's hitbox in CookieHitboxTable
 PointHLToCookieHitbox::
     call    GetCookieSize
@@ -89,7 +89,7 @@ CreateCookie::
     ld      hl, hCookieCount
     inc     [hl]
     
-    ld      hl, wCookieTable
+    ld      hl, wCookiePosTable
     ld      b, MAX_COOKIE_COUNT
     call    FindEmptyActorSlot
     ret     c           ; No empty slots
@@ -153,7 +153,7 @@ CreateCookie::
 
 ; Update cookies' positions
 UpdateCookies::
-    ld      hl, wCookieTable
+    ld      hl, wCookiePosTable
     ld      b, MAX_COOKIE_COUNT
 .loop
     ld      a, [hl]
@@ -182,7 +182,7 @@ UpdateCookies::
     ld      [hl], a
     
     dec     h
-    dec     h           ; wCookieTable
+    dec     h           ; wCookiePosTable
     
     ld      a, c        ; Get Y speed again
     rr      c           ; Save carry from fractional part in c
@@ -214,7 +214,7 @@ UpdateCookies::
     ld      [hl], a
     
     dec     h
-    dec     h           ; wCookieTable
+    dec     h           ; wCookiePosTable
     
     ld      a, c        ; Get X speed again
     rr      c           ; Save carry from fractional part in c

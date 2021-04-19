@@ -65,10 +65,10 @@ SetUpGame::
     ldh     [hPlayerLives], a
     
     ; Clear actor tables
-    ld      hl, wMissileTable
+    ld      hl, wMissilePosTable
     ld      b, MAX_MISSILE_COUNT
     call    ClearActors
-    ld      hl, wCookieTable
+    ld      hl, wCookiePosTable
     ld      b, MAX_COOKIE_COUNT
     call    ClearActors
     
@@ -156,9 +156,9 @@ InGame::
     call    HideAllActors
     call    DrawHearts
     ; Copy actor data to OAM
-    ld      de, wMissileTable
+    ld      de, wMissilePosTable
     call    CopyActorsToOAM
-    ld      de, wCookieTable
+    ld      de, wCookiePosTable
     call    CopyActorsToOAM
     
     call    HaltVBlank
