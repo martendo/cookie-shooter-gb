@@ -33,11 +33,11 @@ hTargetCookieCount:: DS 1
 SECTION "Cookie Data", ROM0
 
 CookieTileTable::
-    DB      4   ; COOKIE_SIZE_16
-    DB      8   ; COOKIE_SIZE_14
-    DB      12  ; COOKIE_SIZE_12
-    DB      16  ; COOKIE_SIZE_10
-    DB      20  ; COOKIE_SIZE_8
+    DB      COOKIE_TILE         ; COOKIE_SIZE_16
+    DB      COOKIE_TILE + 4     ; COOKIE_SIZE_14
+    DB      COOKIE_TILE + 8     ; COOKIE_SIZE_12
+    DB      COOKIE_TILE + 12    ; COOKIE_SIZE_10
+    DB      COOKIE_TILE + 16    ; COOKIE_SIZE_8
 .end::
 
 CookieHitboxTable::
