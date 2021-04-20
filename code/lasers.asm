@@ -1,50 +1,50 @@
 INCLUDE "defines.inc"
 
-SECTION "Missile Table", WRAM0, ALIGN[8]
+SECTION "Laser Table", WRAM0, ALIGN[8]
 
-wMissilePosTable::
-    DS MAX_MISSILE_COUNT * ACTOR_SIZE
+wLaserPosTable::
+    DS MAX_LASER_COUNT * ACTOR_SIZE
 .end::
 
-SECTION "Missile Code", ROM0
+SECTION "Laser Code", ROM0
 
-ShootMissile::
-    ld      hl, wMissilePosTable
-    ld      b, MAX_MISSILE_COUNT
+ShootLaser::
+    ld      hl, wLaserPosTable
+    ld      b, MAX_LASER_COUNT
     call    FindEmptyActorSlot
     ret     c           ; No empty slots
     
     ; [hl] = X position
     ld      a, [wOAM + PLAYER_X1_OFFSET]
-    add     a, (PLAYER_WIDTH / 2) - (MISSILE_WIDTH / 2)
+    add     a, (PLAYER_WIDTH / 2) - (LASER_WIDTH / 2)
     ld      [hld], a    ; X position
-    ld      [hl], MISSILE_START_Y ; Y position
+    ld      [hl], LASER_START_Y ; Y position
     ret
 
-; Update missiles' positions
-UpdateMissiles::
-    ld      hl, wMissilePosTable
-    ld      b, MAX_MISSILE_COUNT
+; Update lasers' positions
+UpdateLasers::
+    ld      hl, wLaserPosTable
+    ld      b, MAX_LASER_COUNT
 .loop
     ld      a, [hl]
     and     a, a
     jr      nz, .update
-    ; No missile, skip
+    ; No laser, skip
     inc     l
     inc     l
     jr      .next
     
 .update
-    ld      a, MISSILE_SPEED
+    ld      a, LASER_SPEED
     add     a, [hl]     ; Y position
-    cp      a, STATUS_BAR_HEIGHT - MISSILE_HEIGHT + 16
+    cp      a, STATUS_BAR_HEIGHT - LASER_HEIGHT + 16
     jr      nc, :+
     xor     a, a        ; Out of sight, destroy
     ld      [hli], a
     jr      .resume
 :
     ld      [hli], a
-    jr      nz, CheckMissileCollide
+    jr      nz, CheckLaserCollide
 .resume
     inc     l           ; Leave X as-is
 .next
@@ -52,18 +52,18 @@ UpdateMissiles::
     jr      nz, .loop
     ret
 
-; Check for collision between a missile and a cookie
-; @param hl Pointer to missile's X position
-; @param a  Missile's Y position
-CheckMissileCollide:
+; Check for collision between a laser and a cookie
+; @param hl Pointer to laser's X position
+; @param a  Laser's Y position
+CheckLaserCollide:
     push    bc
     
-    add     a, MISSILE_HITBOX_Y
-    ld      d, a        ; d = missile.hitbox.top
+    add     a, LASER_HITBOX_Y
+    ld      d, a        ; d = laser.hitbox.top
     ld      a, [hld]
     push    hl
-    add     a, MISSILE_HITBOX_X
-    ld      e, a        ; e = missile.hitbox.left
+    add     a, LASER_HITBOX_X
+    ld      e, a        ; e = laser.hitbox.left
     
     ld      hl, wCookiePosTable
     ld      c, MAX_COOKIE_COUNT
@@ -84,12 +84,12 @@ CheckMissileCollide:
     ld      b, a
     inc     l
     add     a, [hl]     ; cookie.hitbox.height
-    cp      a, d        ; cookie.hitbox.bottom < missile.hitbox.top
+    cp      a, d        ; cookie.hitbox.bottom < laser.hitbox.top
     jr      c, .noCollision
     
     ld      a, d
-    add     a, MISSILE_HITBOX_HEIGHT
-    cp      a, b        ; missile.hitbox.bottom < cookie.hitbox.top
+    add     a, LASER_HITBOX_HEIGHT
+    cp      a, b        ; laser.hitbox.bottom < cookie.hitbox.top
     jr      c, .noCollision
     
     ldh     a, [hScratch]   ; cookie.x
@@ -98,15 +98,15 @@ CheckMissileCollide:
     ld      b, a
     inc     l
     add     a, [hl]     ; cookie.hitbox.width
-    cp      a, e        ; cookie.hitbox.right < missile.hitbox.left
+    cp      a, e        ; cookie.hitbox.right < laser.hitbox.left
     jr      c, .noCollision
     
     ld      a, e
-    add     a, MISSILE_HITBOX_WIDTH
-    cp      a, b        ; missile.hitbox.right < cookie.hitbox.left
+    add     a, LASER_HITBOX_WIDTH
+    cp      a, b        ; laser.hitbox.right < cookie.hitbox.left
     jr      c, .noCollision
     
-    ; Missile and cookie are colliding!
+    ; Laser and cookie are colliding!
     pop     hl
     xor     a, a
     ld      [hl], a     ; Destroy cookie (Y=0)
@@ -159,10 +159,10 @@ CheckMissileCollide:
 .finished
     pop     hl
     xor     a, a
-    ld      [hli], a    ; Destroy missile (Y=0)
+    ld      [hli], a    ; Destroy laser (Y=0)
     pop     bc
     
-    jr      UpdateMissiles.resume
+    jr      UpdateLasers.resume
     
 .noCollision
     pop     hl
@@ -175,4 +175,4 @@ CheckMissileCollide:
     pop     hl
     inc     l
     pop     bc
-    jp      UpdateMissiles.resume
+    jp      UpdateLasers.resume

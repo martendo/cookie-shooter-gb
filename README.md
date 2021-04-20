@@ -3,7 +3,7 @@ A Game Boy demake of one of my first games, Cookie Shooter!
 
 ## How to Play
 You're a spaceship flying through space with cookies coming at you!
-Press the A button to shoot a missile and get points for blasting a cookie.
+Press the A button to shoot a laser and get points for blasting a cookie.
 Try not to get hit by the cookies, though; you can only take 3 hits!
 
 ### Controls
@@ -21,7 +21,7 @@ Try not to get hit by the cookies, though; you can only take 3 hits!
     </tr>
     <tr>
       <td>A</td>
-      <td>Shoot Missile</td>
+      <td>Shoot Laser</td>
     </tr>
   </tbody>
 </table>

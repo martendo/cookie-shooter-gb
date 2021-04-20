@@ -65,8 +65,8 @@ SetUpGame::
     ldh     [hPlayerLives], a
     
     ; Clear actor tables
-    ld      hl, wMissilePosTable
-    ld      b, MAX_MISSILE_COUNT
+    ld      hl, wLaserPosTable
+    ld      b, MAX_LASER_COUNT
     call    ClearActors
     ld      hl, wCookiePosTable
     ld      b, MAX_COOKIE_COUNT
@@ -112,10 +112,10 @@ InGame::
     bit     PADB_RIGHT, a
     call    nz, MovePlayerRight
     
-    ; Shoot a missile
+    ; Shoot a laser
     ldh     a, [hNewKeys]
     bit     PADB_A, a
-    call    nz, ShootMissile
+    call    nz, ShootLaser
     
     ; Update target cookie count based on score
     ld      hl, hScore.2
@@ -166,7 +166,7 @@ InGame::
     ; TODO: Add "Super" mode things - currently exactly the same as classic!!!
     
     ; Update actors
-    call    UpdateMissiles
+    call    UpdateLasers
     call    UpdateCookies
     
     ; Check for game over - no more lives left
@@ -182,7 +182,7 @@ InGame::
     call    HideAllActors
     call    DrawHearts
     ; Copy actor data to OAM
-    ld      de, wMissilePosTable
+    ld      de, wLaserPosTable
     call    CopyActorsToOAM
     ld      de, wCookiePosTable
     call    CopyActorsToOAM

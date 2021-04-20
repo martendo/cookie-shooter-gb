@@ -70,18 +70,18 @@ CopyActorsToOAM::
     jr      z, CopyCookiesToOAM
     ; Fallthrough
 
-CopyMissilesToOAM:
-    ld      b, MAX_MISSILE_COUNT
+CopyLasersToOAM:
+    ld      b, MAX_LASER_COUNT
 .loop
     ld      a, [de]     ; Y position
-    and     a, a        ; No missile, skip
+    and     a, a        ; No laser, skip
     jr      z, .skip
     ld      [hli], a
     inc     e
     ld      a, [de]     ; X position
     ld      [hli], a
     inc     e
-    ld      [hl], MISSILE_TILE
+    ld      [hl], LASER_TILE
     inc     l
     ld      [hl], 0
     inc     l

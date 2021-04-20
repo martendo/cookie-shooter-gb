@@ -1,6 +1,6 @@
 INCLUDE "constants/game.inc"
 INCLUDE "constants/actors.inc"
 INCLUDE "constants/player.inc"
-INCLUDE "constants/missiles.inc"
+INCLUDE "constants/lasers.inc"
 INCLUDE "constants/cookies.inc"
 INCLUDE "constants/fade.inc"
