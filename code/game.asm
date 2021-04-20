@@ -163,6 +163,8 @@ InGame::
     ld      [hl], a
     
 :
+    ; TODO: Add "Super" mode things - currently exactly the same as classic!!!
+    
     ; Update actors
     call    UpdateMissiles
     call    UpdateCookies

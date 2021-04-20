@@ -72,13 +72,18 @@ EntryPoint::
     jr      nz, .writeSaveDataHeaderLoop
     ; Clear high score
     xor     a, a
-    ASSERT sHighScore == sSaveDataHeader.end
+    ASSERT sClassicHighScore == sSaveDataHeader.end
+    REPT SCORE_BYTE_COUNT
     ld      [hli], a
+    ENDR
+    ASSERT sSuperHighScore == sClassicHighScore.end
+    REPT SCORE_BYTE_COUNT
     ld      [hli], a
-    ld      [hli], a
+    ENDR
     
 :
-    xor     a, a    ; CART_SRAM_DISABLE
+    ASSERT CART_SRAM_DISABLE == 0
+    xor     a, a
     ld      [rRAMG], a
     
     ; Set palettes
@@ -114,6 +119,9 @@ Main::
     ; GAME_STATE_TITLE_SCREEN
     and     a, a
     jp      z, TitleScreen
+    ; GAME_STATE_MODE_SELECT
+    dec     a
+    jp      z, ModeSelect
     ; GAME_STATE_IN_GAME
     dec     a
     jp      z, InGame
@@ -150,6 +158,7 @@ hGameState::   DS 1
 
 hVBlankFlag::  DS 1
 
+ASSERT SCORE_BYTE_COUNT == 3
 hScore::
 .0:: DS 1
 .1:: DS 1
@@ -160,6 +169,8 @@ hCookiesBlasted::
 .lo:: DS 1
 .hi:: DS 1
 .end::
+
+hGameMode:: DS 1
 
 hWaitCountdown:: DS 1
 
@@ -192,7 +203,15 @@ sSaveDataHeader:
     DS STRLEN(SAVE_DATA_HEADER)
 .end
 
-sHighScore::
+ASSERT SCORE_BYTE_COUNT == 3
+sClassicHighScore::
+.0:: DS 1
+.1:: DS 1
+.2:: DS 1
+.end::
+
+ASSERT SCORE_BYTE_COUNT == 3
+sSuperHighScore::
 .0:: DS 1
 .1:: DS 1
 .2:: DS 1

@@ -24,9 +24,15 @@ INCBIN "res/title-screen.2bpp", (8 * 2) * $80
 TitleScreenMap::
 INCBIN "res/title-screen.tilemap"
 
+ModeSelectTiles::
+INCBIN "res/mode-select.2bpp"
+INCBIN "res/mode-select-numbers.2bpp"
+.end::
+ModeSelectMap::
+INCBIN "res/mode-select.tilemap"
+
 GameOverTiles::
 INCBIN "res/game-over.2bpp"
-.numberTiles::
 INCBIN "res/game-over-numbers.2bpp"
 .end::
 GameOverMap::
@@ -34,11 +40,11 @@ INCBIN "res/game-over.tilemap"
 
 SECTION "Graphics Code", ROM0
 
-; Draw a BCD number onto the background map
+; Draw a BCD number onto the status bar
 ; @param de Pointer to most significant byte of BCD number
 ; @param hl Pointer to destination on map
 ; @param c  Number of bytes to draw
-DrawBCD::
+DrawStatusBarBCD::
     ASSERT NUMBER_TILES_START == 1
     ld      a, [de]
     dec     e
@@ -54,5 +60,34 @@ DrawBCD::
     inc     a       ; add a, NUMBER_TILES_START
     ld      [hli], a
     dec     c
-    jr      nz, DrawBCD
+    jr      nz, DrawStatusBarBCD
+    ret
+
+; Draw a BCD number onto the background map with an arbitrary tile
+; ID offset, even if the LCD is on
+; @param de Pointer to most significant byte of BCD number
+; @param hl Pointer to destination on map
+; @param c  Number of bytes to draw
+; @param b  Tile ID offset
+LCDDrawBCDWithOffset::
+    ldh     a, [rSTAT]
+    and     a, STATF_BUSY
+    jr      nz, LCDDrawBCDWithOffset
+    
+    ld      a, [de]     ; 2 cycles
+    ; High nibble
+    swap    a           ; 2 cycles
+    and     a, $0F      ; 2 cycles
+    add     a, b        ; 1 cycle (Add tile ID offset)
+    ld      [hli], a    ; 2 cycles
+    ld      a, [de]     ; 2 cycles
+    ; Low nibble
+    and     a, $0F      ; 2 cycles
+    add     a, b        ; 1 cycle
+    ld      [hli], a    ; 2 cycles
+    ; Total 16 cycles! Perfect fit!
+    
+    dec     e
+    dec     c
+    jr      nz, LCDDrawBCDWithOffset
     ret

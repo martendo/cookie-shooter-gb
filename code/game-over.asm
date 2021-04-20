@@ -17,9 +17,17 @@ LoadGameOverScreen::
     ld      a, CART_SRAM_ENABLE
     ld      [rRAMG], a
     
-    ld      de, sHighScore.end - 1
+    ld      de, sClassicHighScore.end - 1
+    ldh     a, [hGameMode]
+    ASSERT GAME_MODE_CLASSIC == 0
+    and     a, a
+    jr      z, :+
+    ASSERT HIGH(sClassicHighScore.end - 1) == HIGH(sSuperHighScore.end - 1)
+    ld      e, LOW(sSuperHighScore.end - 1)
+:
+    push    de
     ld      hl, hScore.end - 1
-    ld      b, sHighScore.end - sHighScore
+    ld      b, SCORE_BYTE_COUNT
 .checkHighScoreLoop
     ld      a, [de]
     cp      a, [hl]
@@ -35,9 +43,12 @@ LoadGameOverScreen::
     ; New high score
     
     ; Overwrite high score
-    ; h and d unchanged
-    ld      e, LOW(sHighScore)
-    ld      l, LOW(hScore)
+    pop     de
+    push    de
+    REPT SCORE_BYTE_COUNT - 1
+    dec     e
+    ENDR
+    ld      l, LOW(hScore)      ; h unchanged
     ld      a, [hli]
     ld      [de], a
     inc     e
@@ -67,43 +78,16 @@ LoadGameOverScreen::
     inc     l
     ; a = 0
     ld      [hl], a
-    ld      de, hScore.end - 1
-    jr      .drawHighScore
     
 .oldHighScore
-    ; d unchanged
-    ld      e, LOW(sHighScore.end - 1)
-.drawHighScore
-    ld      hl, vHighScore
-    ld      c, sHighScore.end - sHighScore
-.drawHighScoreLoop
-    ldh     a, [rSTAT]
-    and     a, STATF_BUSY
-    jr      nz, .drawHighScoreLoop
+    ; Draw high score
+    pop     de
+    ld      hl, vGameOverHighScore
+    lb      bc, GAME_OVER_NUMBER_TILES_START, SCORE_BYTE_COUNT
+    call    LCDDrawBCDWithOffset
     
-    ld      a, [de]
-    dec     e
-    ld      b, a
-    ; High nibble
-    swap    a
-    and     a, $0F
-    add     a, GAME_OVER_NUMBER_TILES_START
-    ld      [hli], a
-    
-:
-    ldh     a, [rSTAT]
-    and     a, STATF_BUSY
-    jr      nz, :-
-    
-    ld      a, b
-    ; Low nibble
-    and     a, $0F
-    add     a, GAME_OVER_NUMBER_TILES_START
-    ld      [hli], a
-    dec     c
-    jr      nz, .drawHighScoreLoop
-    
-    xor     a, a    ; CART_SRAM_DISABLE
+    ASSERT CART_SRAM_DISABLE == 0
+    xor     a, a
     ld      [rRAMG], a
     
     ret
@@ -113,8 +97,8 @@ GameOver::
     and     a, PADF_A | PADF_START
     jr      z, :+
     
-    ; Reset game, as if coming from the title screen
-    ld      a, GAME_STATE_TITLE_SCREEN
+    ; Reset game - fade increments game state midway
+    ld      a, GAME_STATE_IN_GAME - 1
     ldh     [hGameState], a
     
     ld      hl, SetUpGame.skipTiles

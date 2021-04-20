@@ -29,11 +29,11 @@ VBlankHandler:
     ld      de, hCookiesBlasted.end - 1
     ld      hl, vCookiesBlasted
     ld      c, hCookiesBlasted.end - hCookiesBlasted
-    call    DrawBCD
+    call    DrawStatusBarBCD
     ASSERT hScore.end == hCookiesBlasted
     ld      hl, vScore
     ld      c, hScore.end - hScore
-    call    DrawBCD
+    call    DrawStatusBarBCD
 .noStatusBar
     
     ; Graphics loading may be done by a subroutine called by UpdateFade,
