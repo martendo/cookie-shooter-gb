@@ -55,6 +55,18 @@ LoadModeSelectScreen::
 
 ModeSelect::
     ldh     a, [hNewKeys]
+    bit     PADB_B, a
+    jr      z, :+
+    
+    ; Return to title screen
+    ASSERT GAME_STATE_TITLE_SCREEN == 0
+    xor     a, a
+    ld      hl, LoadTitleScreen
+    call    StartFade
+    jp      Main
+    
+:
+    ldh     a, [hNewKeys]
     bit     PADB_UP, a
     call    nz, .moveSelectionUp
     ldh     a, [hNewKeys]
