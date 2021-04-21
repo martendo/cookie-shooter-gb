@@ -75,17 +75,6 @@ SetUpGame::
     ret
 
 InGame::
-    ; Wait before starting the game
-    ldh     a, [hWaitCountdown]
-    and     a, a
-    jr      z, .notWaiting
-    
-    dec     a
-    ldh     [hWaitCountdown], a
-    call    HaltVBlank
-    jp      Main
-    
-.notWaiting
     ; Pause the game
     ldh     a, [hNewKeys]
     bit     PADB_START, a
@@ -112,6 +101,16 @@ InGame::
     bit     PADB_A, a
     call    nz, ShootLaser
     
+    ; Delay game start period - don't create any cookies yet
+    ldh     a, [hWaitCountdown]
+    and     a, a
+    jr      z, .updateCookieCount
+    
+    dec     a
+    ldh     [hWaitCountdown], a
+    jr      .skipCookieCount
+    
+.updateCookieCount
     ; Update target cookie count based on score
     ld      hl, hScore.2
     ld      a, [hld]
@@ -136,6 +135,7 @@ InGame::
     cp      a, [hl]
     call    c, CreateCookie
     
+.skipCookieCount
     ; Update player invincibility
     ld      hl, hPlayerInvCountdown
     ld      a, [hl]

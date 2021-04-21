@@ -50,15 +50,15 @@ EntryPoint::
     ; Check save data header
     ld      a, CART_SRAM_ENABLE
     ld      [rRAMG], a
-    ld      hl, sSaveDataHeader
     ld      de, SaveDataHeader
+    ld      hl, sSaveDataHeader
     ld      b, STRLEN(SAVE_DATA_HEADER)
 .checkSaveDataHeaderLoop
     ld      a, [de]
     cp      a, [hl]
     jr      nz, .initSRAM
-    ASSERT HIGH(SaveDataHeader) == HIGH(SaveDataHeader.end)
-    inc     e
+    ASSERT HIGH(SaveDataHeader) != HIGH(SaveDataHeader.end)
+    inc     de
     ASSERT HIGH(sSaveDataHeader) == HIGH(sSaveDataHeader.end)
     inc     l
     dec     b
@@ -69,10 +69,10 @@ EntryPoint::
     
 .initSRAM
     ; Write save data header
+    ASSERT HIGH(SaveDataHeader) != HIGH(SaveDataHeader.end)
+    ld      de, SaveDataHeader
     ASSERT HIGH(sSaveDataHeader) == HIGH(sSaveDataHeader.end)
     ld      l, LOW(sSaveDataHeader)
-    ASSERT HIGH(SaveDataHeader) == HIGH(SaveDataHeader.end)
-    ld      e, LOW(SaveDataHeader)
     ld      b, STRLEN(SAVE_DATA_HEADER)
 .writeSaveDataHeaderLoop
     ld      a, [de]
