@@ -97,7 +97,7 @@ GameOver::
     
     ; Reset game
     ld      a, GAME_STATE_IN_GAME
-    ld      hl, SetUpGame.skipTiles
+    ld      hl, SetUpGame
     call    StartFade
     jp      Main
     

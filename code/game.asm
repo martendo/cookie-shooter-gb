@@ -19,7 +19,6 @@ SetUpGame::
     ld      hl, _VRAM9000
     ld      bc, InGameTiles.end - InGameTiles
     call    LCDMemcopy
-.skipTiles::
     ; Background map
     ld      hl, _SCRN0 + (STATUS_BAR_TILE_HEIGHT * SCRN_VX_B)
     ld      b, IN_GAME_BACKGROUND_TILE
