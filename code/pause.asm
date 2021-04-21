@@ -6,6 +6,7 @@ PauseGame::
     ld      a, GAME_STATE_PAUSED
     ldh     [hGameState], a
     
+    ; Draw "paused" strip
     ld      de, PausedStripMap
     ld      hl, vPausedStrip
     ld      bc, SCRN_X_B
@@ -23,6 +24,7 @@ Paused::
     ld      a, GAME_STATE_IN_GAME
     ldh     [hGameState], a
     
+    ; Erase "paused" strip
     ld      hl, vPausedStrip
     lb      bc, IN_GAME_BACKGROUND_TILE, SCRN_X_B
     call    LCDMemsetSmall

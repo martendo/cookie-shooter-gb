@@ -22,7 +22,8 @@ StartFade::
 UpdateFade::
     ld      hl, hFadeState
     ld      a, [hl]
-    inc     a       ; a = $FF
+    ASSERT NOT_FADING == LOW(-1)
+    inc     a       ; a = -1
     ret     z       ; Not fading, nothing to do
     
     dec     a       ; Undo inc
@@ -38,7 +39,8 @@ UpdateFade::
     ; Fade out: shift all colours; darken each one
     sra     [hl]
     sra     [hl]
-    dec     l       ; rBGP
+    ASSERT rBGP == rOBP0 - 1
+    dec     l
     sra     [hl]
     sra     [hl]
     ld      a, [hl]
@@ -72,7 +74,8 @@ UpdateFade::
     or      a, b
     ld      [hl], a
     
-    dec     l       ; rBGP
+    ASSERT rBGP == rOBP0 - 1
+    dec     l
     ld      a, [hl]
     dec     a
     and     a, %11  ; a = new lighter colour
@@ -87,7 +90,7 @@ UpdateFade::
     cp      a, %11100100    ; Palette is back to normal?
     jr      nz, .fadeInFinished
     
-    ld      a, $FF  ; Finished fading
+    ld      a, NOT_FADING   ; Finished fading
     jr      .finished
     
 .fadeInFinished
@@ -102,9 +105,7 @@ UpdateFade::
     ld      a, [hl]
     and     a, FADE_DIRECTION
     or      a, b
-    jr      :+
 .finished
     ld      l, LOW(hFadeState)
-:
     ld      [hl], a
     ret

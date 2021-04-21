@@ -12,14 +12,16 @@ ShootLaser::
     ld      hl, wLaserPosTable
     ld      b, MAX_LASER_COUNT
     call    FindEmptyActorSlot
-    ret     c           ; No empty slots
+    ret     c       ; No empty slots
     
     ; [hl] = X position
     ld      a, [wOAM + PLAYER_X1_OFFSET]
     add     a, (PLAYER_WIDTH / 2) - (LASER_WIDTH / 2)
-    ld      [hld], a    ; X position
+    ld      [hld], a            ; X position
     ld      [hl], LASER_START_Y ; Y position
-    ret
+    
+    ; Generate a random number
+    jp      GenerateRandomNumber
 
 ; Update lasers' positions
 UpdateLasers::
@@ -61,7 +63,7 @@ CheckLaserCollide:
     add     a, LASER_HITBOX_Y
     ld      d, a        ; d = laser.hitbox.top
     ld      a, [hld]
-    push    hl
+    push    hl          ; Laser Y position
     add     a, LASER_HITBOX_X
     ld      e, a        ; e = laser.hitbox.left
     
@@ -75,7 +77,7 @@ CheckLaserCollide:
     ld      b, a
     ld      a, [hld]
     ldh     [hScratch], a
-    push    hl
+    push    hl          ; Cookie Y position
     
     call    PointHLToCookieHitbox
     
@@ -107,9 +109,8 @@ CheckLaserCollide:
     jr      c, .noCollision
     
     ; Laser and cookie are colliding!
-    pop     hl
-    xor     a, a
-    ld      [hl], a     ; Destroy cookie (Y=0)
+    pop     hl          ; Cookie Y position
+    ld      [hl], 0     ; Destroy cookie (Y=0)
     
     call    GetCookieSize
     add     a, a        ; 1 entry = 2 bytes
@@ -154,10 +155,10 @@ CheckLaserCollide:
     ld      a, [hl]     ; hCookiesBlasted.hi
     add     a, 1
     daa
-    ld      [hli], a
+    ld      [hl], a
     
 .finished
-    pop     hl
+    pop     hl          ; Laser Y position
     xor     a, a
     ld      [hli], a    ; Destroy laser (Y=0)
     pop     bc
@@ -165,14 +166,14 @@ CheckLaserCollide:
     jr      UpdateLasers.resume
     
 .noCollision
-    pop     hl
+    pop     hl          ; Cookie Y position
     inc     l
 .skip
     inc     l
     dec     c
     jr      nz, .loop
     
-    pop     hl
+    pop     hl          ; Laser Y position
     inc     l
     pop     bc
     jp      UpdateLasers.resume

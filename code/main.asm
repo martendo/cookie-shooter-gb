@@ -14,30 +14,33 @@ EntryPoint::
     xor     a, a
     ldh     [rLCDC], a
     
+    ; Reset variables
     ldh     [hVBlankFlag], a
     
-    ASSERT GAME_STATE_TITLE_SCREEN == 0
+    ASSERT INITIAL_GAME_STATE == 0
     ldh     [hGameState], a
     
-    ; Copy graphics data to VRAM
-    ; Sprites
+    ; a = 0
+    ldh     [hPressedKeys], a
+    ldh     [hNewKeys], a
+    ASSERT NOT_FADING == LOW(-1)
+    dec     a   ; a = -1
+    ldh     [hFadeState], a ; Not fading
+    
+    ; Copy sprite tiles (never change) to VRAM
     ld      de, SpriteTiles
     ld      hl, _VRAM8000
     ld      bc, SpriteTiles.end - SpriteTiles
     call    Memcopy
+    
+    ld      hl, _OAMRAM
+    call    HideAllObjectsAtAddress
     
     ; Copy OAM DMA routine to HRAM
     ld      de, OAMDMA
     ld      hl, hOAMDMA
     ld      b, OAMDMA.end - OAMDMA
     call    MemcopySmall
-    
-    ; Reset variables
-    xor     a, a
-    ldh     [hPressedKeys], a
-    ldh     [hNewKeys], a
-    dec     a   ; a = $FF
-    ldh     [hFadeState], a ; Not fading
     
     ; Check save data header
     ld      a, CART_SRAM_ENABLE
@@ -57,7 +60,7 @@ EntryPoint::
     jr      nz, .checkSaveDataHeaderLoop
     
     ; Save header is correct
-    jr      :+
+    jr      .doneCheckingSaveData
     
 .initSRAM
     ; Write save data header
@@ -81,7 +84,15 @@ EntryPoint::
     ld      [hli], a
     ENDR
     
-:
+.doneCheckingSaveData
+    ; Seed random number with high scores
+    ; Use the 2nd byte because it is the most interesting
+    ld      a, [sClassicHighScore.1]
+    ld      b, a
+    ld      a, [sSuperHighScore.1]
+    xor     a, b
+    ldh     [hRandomNumber], a
+    
     ASSERT CART_SRAM_DISABLE == 0
     xor     a, a
     ld      [rRAMG], a
@@ -112,7 +123,8 @@ EntryPoint::
 
 Main::
     ldh     a, [hFadeState]
-    inc     a               ; a = $FF
+    ASSERT NOT_FADING == LOW(-1)
+    inc     a               ; a = -1
     jr      nz, EmptyLoop   ; Currently fading
     
     ldh     a, [hGameState]
@@ -181,10 +193,12 @@ SECTION "OAM DMA Routine", ROM0
 OAMDMA:
     ldh     [c], a
 .wait
-    dec     b
-    jr      nz, .wait
+    dec     b           ; 1 cycle
+    jr      nz, .wait   ; 3 cycles
     ret
 .end
+
+ASSERT DMA_LOOP_CYCLES == 1 + 3
 
 SECTION "OAM DMA", HRAM
 

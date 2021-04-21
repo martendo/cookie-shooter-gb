@@ -13,12 +13,12 @@ VBlankHandler:
     push    hl
     
     ld      a, HIGH(wOAM)
-    lb      bc, 41, LOW(rDMA)
+    lb      bc, (OAM_COUNT * sizeof_OAM_ATTRS) / DMA_LOOP_CYCLES + 1, LOW(rDMA)
     call    hOAMDMA
     
     ; Disable objects for status bar
     ld      hl, rLCDC
-    res     1, [hl]
+    res     LCDCB_OBJ, [hl]
     ld      l, LOW(hVBlankFlag)
     ld      [hl], h ; Non-zero
     
@@ -89,8 +89,8 @@ STATHandler:
     push    hl
 .waitHBL
     ldh     a, [rSTAT]
-    and     a, %11      ; Mode 0 - HBlank
-    jr      nz, .waitHBL
+    and     a, STAT_MODE_MASK
+    jr      nz, .waitHBL    ; Mode 0 - HBlank
     
     ld      hl, rLCDC
     ldh     a, [rLY]
@@ -112,13 +112,13 @@ STATHandler:
     ldh     [rLYC], a
 .enableObj
     ; Enable objects - end of status bar or "paused" strip
-    set     1, [hl]
+    set     LCDCB_OBJ, [hl]
     jr      .finished
 .startOfPausedStrip
     ld      a, PAUSED_STRIP_Y + PAUSED_STRIP_HEIGHT - 1
     ldh     [rLYC], a
     ; Disable objects - start of "paused" strip
-    res     1, [hl]
+    res     LCDCB_OBJ, [hl]
 .finished
     pop     hl
     pop     af

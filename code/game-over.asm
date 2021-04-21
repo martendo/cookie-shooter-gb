@@ -14,9 +14,11 @@ LoadGameOverScreen::
     ld      c, SCRN_Y_B - STATUS_BAR_TILE_HEIGHT
     call    LCDMemcopyMap
     
+    ; Check if this score is a new high score
     ld      a, CART_SRAM_ENABLE
     ld      [rRAMG], a
     
+    ; Get corresponding high score to check based on game mode
     ld      de, sClassicHighScore.end - 1
     ldh     a, [hGameMode]
     ASSERT GAME_MODE_CLASSIC == 0
@@ -25,7 +27,7 @@ LoadGameOverScreen::
     ASSERT HIGH(sClassicHighScore.end - 1) == HIGH(sSuperHighScore.end - 1)
     ld      e, LOW(sSuperHighScore.end - 1)
 :
-    push    de
+    push    de      ; Save to draw it onscreen later
     ld      hl, hScore.end - 1
     ld      b, SCORE_BYTE_COUNT
 .checkHighScoreLoop
@@ -45,16 +47,13 @@ LoadGameOverScreen::
     ; Overwrite high score
     pop     de
     push    de
-    REPT SCORE_BYTE_COUNT - 1
+    ld      l, LOW(hScore.end - 1)  ; h unchanged
+    ld      a, [hld]
+    ld      [de], a
     dec     e
-    ENDR
-    ld      l, LOW(hScore)      ; h unchanged
-    ld      a, [hli]
+    ld      a, [hld]
     ld      [de], a
-    inc     e
-    ld      a, [hli]
-    ld      [de], a
-    inc     e
+    dec     e
     ld      a, [hl]
     ld      [de], a
     
@@ -76,8 +75,7 @@ LoadGameOverScreen::
     inc     l
     ld      [hl], NEW_HIGH_SCORE_TILE + 2
     inc     l
-    ; a = 0
-    ld      [hl], a
+    ld      [hl], a     ; a = 0
     
 .oldHighScore
     ; Draw high score

@@ -10,8 +10,9 @@ SECTION "Common Actor Code", ROM0
 ; Hide all objects in OAM by zeroing their Y positions
 HideAllObjects::
     ld      hl, wOAM
+HideAllObjectsAtAddress::
     ld      d, OAM_COUNT
-.skip
+HideObjects:
     ld      bc, sizeof_OAM_ATTRS
     xor     a, a
 .loop
@@ -25,7 +26,24 @@ HideAllObjects::
 HideAllActors::
     ld      hl, wOAM + PLAYER_END_OFFSET
     ld      d, OAM_COUNT - PLAYER_OBJ_COUNT
-    jr      HideAllObjects.skip
+    jr      HideObjects
+
+; Hide objects starting at hNextAvailableOAMSlot
+HideUnusedObjects::
+    ldh     a, [hNextAvailableOAMSlot]
+    ld      b, a
+    ld      a, OAM_COUNT
+    sub     a, b
+    ld      d, a
+    
+    ld      a, b
+    ASSERT sizeof_OAM_ATTRS == 4
+    add     a, a
+    add     a, a
+    ld      l, a
+    ld      h, HIGH(wOAM)
+    
+    jr      HideObjects
 
 ; Clear actors
 ; @param hl Pointer to actor data to clear
@@ -60,8 +78,9 @@ FindEmptyActorSlot::
 CopyActorsToOAM::
     ldh     a, [hNextAvailableOAMSlot]
     ld      c, a
+    ASSERT sizeof_OAM_ATTRS == 4
     add     a, a
-    add     a, a        ; * sizeof_OAM_ATTRS
+    add     a, a
     ld      l, a
     ld      h, HIGH(wOAM)
     

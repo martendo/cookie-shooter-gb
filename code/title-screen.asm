@@ -3,6 +3,8 @@ INCLUDE "defines.inc"
 SECTION "Title Screen", ROM0
 
 LoadTitleScreen::
+    call    HideAllObjects
+    
     ld      de, TitleScreen9000Tiles
     ld      hl, _VRAM9000
     ld      bc, TitleScreen9000Tiles.end - TitleScreen9000Tiles
@@ -14,9 +16,7 @@ LoadTitleScreen::
     ld      de, TitleScreenMap
     ld      hl, _SCRN0
     ld      c, SCRN_Y_B
-    call    LCDMemcopyMap
-    
-    jp      HideAllObjects
+    jp      LCDMemcopyMap
 
 TitleScreen::
     ldh     a, [hNewKeys]

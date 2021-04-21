@@ -37,8 +37,7 @@ LoadModeSelectScreen::
     inc     l
     ld      [hl], COOKIE_TILE
     inc     l
-    xor     a, a
-    ld      [hli], a
+    ld      [hli], a        ; a = 0
     ; Object 2
     ld      [hl], MODE_SELECT_CLASSIC_CURSOR_Y
     inc     l
@@ -46,18 +45,20 @@ LoadModeSelectScreen::
     inc     l
     ld      [hl], COOKIE_TILE + 2
     inc     l
-    ; a = 0
-    ld      [hl], a
+    ld      [hl], a         ; a = 0
     
-    ; a = 0
-    ldh     [hGameMode], a
+    ASSERT DEFAULT_GAME_MODE == 0
+    ldh     [hGameMode], a  ; a = 0
     ret
 
 ModeSelect::
+    ; Draw cookie cursor for current selection
     ldh     a, [hGameMode]
+    ASSERT GAME_MODE_CLASSIC == 0
     and     a, a
     ld      a, MODE_SELECT_CLASSIC_CURSOR_Y
     jr      z, :+
+    ASSERT GAME_MODE_COUNT - 1 == 1
     ld      a, MODE_SELECT_SUPER_CURSOR_Y
 :
     ld      [wOAM + MODE_SELECT_CURSOR_Y1_OFFSET], a

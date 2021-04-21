@@ -95,7 +95,7 @@ CreateCookie::
     ret     c           ; No empty slots
     
     ; [hl] = X position
-    call    GetRandomNumber
+    call    GenerateRandomNumber
     cp      a, SCRN_X - 16 + 8
     jr      c, :+
     sub     a, (SCRN_X - 16) / 2
@@ -104,7 +104,7 @@ CreateCookie::
     ld      [hl], COOKIE_START_Y ; Y position
     
     inc     h           ; wCookieSpeedTable
-    call    GetRandomNumber
+    call    GenerateRandomNumber
     and     a, COOKIE_SPEED_Y_MASK
     add     a, COOKIE_MIN_SPEED_Y
     cp      a, COOKIE_MAX_SPEED_Y
@@ -114,7 +114,7 @@ CreateCookie::
     swap    a
     ld      [hli], a
     
-    call    GetRandomNumber
+    call    GenerateRandomNumber
     ASSERT COOKIE_SPEED_X_MASK == $FF
     ASSERT COOKIE_MIN_SPEED_X == 0
     bit     7, a
@@ -140,7 +140,7 @@ CreateCookie::
     
     srl     l           ; wCookieSpeedAccTable entry = 2 bytes, wCookieSizeTable entry = 1 byte
     inc     h           ; wCookieSizeTable
-    call    GetRandomNumber
+    call    GenerateRandomNumber
     and     a, COOKIE_SIZE_MASK
     ASSERT COOKIE_SIZE_MASK != COOKIE_SIZE_COUNT - 1
     cp      a, COOKIE_SIZE_COUNT
@@ -243,7 +243,8 @@ UpdateCookies::
     
     ; Check if colliding with the player
     ldh     a, [hPlayerInvCountdown]
-    inc     a           ; a = $FF
+    ASSERT PLAYER_NOT_INV == LOW(-1)
+    inc     a           ; a = -1
     ; Player is invincible, don't bother
     jr      nz, .skipCollision
     

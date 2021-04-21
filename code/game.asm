@@ -3,6 +3,17 @@ INCLUDE "defines.inc"
 SECTION "In-Game Code", ROM0
 
 SetUpGame::
+    ; VBlank interrupt handler will read score and cookies blasted
+    ; (graphics loading will take a while) so initialize them right away
+    xor     a, a
+    ld      hl, hScore
+    ld      [hli], a
+    ld      [hli], a
+    ld      [hli], a
+    ASSERT hScore.end == hCookiesBlasted
+    ld      [hli], a
+    ld      [hl], a
+    
     ; Tiles
     ld      de, InGameTiles
     ld      hl, _VRAM9000
@@ -49,14 +60,8 @@ SetUpGame::
     
     ; a = 0
     ldh     [hCookieCount], a
-    ld      hl, hScore
-    ld      [hli], a
-    ld      [hli], a
-    ld      [hli], a
-    ASSERT hScore.end == hCookiesBlasted
-    ld      [hli], a
-    ld      [hli], a
-    dec     a           ; a = $FF
+    ASSERT PLAYER_NOT_INV == LOW(-1)
+    dec     a            ; a = -1
     ldh     [hPlayerInvCountdown], a
     
     ld      a, START_TARGET_COOKIE_COUNT
@@ -72,7 +77,6 @@ SetUpGame::
     ld      b, MAX_COOKIE_COUNT
     call    ClearActors
     
-    ; a = 0
     call    DrawHearts
     
     ld      a, GAME_START_DELAY_FRAMES
@@ -144,7 +148,8 @@ InGame::
     ; Update player invincibility
     ld      hl, hPlayerInvCountdown
     ld      a, [hl]
-    inc     a       ; a = $FF
+    ASSERT PLAYER_NOT_INV == LOW(-1)
+    inc     a       ; a = -1
     jr      z, :+
     
     dec     [hl]
@@ -179,13 +184,13 @@ InGame::
     jp      Main
 :
     
-    call    HideAllActors
     call    DrawHearts
     ; Copy actor data to OAM
     ld      de, wLaserPosTable
     call    CopyActorsToOAM
     ld      de, wCookiePosTable
     call    CopyActorsToOAM
+    call    HideUnusedObjects
     
     call    HaltVBlank
     
@@ -194,9 +199,8 @@ InGame::
 ; Draw hearts to show player's remaining lives
 ; NOTE: hNextAvailableOAMSlot is overridden, call this before
 ; CopyActorsToOAM!
-; @param a  0
 DrawHearts::
-    ld      b, a    ; a = 0
+    ld      b, 0
     ld      hl, wOAM + PLAYER_END_OFFSET
 .drawHeartsLoop
     ld      a, HEART_START_Y
