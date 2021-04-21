@@ -171,6 +171,7 @@ InGame::
     and     a, a
     jr      nz, :+
     
+    ld      a, GAME_STATE_GAME_OVER
     ld      hl, LoadGameOverScreen
     call    StartFade
     jp      Main

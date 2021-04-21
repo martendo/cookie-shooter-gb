@@ -23,6 +23,7 @@ TitleScreen::
     and     a, PADF_A | PADF_START
     jr      z, :+
     
+    ld      a, GAME_STATE_MODE_SELECT
     ld      hl, LoadModeSelectScreen
     call    StartFade
     jp      Main

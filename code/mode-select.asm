@@ -77,6 +77,7 @@ ModeSelect::
     jr      z, :+
     
     ; Start game!
+    ld      a, GAME_STATE_IN_GAME
     ld      hl, SetUpGame
     call    StartFade
     jp      Main

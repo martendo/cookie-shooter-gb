@@ -2,15 +2,21 @@ INCLUDE "defines.inc"
 
 SECTION "Fade Variables", HRAM
 
-hFadeState:: DS 1
+hFadeNewGameState:
+    DS 1
+hFadeState::
+    DS 1
 hFadeMidwayCall:
 .lo DS 1
 .hi DS 1
 
 SECTION "Fade Code", ROM0
 
+; Start a fade to black and back
+; @param a  New game state to set midway through the fade
 ; @param hl Address to call midway through the fade
 StartFade::
+    ldh     [hFadeNewGameState], a
     ld      a, FADE_OUT | FADE_PHASE_FRAMES
     ldh     [hFadeState], a
     ld      a, l
@@ -47,13 +53,16 @@ UpdateFade::
     inc     a       ; a = $FF = all black
     jr      nz, .fadeOutFinished
     
-    ; Midway - increment game state, call subroutine
-    ld      l, LOW(hGameState)
-    inc     [hl]
+    ; Midway through fade
+    ; Set new game state
+    ld      l, LOW(hFadeNewGameState)
+    ld      a, [hli]
+    ldh     [hGameState], a
     ; Switch to fade in
-    ld      l, LOW(hFadeState)
+    ASSERT hFadeState == hFadeNewGameState + 1
     ld      [hl], FADE_IN | FADE_PHASE_FRAMES
     
+    ; Jump to midway subroutine
     ASSERT hFadeMidwayCall == hFadeState + 1
     inc     l
     ld      a, [hli]

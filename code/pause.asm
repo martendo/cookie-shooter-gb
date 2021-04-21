@@ -10,7 +10,7 @@ PauseGame::
     ld      de, PausedStripMap
     ld      hl, vPausedStrip
     ld      c, PAUSED_STRIP_TILE_HEIGHT
-    jr      LCDMemcopyMap
+    jp      LCDMemcopyMap
 
 Paused::
     ldh     a, [hNewKeys]
@@ -38,9 +38,8 @@ Paused::
     jp      Main
 
 .quitGame
-    ; Return to mode select screen - game state incremented midway through fade
-    ld      a, GAME_STATE_MODE_SELECT - 1
-    ldh     [hGameState], a
+    ; Return to game mode select screen
+    ld      a, GAME_STATE_MODE_SELECT
     ld      hl, LoadModeSelectScreen
     call    StartFade
     jp      Main

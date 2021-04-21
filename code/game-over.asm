@@ -95,10 +95,8 @@ GameOver::
     and     a, PADF_A | PADF_START
     jr      z, :+
     
-    ; Reset game - fade increments game state midway
-    ld      a, GAME_STATE_IN_GAME - 1
-    ldh     [hGameState], a
-    
+    ; Reset game
+    ld      a, GAME_STATE_IN_GAME
     ld      hl, SetUpGame.skipTiles
     call    StartFade
     jp      Main
