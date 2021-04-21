@@ -36,7 +36,7 @@ EntryPoint::
     ; Clear OAM
     ld      hl, _OAMRAM
     call    HideAllObjectsAtAddress
-    ld      hl, wOAM
+    ld      hl, wShadowOAM
     ; a = 0
     ld      b, OAM_COUNT * sizeof_OAM_ATTRS
     call    MemsetSmall
@@ -163,7 +163,7 @@ HaltVBlank::
 
 SECTION "Shadow OAM", WRAM0, ALIGN[8]
 
-wOAM::
+wShadowOAM::
     DS      OAM_COUNT * sizeof_OAM_ATTRS
 
 SECTION "Global Variables", HRAM

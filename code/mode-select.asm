@@ -30,7 +30,7 @@ LoadModeSelectScreen::
     
     ; Selection cursor - a cookie!
     ; Object 1
-    ld      hl, wOAM
+    ld      hl, wShadowOAM
     ld      [hl], MODE_SELECT_CLASSIC_CURSOR_Y
     inc     l
     ld      [hl], MODE_SELECT_CURSOR_X
@@ -61,8 +61,8 @@ ModeSelect::
     ASSERT GAME_MODE_COUNT - 1 == 1
     ld      a, MODE_SELECT_SUPER_CURSOR_Y
 :
-    ld      [wOAM + MODE_SELECT_CURSOR_Y1_OFFSET], a
-    ld      [wOAM + MODE_SELECT_CURSOR_Y2_OFFSET], a
+    ld      [wShadowOAM + MODE_SELECT_CURSOR_Y1_OFFSET], a
+    ld      [wShadowOAM + MODE_SELECT_CURSOR_Y2_OFFSET], a
     
     ldh     a, [hNewKeys]
     bit     PADB_UP, a

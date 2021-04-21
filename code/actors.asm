@@ -9,7 +9,7 @@ SECTION "Common Actor Code", ROM0
 
 ; Hide all objects in OAM by zeroing their Y positions
 HideAllObjects::
-    ld      hl, wOAM
+    ld      hl, wShadowOAM
 HideAllObjectsAtAddress::
     ld      d, OAM_COUNT
 HideObjects:
@@ -24,7 +24,7 @@ HideObjects:
 
 ; Hide all objects that aren't the player
 HideAllActors::
-    ld      hl, wOAM + PLAYER_END_OFFSET
+    ld      hl, wShadowOAM + PLAYER_END_OFFSET
     ld      d, OAM_COUNT - PLAYER_OBJ_COUNT
     jr      HideObjects
 
@@ -41,7 +41,7 @@ HideUnusedObjects::
     add     a, a
     add     a, a
     ld      l, a
-    ld      h, HIGH(wOAM)
+    ld      h, HIGH(wShadowOAM)
     
     jr      HideObjects
 
@@ -82,7 +82,7 @@ CopyActorsToOAM::
     add     a, a
     add     a, a
     ld      l, a
-    ld      h, HIGH(wOAM)
+    ld      h, HIGH(wShadowOAM)
     
     ld      a, d
     cp      a, HIGH(wCookiePosTable)

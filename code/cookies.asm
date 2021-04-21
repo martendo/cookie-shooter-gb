@@ -269,7 +269,7 @@ UpdateCookies::
     ld      a, [hl]     ; cookie.hitbox.width
     ldh     [hScratch], a
     
-    ld      hl, wOAM + PLAYER_Y_OFFSET
+    ld      hl, wShadowOAM + PLAYER_Y_OFFSET
     push    bc
     
     ld      a, [hli]

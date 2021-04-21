@@ -15,7 +15,7 @@ ShootLaser::
     ret     c       ; No empty slots
     
     ; [hl] = X position
-    ld      a, [wOAM + PLAYER_X1_OFFSET]
+    ld      a, [wShadowOAM + PLAYER_X1_OFFSET]
     add     a, (PLAYER_WIDTH / 2) - (LASER_WIDTH / 2)
     ld      [hld], a            ; X position
     ld      [hl], LASER_START_Y ; Y position

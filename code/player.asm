@@ -19,7 +19,7 @@ MovePlayerRight::
 
 ; @param a Change in X position (speed)
 MovePlayer:
-    ld      hl, wOAM + PLAYER_X1_OFFSET
+    ld      hl, wShadowOAM + PLAYER_X1_OFFSET
     add     a, [hl]
     
     ; x < 0
@@ -30,7 +30,7 @@ MovePlayer:
     ret     nc  ; Moving out of bounds on the right
     
     ld      [hl], a
-    ld      l, LOW(wOAM + PLAYER_X2_OFFSET)
+    ld      l, LOW(wShadowOAM + PLAYER_X2_OFFSET)
     add     a, 8
     ld      [hl], a
     ret

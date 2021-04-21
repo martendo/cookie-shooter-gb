@@ -58,7 +58,7 @@ LoadGameOverScreen::
     ld      [de], a
     
     ; Show "NEW" sprite
-    ld      hl, wOAM
+    ld      hl, wShadowOAM
     ; Object 1
     ld      [hl], NEW_HIGH_SCORE_Y
     inc     l

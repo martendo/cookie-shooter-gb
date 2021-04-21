@@ -12,7 +12,7 @@ VBlankHandler:
     push    de
     push    hl
     
-    ld      a, HIGH(wOAM)
+    ld      a, HIGH(wShadowOAM)
     lb      bc, (OAM_COUNT * sizeof_OAM_ATTRS) / DMA_LOOP_CYCLES + 1, LOW(rDMA)
     call    hOAMDMA
     

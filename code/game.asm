@@ -41,7 +41,7 @@ SetUpGame::
     
     call    HideAllActors
     ; Set up player
-    ld      hl, wOAM + PLAYER_OFFSET
+    ld      hl, wShadowOAM + PLAYER_OFFSET
     ; Object 1
     ld      [hl], PLAYER_Y
     inc     l
@@ -162,9 +162,9 @@ InGame::
     ASSERT PLAYER_INV_TILE == LOW(-1)
     dec     a
 .writePlayerTile
-    ld      hl, wOAM + PLAYER_TILE1_OFFSET
+    ld      hl, wShadowOAM + PLAYER_TILE1_OFFSET
     ld      [hl], a
-    ld      l, LOW(wOAM + PLAYER_TILE2_OFFSET)
+    ld      l, LOW(wShadowOAM + PLAYER_TILE2_OFFSET)
     ld      [hl], a
     
 :
@@ -201,7 +201,7 @@ InGame::
 ; CopyActorsToOAM!
 DrawHearts::
     ld      b, 0
-    ld      hl, wOAM + PLAYER_END_OFFSET
+    ld      hl, wShadowOAM + PLAYER_END_OFFSET
 .drawHeartsLoop
     ld      a, HEART_START_Y
     ld      c, b
