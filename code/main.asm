@@ -33,8 +33,13 @@ EntryPoint::
     ld      bc, SpriteTiles.end - SpriteTiles
     call    Memcopy
     
+    ; Clear OAM
     ld      hl, _OAMRAM
     call    HideAllObjectsAtAddress
+    ld      hl, wOAM
+    ; a = 0
+    ld      b, OAM_COUNT * sizeof_OAM_ATTRS
+    call    MemsetSmall
     
     ; Copy OAM DMA routine to HRAM
     ld      de, OAMDMA
