@@ -54,18 +54,6 @@ LoadModeSelectScreen::
     ret
 
 ModeSelect::
-    ; Draw cookie cursor for current selection
-    ldh     a, [hGameMode]
-    ASSERT GAME_MODE_CLASSIC == 0
-    and     a, a
-    ld      a, MODE_SELECT_CLASSIC_CURSOR_Y
-    jr      z, :+
-    ASSERT GAME_MODE_COUNT - 1 == 1
-    ld      a, MODE_SELECT_SUPER_CURSOR_Y
-:
-    ld      [wShadowOAM + MODE_SELECT_CURSOR_Y1_OFFSET], a
-    ld      [wShadowOAM + MODE_SELECT_CURSOR_Y2_OFFSET], a
-    
     ldh     a, [hNewKeys]
     bit     PADB_UP, a
     call    nz, .moveSelectionUp
@@ -93,6 +81,12 @@ ModeSelect::
     
     dec     a
     ldh     [hGameMode], a
+    
+    ASSERT GAME_MODE_COUNT - 1 == 1
+    ld      a, MODE_SELECT_CLASSIC_CURSOR_Y
+    ld      [wShadowOAM + MODE_SELECT_CURSOR_Y1_OFFSET], a
+    ld      [wShadowOAM + MODE_SELECT_CURSOR_Y2_OFFSET], a
+    
     ret
 .moveSelectionDown
     ldh     a, [hGameMode]
@@ -103,4 +97,10 @@ ModeSelect::
     inc     a   ; Undo dec
     inc     a
     ldh     [hGameMode], a
+    
+    ASSERT GAME_MODE_COUNT - 1 == 1
+    ld      a, MODE_SELECT_SUPER_CURSOR_Y
+    ld      [wShadowOAM + MODE_SELECT_CURSOR_Y1_OFFSET], a
+    ld      [wShadowOAM + MODE_SELECT_CURSOR_Y2_OFFSET], a
+    
     ret

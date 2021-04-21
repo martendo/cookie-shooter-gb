@@ -57,7 +57,6 @@ EntryPoint::
     ld      a, [de]
     cp      a, [hl]
     jr      nz, .initSRAM
-    ASSERT HIGH(SaveDataHeader) != HIGH(SaveDataHeader.end)
     inc     de
     ASSERT HIGH(sSaveDataHeader) == HIGH(sSaveDataHeader.end)
     inc     l
@@ -69,7 +68,6 @@ EntryPoint::
     
 .initSRAM
     ; Write save data header
-    ASSERT HIGH(SaveDataHeader) != HIGH(SaveDataHeader.end)
     ld      de, SaveDataHeader
     ASSERT HIGH(sSaveDataHeader) == HIGH(sSaveDataHeader.end)
     ld      l, LOW(sSaveDataHeader)
