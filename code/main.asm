@@ -53,13 +53,13 @@ EntryPoint::
     ld      hl, sSaveDataHeader
     ld      de, SaveDataHeader
     ld      b, STRLEN(SAVE_DATA_HEADER)
-    ASSERT HIGH(sSaveDataHeader) == HIGH(sSaveDataHeader.end)
-    ASSERT HIGH(SaveDataHeader) == HIGH(SaveDataHeader.end)
 .checkSaveDataHeaderLoop
     ld      a, [de]
     cp      a, [hl]
     jr      nz, .initSRAM
+    ASSERT HIGH(SaveDataHeader) == HIGH(SaveDataHeader.end)
     inc     e
+    ASSERT HIGH(sSaveDataHeader) == HIGH(sSaveDataHeader.end)
     inc     l
     dec     b
     jr      nz, .checkSaveDataHeaderLoop
@@ -69,7 +69,9 @@ EntryPoint::
     
 .initSRAM
     ; Write save data header
+    ASSERT HIGH(sSaveDataHeader) == HIGH(sSaveDataHeader.end)
     ld      l, LOW(sSaveDataHeader)
+    ASSERT HIGH(SaveDataHeader) == HIGH(SaveDataHeader.end)
     ld      e, LOW(SaveDataHeader)
     ld      b, STRLEN(SAVE_DATA_HEADER)
 .writeSaveDataHeaderLoop
