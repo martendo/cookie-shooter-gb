@@ -23,16 +23,8 @@ SetUpGame::
     ; Background map
     ld      hl, _SCRN0 + (STATUS_BAR_TILE_HEIGHT * SCRN_VX_B)
     ld      b, IN_GAME_BACKGROUND_TILE
-    lb      de, SCRN_Y_B - STATUS_BAR_TILE_HEIGHT, SCRN_VX_B - SCRN_X_B
-:
-    ld      c, SCRN_X_B
-    call    LCDMemsetSmall
-    ld      a, d
-    ld      d, 0
-    add     hl, de
-    ld      d, a
-    dec     d
-    jr      nz, :-
+    ld      d, SCRN_Y_B - STATUS_BAR_TILE_HEIGHT
+    call    LCDMemsetMap
     ; Status bar
     ld      de, StatusBarMap
     ld      hl, _SCRN0

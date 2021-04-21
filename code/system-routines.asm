@@ -105,3 +105,21 @@ LCDMemsetSmall::
     dec     c
     jr      nz, LCDMemsetSmall
     ret
+
+; Fill an arbitrary number of rows of the background map, even if the
+; LCD is on
+; @param hl Pointer to destination
+; @param b  Byte value to use
+; @param d  Number of rows to fill
+LCDMemsetMap::
+    ld      e, SCRN_VX_B - SCRN_X_B
+.loop
+    ld      c, SCRN_X_B
+    call    LCDMemsetSmall
+    ld      a, d
+    ld      d, 0
+    add     hl, de
+    ld      d, a
+    dec     d
+    jr      nz, .loop
+    ret

@@ -28,6 +28,8 @@ LoadModeSelectScreen::
     xor     a, a
     ld      [rRAMG], a
     
+    ; May be coming from exiting a game, hide all objects but the first 2
+    call    HideAllActors
     ; Selection cursor - a cookie!
     ; Object 1
     ld      hl, wShadowOAM
