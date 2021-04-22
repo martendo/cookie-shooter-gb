@@ -48,13 +48,12 @@ HideUnusedObjects::
 ; Clear actors
 ; @param hl Pointer to actor data to clear
 ; @param b  Maximum number of actors
+; @param a  0
 ClearActors::
-    xor     a, a
-.loop
     ld      [hli], a
     inc     l
     dec     b
-    jr      nz, .loop
+    jr      nz, ClearActors
     ret
 
 ; Find an empty slot to in an actor table

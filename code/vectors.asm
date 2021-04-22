@@ -20,11 +20,15 @@ VBlankHandler:
     ld      hl, rLCDC
     res     LCDCB_OBJ, [hl]
     ld      l, LOW(hVBlankFlag)
-    ld      [hl], h ; Non-zero
+    ld      [hl], h         ; Non-zero
     
     ldh     a, [hGameState]
     cp      a, GAME_STATE_IN_GAME
     jr      c, .noStatusBar
+    jr      nz, .noHearts   ; Only draw hearts in-game
+    ; Draw player's lives
+    call    DrawHearts
+.noHearts
     ; Update score and cookies blasted
     ld      de, hCookiesBlasted.end - 1
     ld      hl, vCookiesBlasted

@@ -40,6 +40,35 @@ INCBIN "res/game-over.tilemap"
 
 SECTION "Graphics Code", ROM0
 
+; Draw hearts to show player's remaining lives
+DrawHearts::
+    ldh     a, [hPlayerLives]
+    and     a, a    ; Nothing to draw
+    ret     z
+    
+    ld      hl, vHearts
+    ld      de, SCRN_VX_B
+    lb      bc, HEART_TILE1, HEART_TILE2
+    ; a = player lives
+    call    .draw
+    ldh     a, [hPlayerLives]
+    ld      b, a
+    ld      a, PLAYER_MAX_LIVES
+    sub     a, b    ; a = heart spaces to erase
+    ret     z       ; None, done
+    
+    lb      bc, IN_GAME_BACKGROUND_TILE, IN_GAME_BACKGROUND_TILE
+    ; Fallthrough
+
+.draw
+    ld      [hl], b
+    add     hl, de
+    ld      [hl], c
+    add     hl, de
+    dec     a
+    jr      nz, .draw
+    ret
+
 ; Draw a BCD number onto the status bar
 ; @param de Pointer to most significant byte of BCD number
 ; @param hl Pointer to destination on map

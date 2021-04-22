@@ -13,6 +13,8 @@ SetUpGame::
     ASSERT hScore.end == hCookiesBlasted
     ld      [hli], a
     ld      [hl], a
+    ld      a, PLAYER_START_LIVES
+    ldh     [hPlayerLives], a
     
     ; Tiles
     ld      de, InGameTiles
@@ -49,6 +51,18 @@ SetUpGame::
     ld      [hli], a    ; a = 0 = PLAYER_TILE
     ld      [hl], OAMF_XFLIP
     
+    ; Clear actor tables
+    ; a = 0
+    ldh     [hNextAvailableOAMSlot], a
+    ld      hl, wLaserPosTable
+    ld      b, MAX_LASER_COUNT
+    ; a = 0
+    call    ClearActors
+    ld      hl, wCookiePosTable
+    ld      b, MAX_COOKIE_COUNT
+    ; a = 0
+    call    ClearActors
+    
     ; a = 0
     ldh     [hCookieCount], a
     ASSERT PLAYER_NOT_INV == LOW(-1)
@@ -57,18 +71,6 @@ SetUpGame::
     
     ld      a, START_TARGET_COOKIE_COUNT
     ldh     [hTargetCookieCount], a
-    ld      a, PLAYER_START_LIVES
-    ldh     [hPlayerLives], a
-    
-    ; Clear actor tables
-    ld      hl, wLaserPosTable
-    ld      b, MAX_LASER_COUNT
-    call    ClearActors
-    ld      hl, wCookiePosTable
-    ld      b, MAX_COOKIE_COUNT
-    call    ClearActors
-    
-    call    DrawHearts
     
     ld      a, GAME_START_DELAY_FRAMES
     ldh     [hWaitCountdown], a
@@ -159,6 +161,9 @@ InGame::
     ld      [hl], a
     
 :
+    ld      a, PLAYER_OBJ_COUNT
+    ldh     [hNextAvailableOAMSlot], a
+    
     ; TODO: Add "Super" mode things - currently exactly the same as classic!!!
     
     ; Update actors
@@ -176,7 +181,6 @@ InGame::
     jp      Main
 :
     
-    call    DrawHearts
     ; Copy actor data to OAM
     ld      de, wLaserPosTable
     call    CopyActorsToOAM
@@ -187,36 +191,3 @@ InGame::
     call    HaltVBlank
     
     jp      Main
-
-; Draw hearts to show player's remaining lives
-; NOTE: hNextAvailableOAMSlot is overridden, call this before
-; CopyActorsToOAM!
-DrawHearts::
-    ld      b, 0
-    ld      hl, wShadowOAM + PLAYER_END_OFFSET
-.drawHeartsLoop
-    ld      a, HEART_START_Y
-    ld      c, b
-    inc     c
-:
-    dec     c
-    jr      z, :+
-    add     a, HEART_HEIGHT
-    jr      :-
-:
-    ld      [hli], a
-    ld      [hl], HEART_X
-    inc     l
-    ld      [hl], HEART_TILE
-    inc     l
-    ld      [hl], 0
-    inc     l
-    
-    inc     b
-    ldh     a, [hPlayerLives]
-    cp      a, b
-    jr      nz, .drawHeartsLoop
-    
-    add     a, PLAYER_OBJ_COUNT
-    ldh     [hNextAvailableOAMSlot], a
-    ret
