@@ -1,3 +1,3 @@
-INCLUDE "hardware.inc/hardware.inc"
+INCLUDE "hardware.inc"
 INCLUDE "constants.inc"
 INCLUDE "macros.inc"
