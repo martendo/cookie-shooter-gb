@@ -67,12 +67,12 @@ ModeSelect::
     
 :
     ldh     a, [hNewKeys]
-    bit     PADB_UP, a
+    ld      b, a    ; Save in b because a will be overwritten
+    bit     PADB_UP, b
     call    nz, .moveSelectionUp
-    ldh     a, [hNewKeys]
-    bit     PADB_DOWN, a
+    bit     PADB_DOWN, b
     call    nz, .moveSelectionDown
-    ldh     a, [hNewKeys]
+    ld      a, b
     and     a, PADF_A | PADF_START
     jr      z, :+
     

@@ -7,12 +7,13 @@ SetUpGame::
     ; (graphics loading will take a while) so initialize them right away
     xor     a, a
     ld      hl, hScore
+    REPT SCORE_BYTE_COUNT
     ld      [hli], a
-    ld      [hli], a
-    ld      [hli], a
+    ENDR
     ASSERT hScore.end == hCookiesBlasted
+    REPT COOKIES_BLASTED_BYTE_COUNT
     ld      [hli], a
-    ld      [hl], a
+    ENDR
     ld      a, PLAYER_START_LIVES
     ldh     [hPlayerLives], a
     
@@ -92,10 +93,10 @@ InGame::
 :
     ; Player movement
     ldh     a, [hPressedKeys]
-    bit     PADB_LEFT, a
+    ld      b, a    ; Save in b because a will be overwritten
+    bit     PADB_LEFT, b
     call    nz, MovePlayerLeft
-    ldh     a, [hPressedKeys]
-    bit     PADB_RIGHT, a
+    bit     PADB_RIGHT, b
     call    nz, MovePlayerRight
     
     ; Shoot a laser
@@ -116,13 +117,13 @@ InGame::
     ; Update target cookie count based on score
     ld      hl, hScore.2
     ld      a, [hld]
-    ASSERT 10000 / ADD_COOKIE_RATE == 2
-    add     a, a
+    ASSERT 01_00_00 / ADD_COOKIE_RATE == 2
+    add     a, a    ; * 2
     ld      b, a
     ld      a, [hl] ; hScore.1
-    ASSERT ADD_COOKIE_RATE / 1000 < 10 && ADD_COOKIE_RATE / 1000 >= 0
-    cp      a, (ADD_COOKIE_RATE / 1000) << 4
-    ccf
+    ASSERT ADD_COOKIE_RATE / 10_00 < 10 && ADD_COOKIE_RATE / 10_00 >= 0
+    cp      a, (ADD_COOKIE_RATE / 10_00) << 4
+    ccf             ; Add an extra cookie if >= ADD_COOKIE_RATE
     ld      a, 0    ; Preserve carry
     adc     a, b
     add     a, START_TARGET_COOKIE_COUNT
@@ -170,6 +171,13 @@ InGame::
     call    UpdateLasers
     call    UpdateCookies
     
+    ; Copy actor data to OAM
+    ld      de, wLaserPosTable
+    call    CopyActorsToOAM
+    ld      de, wCookiePosTable
+    call    CopyActorsToOAM
+    call    HideUnusedObjects
+    
     ; Check for game over - no more lives left
     ldh     a, [hPlayerLives]
     and     a, a
@@ -180,14 +188,5 @@ InGame::
     call    StartFade
     jp      Main
 :
-    
-    ; Copy actor data to OAM
-    ld      de, wLaserPosTable
-    call    CopyActorsToOAM
-    ld      de, wCookiePosTable
-    call    CopyActorsToOAM
-    call    HideUnusedObjects
-    
     call    HaltVBlank
-    
     jp      Main

@@ -74,12 +74,7 @@ Initialize::
     ASSERT HIGH(sSaveDataHeader) == HIGH(sSaveDataHeader.end)
     ld      l, LOW(sSaveDataHeader)
     ld      b, STRLEN(SAVE_DATA_HEADER)
-.writeSaveDataHeaderLoop
-    ld      a, [de]
-    ld      [hli], a
-    inc     e
-    dec     b
-    jr      nz, .writeSaveDataHeaderLoop
+    call    MemcopySmall
     ; Clear high score
     xor     a, a
     ASSERT sClassicHighScore == sSaveDataHeader.end
@@ -189,6 +184,7 @@ hScore::
 .2:: DS 1
 .end::
 
+ASSERT COOKIES_BLASTED_BYTE_COUNT == 2
 hCookiesBlasted::
 .lo:: DS 1
 .hi:: DS 1

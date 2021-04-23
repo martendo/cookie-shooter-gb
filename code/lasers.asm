@@ -176,4 +176,4 @@ CheckLaserCollide:
     pop     hl          ; Laser Y position
     inc     l
     pop     bc
-    jp      UpdateLasers.resume
+    jr      UpdateLasers.resume
