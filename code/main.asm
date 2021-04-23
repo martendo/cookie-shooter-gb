@@ -1,6 +1,6 @@
 INCLUDE "defines.inc"
 
-SECTION "Main", ROM0[$0150]
+SECTION "Initialization and Main Loop", ROM0
 
 EntryPoint::
     ld      sp, $E000

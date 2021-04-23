@@ -1,6 +1,6 @@
-SECTION "Header", ROM0[$0100]
+SECTION "Entry Point", ROM0[$0100]
 
     di
-    jp      EntryPoint
+    jp      Initialize
     
     DS      $0150 - @, 0
