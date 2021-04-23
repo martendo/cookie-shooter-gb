@@ -21,10 +21,12 @@ Initialize::
     ldh     [hGameState], a
     
     ; a = 0
-    ldh     [hPressedKeys], a
     ldh     [hNewKeys], a
+    dec     a               ; a = $FF = all pressed
+    ; Make all keys pressed so hNewKeys is correct
+    ldh     [hPressedKeys], a
     ASSERT NOT_FADING == LOW(-1)
-    dec     a   ; a = -1
+    ; a = $FF = -1
     ldh     [hFadeState], a ; Not fading
     
     ; Copy sprite tiles (never change) to VRAM
