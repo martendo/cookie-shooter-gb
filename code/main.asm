@@ -2,8 +2,8 @@ INCLUDE "defines.inc"
 
 SECTION "Initialization and Main Loop", ROM0
 
-EntryPoint::
-    ld      sp, $E000
+Initialize::
+    ld      sp, wStackBottom
     
     ; Wait for VBlank to disable the LCD
 .waitVBL
@@ -163,10 +163,15 @@ HaltVBlank::
     ldh     [hVBlankFlag], a
     ret
 
+SECTION "Stack", WRAMX[$E000 - STACK_SIZE]
+
+    DS STACK_SIZE
+wStackBottom:
+
 SECTION "Shadow OAM", WRAM0, ALIGN[8]
 
 wShadowOAM::
-    DS      OAM_COUNT * sizeof_OAM_ATTRS
+    DS OAM_COUNT * sizeof_OAM_ATTRS
 
 SECTION "Global Variables", HRAM
 
