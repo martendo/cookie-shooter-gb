@@ -31,6 +31,35 @@ DrawHearts::
     jr      nz, .draw
     ret
 
+; Draw a power-up slot
+; @param a  Power-up type
+; @param hl Pointer to destination on map
+; @param de SCRN_VX_B
+DrawPowerUp::
+    ; Get tiles with power-up type
+    ASSERT POWER_UP_TILE_COUNT == 4
+    add     a, a    ; * 2
+    add     a, a    ; * 4
+    add     a, POWER_UP_TILES_START
+    
+    ASSERT POWER_UP_TILE_WIDTH == 2
+    ld      [hli], a
+    inc     a
+    ld      [hld], a
+    inc     a
+    
+    add     hl, de
+    ASSERT POWER_UP_TILE_HEIGHT - 1 == 1
+    
+    ASSERT POWER_UP_TILE_WIDTH == 2
+    ld      [hli], a
+    inc     a
+    ld      [hld], a
+    
+    add     hl, de
+    
+    ret
+
 ; Draw a BCD number onto the status bar
 ; @param de Pointer to most significant byte of BCD number
 ; @param hl Pointer to destination on map

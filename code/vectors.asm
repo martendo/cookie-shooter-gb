@@ -24,12 +24,31 @@ VBlankHandler:
     
     ldh     a, [hGameState]
     cp      a, GAME_STATE_IN_GAME
-    jr      c, .noStatusBar
-    jr      nz, .noHearts   ; Only draw hearts in-game
-    ; Draw player's lives
+    jr      c, .noStatus
+    jr      nz, .notInGame  ; Only draw hearts + power-ups in-game
+    
+    ; Draw hearts (player's lives)
     call    DrawHearts
-.noHearts
-    ; Update score and cookies blasted
+    
+    ; Draw power-ups
+    ldh     a, [hGameMode]
+    ASSERT GAME_MODE_COUNT - 1 == 1 && GAME_MODE_CLASSIC == 0
+    and     a, a
+    jr      z, .noPowerUps
+    
+    ld      hl, vPowerUps
+    ld      de, SCRN_VX_B
+    
+    ldh     a, [hPowerUps.1]
+    call    DrawPowerUp
+    ldh     a, [hPowerUps.2]
+    call    DrawPowerUp
+    ldh     a, [hPowerUps.3]
+    call    DrawPowerUp
+    
+.noPowerUps
+.notInGame
+    ; Draw score and cookies blasted
     ld      de, hCookiesBlasted.end - 1
     ld      hl, vCookiesBlasted
     ld      c, hCookiesBlasted.end - hCookiesBlasted
@@ -38,7 +57,7 @@ VBlankHandler:
     ld      hl, vScore
     ld      c, hScore.end - hScore
     call    DrawStatusBarBCD
-.noStatusBar
+.noStatus
     
     ; Graphics loading may be done by a subroutine called by UpdateFade,
     ; so don't let that delay the above

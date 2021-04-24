@@ -5,6 +5,7 @@ INCBIN "res/sprite-tiles.2bpp"
 .end::
 InGameTiles::
 INCBIN "res/in-game-tiles.2bpp"
+INCBIN "res/power-ups.2bpp"
 .end::
 
 StatusBarMap::

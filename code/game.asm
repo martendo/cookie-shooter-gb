@@ -1,10 +1,29 @@
 INCLUDE "defines.inc"
 
+SECTION "In-Game Variables", HRAM
+
+hWaitCountdown: DS 1
+
+; Last frame's game score in thousands (e.g. score of 14200 = last score
+; thousands of 14)
+; Used to tell when the player crossed a multiple of 1000 points for
+; checking whether or not to give a power-up
+hLastScoreThousands:: DS 1
+
+; Player's power-up slots
+hPowerUps::
+ASSERT MAX_POWER_UP_COUNT == 3
+.1:: DS 1
+.2:: DS 1
+.3:: DS 1
+.end
+
 SECTION "In-Game Code", ROM0
 
 SetUpGame::
-    ; VBlank interrupt handler will read score and cookies blasted
-    ; (graphics loading will take a while) so initialize them right away
+    ; VBlank interrupt handler will read and draw these things on the
+    ; screen (graphics loading will take a while) so initialize them
+    ; right away
     xor     a, a
     ld      hl, hScore
     REPT SCORE_BYTE_COUNT
@@ -14,6 +33,14 @@ SetUpGame::
     REPT COOKIES_BLASTED_BYTE_COUNT
     ld      [hli], a
     ENDR
+    
+    ASSERT hPowerUps != hCookiesBlasted.end
+    ld      l, LOW(hPowerUps)
+    ASSERT NO_POWER_UP == 0
+    REPT MAX_POWER_UP_COUNT
+    ld      [hli], a
+    ENDR
+    
     ld      a, PLAYER_START_LIVES
     ldh     [hPlayerLives], a
     
@@ -66,6 +93,7 @@ SetUpGame::
     
     ; a = 0
     ldh     [hCookieCount], a
+    ldh     [hLastScoreThousands], a
     ASSERT PLAYER_NOT_INV == LOW(-1)
     dec     a            ; a = -1
     ldh     [hPlayerInvCountdown], a
@@ -162,14 +190,60 @@ InGame::
     ld      [hl], a
     
 :
-    ld      a, PLAYER_OBJ_COUNT
-    ldh     [hNextAvailableOAMSlot], a
-    
-    ; TODO: Add "Super" mode things - currently exactly the same as classic!!!
-    
     ; Update actors
     call    UpdateLasers
     call    UpdateCookies
+    
+    ldh     a, [hScore.2]
+    swap    a
+    and     a, $F0
+    ld      b, a
+    ldh     a, [hScore.1]
+    swap    a
+    and     a, $0F
+    or      a, b
+    ld      b, a    ; b = score (thousands)
+    
+    ; Update power-ups
+    ldh     a, [hGameMode]
+    ASSERT GAME_MODE_COUNT - 1 == 1 && GAME_MODE_CLASSIC == 0
+    and     a, a
+    jr      z, .noPowerUp
+    
+    ; Score crossed 1000 points?
+    ldh     a, [hLastScoreThousands]
+    cp      a, b
+    jr      z, .noPowerUp
+    
+    ; TODO: Give the player power-ups!
+    
+    jr      .noPowerUp
+.getPowerUp
+    ld      hl, hPowerUps
+    push    bc
+    ld      b, MAX_POWER_UP_COUNT
+.findEmptySlotLoop
+    ld      a, [hl]
+    ASSERT NO_POWER_UP == 0
+    and     a, a
+    jr      z, .foundEmptySlot
+    inc     l
+    dec     b
+    jr      nz, .findEmptySlotLoop
+    ; No more room for a power-up left
+    jr      .noPowerUp
+    
+.foundEmptySlot
+    ld      a, c
+    ld      [hl], a
+    pop     bc
+    
+.noPowerUp
+    ld      a, b
+    ldh     [hLastScoreThousands], a
+    
+    ld      a, PLAYER_OBJ_COUNT
+    ldh     [hNextAvailableOAMSlot], a
     
     ; Copy actor data to OAM
     ld      de, wLaserPosTable

@@ -1,4 +1,5 @@
 INCLUDE "constants/game.inc"
+INCLUDE "constants/power-ups.inc"
 INCLUDE "constants/actors.inc"
 INCLUDE "constants/player.inc"
 INCLUDE "constants/lasers.inc"
