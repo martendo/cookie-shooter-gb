@@ -1,4 +1,5 @@
 SRCDIR := code
+DATADIR := data
 GFXDIR := gfx
 BINDIR := bin
 OBJDIR := obj
@@ -15,7 +16,7 @@ LDFLAGS  = -p $(PADVALUE)
 FIXFLAGS = -v -p $(PADVALUE) -i "$(MFRCODE)" -k "$(LICENSEE)" -l $(OLDLIC) -m $(MBC) -n $(VERSION) -r $(SRAMSIZE) -t $(TITLE)
 GFXFLAGS = -hu -f
 
-SRCS = $(wildcard $(SRCDIR)/*.asm)
+SRCS = $(wildcard $(SRCDIR)/*.asm) $(wildcard $(DATADIR)/*.asm)
 GFX = $(RESDIR)/sprite-tiles.2bpp $(RESDIR)/in-game-tiles.2bpp $(RESDIR)/game-over.2bpp $(RESDIR)/game-over-numbers.2bpp $(RESDIR)/game-over.tilemap $(RESDIR)/title-screen.2bpp $(RESDIR)/title-screen.tilemap $(RESDIR)/mode-select.2bpp $(RESDIR)/mode-select-numbers.2bpp $(RESDIR)/mode-select.tilemap $(IN_GAME_SUBMAPS)
 IN_GAME_SUBMAPS = $(RESDIR)/status-bar.tilemap $(RESDIR)/paused-strip.tilemap
 
@@ -39,15 +40,15 @@ rebuild:
 	$(MAKE) all
 
 # Build the ROM, along with map and symbol files
-$(BINDIR)/%.$(ROMEXT) $(BINDIR)/%.sym $(BINDIR)/%.map: $(GFX) $(patsubst $(SRCDIR)/%.asm,$(OBJDIR)/%.o,$(SRCS))
+$(BINDIR)/%.$(ROMEXT) $(BINDIR)/%.sym $(BINDIR)/%.map: $(GFX) $(patsubst %.asm,$(OBJDIR)/%.o,$(SRCS))
 	@mkdir -p $(@D)
-	rgblink $(LDFLAGS) -m $(BINDIR)/$*.map -n $(BINDIR)/$*.sym -o $(BINDIR)/$*.$(ROMEXT) $(patsubst $(SRCDIR)/%.asm,$(OBJDIR)/%.o,$(SRCS))
+	rgblink $(LDFLAGS) -m $(BINDIR)/$*.map -n $(BINDIR)/$*.sym -o $(BINDIR)/$*.$(ROMEXT) $(patsubst %.asm,$(OBJDIR)/%.o,$(SRCS))
 	rgbfix $(FIXFLAGS) $(BINDIR)/$*.$(ROMEXT)
 
 # Assemble an assembly file, save dependencies
-$(OBJDIR)/%.o $(DEPDIR)/%.mk: $(GFX) $(SRCDIR)/%.asm
-	@mkdir -p $(OBJDIR) $(DEPDIR)
-	rgbasm $(ASFLAGS) -M $(DEPDIR)/$*.mk -MG -MP -MQ $(OBJDIR)/$*.o -MQ $(DEPDIR)/$*.mk -o $(OBJDIR)/$*.o $(SRCDIR)/$*.asm
+$(OBJDIR)/%.o $(DEPDIR)/%.mk: $(GFX) %.asm
+	@mkdir -p $(OBJDIR)/$(*D) $(DEPDIR)/$(*D)
+	rgbasm $(ASFLAGS) -M $(DEPDIR)/$*.mk -MG -MP -MQ $(OBJDIR)/$*.o -MQ $(DEPDIR)/$*.mk -o $(OBJDIR)/$*.o $*.asm
 
 # Graphics conversion
 $(RESDIR)/sprite-tiles.2bpp: $(GFXDIR)/sprite-tiles.png
@@ -70,5 +71,5 @@ $(RESDIR)/%.tilemap: $(GFXDIR)/%.png $(RESDIR)/%.2bpp $(RESDIR)/%.pal.json
 	superfamiconv map -M gb -B 2 -F $(SFC_$*_MAP_FLAGS) -i $< -t $(RESDIR)/$*.2bpp -p $(RESDIR)/$*.pal.json -d $@
 
 ifneq ($(MAKECMDGOALS),clean)
--include $(patsubst $(SRCDIR)/%.asm,$(DEPDIR)/%.mk,$(SRCS))
+-include $(patsubst %.asm,$(DEPDIR)/%.mk,$(SRCS))
 endif
