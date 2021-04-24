@@ -33,6 +33,7 @@ DrawHearts::
 
 ; Draw a power-up slot
 ; @param a  Power-up type
+; @param b  Power-up index (0-2)
 ; @param hl Pointer to destination on map
 ; @param de SCRN_VX_B
 DrawPowerUp::
@@ -41,6 +42,16 @@ DrawPowerUp::
     add     a, a    ; * 2
     add     a, a    ; * 4
     add     a, POWER_UP_TILES_START
+    
+    ld      c, a
+    ; Is this the currently selected power-up?
+    ldh     a, [hPowerUpSelection]
+    cp      a, b
+    ld      a, c
+    jr      nz, :+
+    
+    add     a, POWER_UP_COUNT * POWER_UP_TILE_COUNT
+:
     
     ASSERT POWER_UP_TILE_WIDTH == 2
     ld      [hli], a

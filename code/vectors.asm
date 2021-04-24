@@ -40,10 +40,13 @@ VBlankHandler:
     ld      de, SCRN_VX_B
     
     ldh     a, [hPowerUps.1]
+    ld      b, 0
     call    DrawPowerUp
     ldh     a, [hPowerUps.2]
+    inc     b
     call    DrawPowerUp
     ldh     a, [hPowerUps.3]
+    inc     b
     call    DrawPowerUp
     
 .noPowerUps

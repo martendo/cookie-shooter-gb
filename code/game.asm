@@ -18,6 +18,9 @@ ASSERT MAX_POWER_UP_COUNT == 3
 .3:: DS 1
 .end
 
+; Currently selected power-up (out of the 3)
+hPowerUpSelection:: DS 1
+
 SECTION "In-Game Code", ROM0
 
 SetUpGame::
@@ -40,6 +43,8 @@ SetUpGame::
     REPT MAX_POWER_UP_COUNT
     ld      [hli], a
     ENDR
+    ASSERT hPowerUpSelection == hPowerUps.end
+    ld      [hl], a
     
     ld      a, PLAYER_START_LIVES
     ldh     [hPlayerLives], a
@@ -119,6 +124,35 @@ InGame::
     jp      Main
     
 :
+    ldh     a, [hGameMode]
+    ASSERT GAME_MODE_COUNT - 1 == 1 && GAME_MODE_CLASSIC == 0
+    and     a, a
+    jr      z, .noPowerUps
+    
+    ; Power-up selection
+    ldh     a, [hNewKeys]
+    bit     PADB_UP, a
+    jr      nz, :+
+    
+    bit     PADB_DOWN, a
+    jr      z, .noPowerUps
+    
+    ; Move power-up selection down
+    ldh     a, [hPowerUpSelection]
+    cp      a, MAX_POWER_UP_COUNT - 1
+    jr      nc, .noPowerUps
+    inc     a
+    ldh     [hPowerUpSelection], a
+    jr      .noPowerUps
+
+:
+    ldh     a, [hPowerUpSelection]
+    and     a, a
+    jr      z, .noPowerUps
+    dec     a
+    ldh     [hPowerUpSelection], a
+
+.noPowerUps
     ; Player movement
     ldh     a, [hPressedKeys]
     ld      b, a    ; Save in b because a will be overwritten
