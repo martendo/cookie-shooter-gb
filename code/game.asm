@@ -249,9 +249,13 @@ InGame::
     cp      a, b
     jr      z, .noPowerUp
     
-    ; TODO: Give the player power-ups!
+    ld      a, b
     
-    jr      .noPowerUp
+    ld      c, POWER_UP_SLOW_COOKIES
+    ASSERT (POWER_UP_SLOW_COOKIES_POINT_RATE / $1000) & $0F == 0
+    and     a, $0F
+    jr      nz, .noPowerUp
+    
 .getPowerUp
     ld      hl, hPowerUps
     push    bc
