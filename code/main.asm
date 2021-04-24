@@ -1,8 +1,15 @@
 INCLUDE "defines.inc"
 
+SECTION "Entry Point", ROM0[$0100]
+
+    di
+    jp      Initialize
+    
+    DS      $0150 - @, 0
+
 SECTION "Initialization and Main Loop", ROM0
 
-Initialize::
+Initialize:
     ld      sp, wStackBottom
     
     ; Wait for VBlank to disable the LCD
