@@ -43,10 +43,15 @@ VBlankHandler:
     ld      b, 0
     call    DrawPowerUp
     ldh     a, [hPowerUps.2]
-    inc     b
+    ld      b, 1
     call    DrawPowerUp
     ldh     a, [hPowerUps.3]
-    inc     b
+    ld      b, 2
+    call    DrawPowerUp
+    
+    ld      hl, vCurrentPowerUp
+    ldh     a, [hCurrentPowerUp]
+    ld      b, -1
     call    DrawPowerUp
     
 .noPowerUps

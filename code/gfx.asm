@@ -51,8 +51,13 @@ DrawPowerUp::
     jr      nz, :+
     
     add     a, POWER_UP_COUNT * POWER_UP_TILE_COUNT
+    jr      .draw
 :
+    inc     b       ; Currently in-use power-up
+    jr      nz, .draw
     
+    add     a, (POWER_UP_COUNT * POWER_UP_TILE_COUNT) * 2
+.draw
     ASSERT POWER_UP_TILE_WIDTH == 2
     ld      [hli], a
     inc     a

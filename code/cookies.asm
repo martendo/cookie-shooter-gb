@@ -170,7 +170,22 @@ UpdateCookies::
     inc     d           ; wCookieSpeedTable
     
     ; Y position
+    ldh     a, [hGameMode]
+    ASSERT GAME_MODE_COUNT - 1 == 1 && GAME_MODE_CLASSIC == 0
+    and     a, a
+    jr      z, .normalSpeedY
+    ldh     a, [hCurrentPowerUp]
+    ASSERT POWER_UP_SLOW_COOKIES - 1 == 0
+    dec     a
+    jr      nz, .normalSpeedY
     ld      a, [de]     ; Y speed
+    swap    a
+    sra     a           ; Half of regular speed
+    swap    a
+    jr      :+
+.normalSpeedY
+    ld      a, [de]     ; Y speed
+:
     ld      c, a        ; Save speed in c
     
     inc     h
@@ -196,13 +211,29 @@ UpdateCookies::
     xor     a, a
     ld      [hli], a
     inc     l
-    jr      .destroy
+    jp      .destroy
 .onscreenY
     ld      [hli], a
     
     ; X position
     inc     e
+    ldh     a, [hGameMode]
+    ASSERT GAME_MODE_COUNT - 1 == 1 && GAME_MODE_CLASSIC == 0
+    and     a, a
+    jr      z, .normalSpeedX
+    ldh     a, [hCurrentPowerUp]
+    ASSERT POWER_UP_SLOW_COOKIES - 1 == 0
+    dec     a
+    jr      nz, .normalSpeedX
     ld      a, [de]     ; X speed
+    swap    a
+    sra     a           ; Half of regular speed
+    swap    a
+    jr      :+
+.normalSpeedX
+    ld      a, [de]     ; X speed
+:
+    
     ld      c, a        ; Save speed in c
     
     inc     h

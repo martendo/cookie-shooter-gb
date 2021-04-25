@@ -21,6 +21,13 @@ ASSERT MAX_POWER_UP_COUNT == 3
 ; Currently selected power-up (out of the 3)
 hPowerUpSelection:: DS 1
 
+; Currently in-use power-up
+hCurrentPowerUp:: DS 1
+; Remaining frames with the current power-up
+hPowerUpDuration::
+.lo:: DS 1
+.hi:: DS 1
+
 SECTION "In-Game Code", ROM0
 
 SetUpGame::
@@ -44,6 +51,13 @@ SetUpGame::
     ld      [hli], a
     ENDR
     ASSERT hPowerUpSelection == hPowerUps.end
+    ld      [hli], a
+    ASSERT hCurrentPowerUp == hPowerUpSelection + 1
+    ld      [hli], a
+    ASSERT hPowerUpDuration == hCurrentPowerUp + 1
+    ASSERT NO_POWER_UP_DURATION == HIGH(-1)
+    dec     a       ; a = -1
+    ld      [hli], a
     ld      [hl], a
     
     ld      a, PLAYER_START_LIVES
@@ -135,22 +149,67 @@ InGame::
     jr      nz, :+
     
     bit     PADB_DOWN, a
-    jr      z, .noPowerUps
+    jr      z, .selectedPowerUp
     
     ; Move power-up selection down
     ldh     a, [hPowerUpSelection]
     cp      a, MAX_POWER_UP_COUNT - 1
-    jr      nc, .noPowerUps
+    jr      nc, .selectedPowerUp
     inc     a
     ldh     [hPowerUpSelection], a
-    jr      .noPowerUps
+    jr      .selectedPowerUp
 
 :
     ldh     a, [hPowerUpSelection]
     and     a, a
-    jr      z, .noPowerUps
+    jr      z, .selectedPowerUp
     dec     a
     ldh     [hPowerUpSelection], a
+
+.selectedPowerUp
+    ld      hl, hPowerUps
+    
+    ldh     a, [hNewKeys]
+    bit     PADB_B, a
+    jr      z, .notUsingPowerUp
+    
+    ; Use a power-up
+    ldh     a, [hPowerUpSelection]
+    add     a, l
+    ld      l, a
+    
+    ld      a, [hl]
+    ASSERT NO_POWER_UP == 0
+    and     a, a
+    jr      z, .notUsingPowerUp
+    
+    ldh     [hCurrentPowerUp], a
+    ld      [hl], NO_POWER_UP
+    ld      l, LOW(hPowerUpDuration)
+    ld      [hl], LOW(POWER_UP_DURATION)
+    inc     l
+    ld      [hl], HIGH(POWER_UP_DURATION)
+    
+.notUsingPowerUp
+    ld      l, LOW(hPowerUpDuration.hi)
+    ld      a, [hld]
+    ASSERT NO_POWER_UP_DURATION == HIGH(-1)
+    inc     a       ; a = -1
+    jr      z, .noCurrentPowerUp
+    
+    ld      e, [hl]
+    inc     l
+    ld      d, [hl]
+    dec     de
+    ld      [hl], d
+    dec     l
+    ld      [hl], e
+    jr      .noPowerUps
+    
+.noCurrentPowerUp
+    ASSERT NO_POWER_UP == 0
+    xor     a, a
+    ldh     [hCurrentPowerUp], a
 
 .noPowerUps
     ; Player movement
