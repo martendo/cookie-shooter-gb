@@ -3,27 +3,32 @@ INCLUDE "defines.inc"
 SECTION "Cookie Data", ROM0
 
 CookieTileTable::
-    DB      COOKIE_TILE         ; COOKIE_SIZE_16
-    DB      COOKIE_TILE + 4     ; COOKIE_SIZE_14
-    DB      COOKIE_TILE + 8     ; COOKIE_SIZE_12
-    DB      COOKIE_TILE + 12    ; COOKIE_SIZE_10
-    DB      COOKIE_TILE + 16    ; COOKIE_SIZE_8
+    RSSET COOKIE_TILE
+    REPT COOKIE_SIZE_COUNT
+        DEF TILE RB COOKIE_TILE_COUNT
+        DB TILE
+        PURGE TILE
+    ENDR
 .end::
 
+MACRO hitbox
+    ;   Y,  H,  X,  W
+    DB \1, \2, \1, \2
+ENDM
+
 CookieHitboxTable::
-    ;       Y,  H, X,  W
-    DB      2, 12, 2, 12    ; COOKIE_SIZE_16
-    DB      3, 10, 3, 10    ; COOKIE_SIZE_14
-    DB      4,  8, 4,  8    ; COOKIE_SIZE_12
-    DB      5,  6, 5,  6    ; COOKIE_SIZE_10
-    DB      6,  4, 6,  4    ; COOKIE_SIZE_8
+    hitbox 2, 12    ; COOKIE_SIZE_16
+    hitbox 3, 10    ; COOKIE_SIZE_14
+    hitbox 4, 8     ; COOKIE_SIZE_12
+    hitbox 5, 6     ; COOKIE_SIZE_10
+    hitbox 6, 4     ; COOKIE_SIZE_8
 .end::
 
 ; Points values in BCD
 CookiePointsTable::
-    DW      $25     ; COOKIE_SIZE_16
-    DW      $50     ; COOKIE_SIZE_14
-    DW      $75     ; COOKIE_SIZE_12
-    DW      $100    ; COOKIE_SIZE_10
-    DW      $125    ; COOKIE_SIZE_8
+    DW $25  ; COOKIE_SIZE_16
+    DW $50  ; COOKIE_SIZE_14
+    DW $75  ; COOKIE_SIZE_12
+    DW $100 ; COOKIE_SIZE_10
+    DW $125 ; COOKIE_SIZE_8
 .end::
