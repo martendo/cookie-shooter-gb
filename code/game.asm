@@ -329,56 +329,38 @@ InGame::
     jr      z, .skipPowerUp
     
     ld      a, b
-    push    bc
-    push    af
+    ldh     [hLastScoreThousands], a
     
-    ; Check for slow cookies power-up
-    lb      bc, POWER_UP_SLOW_COOKIES_POINT_RATE / $1000, POWER_UP_SLOW_COOKIES
-:
+    ld      hl, PowerUpPointRateTable
+    ld      c, POWER_UPS_START
+    ld      d, HIGH(hPowerUps)  ; GetPowerUp expects this
+.getPowerUpLoop
+    ld      b, [hl]     ; b = power-up point rate
+.modulo
     sub     a, b
     daa
-    jr      c, .checkFreezeCookies
-    jr      nz, :-
+    jr      c, .nextPowerUp
+    jr      nz, .modulo
     
     ; score % rate == 0
     call    GetPowerUp
     
-.checkFreezeCookies
-    ld      b, POWER_UP_FREEZE_COOKIES_POINT_RATE / $1000
-    ASSERT POWER_UP_FREEZE_COOKIES == POWER_UP_SLOW_COOKIES + 1
+.nextPowerUp
+    ; score % rate != 0
     inc     c
-    pop     af
-    push    af
-:
-    sub     a, b
-    daa
-    jr      c, .checkExtraLife
-    jr      nz, :-
+    ld      a, c
+    cp      a, POWER_UP_COUNT
+    jr      nc, .donePowerUps
     
-    ; score % rate == 0
-    call    GetPowerUp
-    
-.checkExtraLife
-    ; Check for extra life "power-up"
-    ASSERT POWER_UP_EXTRA_LIFE == POWER_UP_FREEZE_COOKIES + 1
-    inc     c
-    ASSERT (POWER_UP_EXTRA_LIFE_POINT_RATE / $1000) & $0F == 0
-    pop     af
-    push    af
-    and     a, $0F
-    jr      nz, .noPowerUp
-    
-    ; score % rate == 0
-    call    GetPowerUp
-    
-.noPowerUp
-    pop     af
-    pop     bc
+    inc     l
+    ldh     a, [hLastScoreThousands]
+    jr      .getPowerUpLoop
     
 .skipPowerUp
     ld      a, b
     ldh     [hLastScoreThousands], a
     
+.donePowerUps
     ld      a, PLAYER_OBJ_COUNT
     ldh     [hNextAvailableOAMSlot], a
     
@@ -405,14 +387,14 @@ InGame::
 ; Add a power-up to an empty power-up slot
 ; @param c  Power-up type
 GetPowerUp:
-    ld      hl, hPowerUps
+    ld      e, LOW(hPowerUps)
     ld      b, MAX_POWER_UP_COUNT
 .findEmptySlotLoop
-    ld      a, [hl]
+    ld      a, [de]
     ASSERT NO_POWER_UP == 0
     and     a, a
     jr      z, .foundEmptySlot
-    inc     l
+    inc     e
     dec     b
     jr      nz, .findEmptySlotLoop
     ; No more room for a power-up left
@@ -420,5 +402,5 @@ GetPowerUp:
     
 .foundEmptySlot
     ld      a, c
-    ld      [hl], a
+    ld      [de], a
     ret
