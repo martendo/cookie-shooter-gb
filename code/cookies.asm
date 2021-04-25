@@ -165,6 +165,23 @@ UpdateCookies::
     jp      .next
     
 .update
+    ldh     a, [hGameMode]
+    ASSERT GAME_MODE_COUNT - 1 == 1 && GAME_MODE_CLASSIC == 0
+    and     a, a
+    jr      z, .updatePos
+    
+    ldh     a, [hCurrentPowerUp]
+    cp      a, POWER_UP_FREEZE_COOKIES
+    jr      nz, .updatePos
+    
+    ; Skip updating position
+    ld      d, [hl]     ; d = Y position
+    inc     l
+    ld      e, [hl]     ; e = X position
+    dec     l
+    jr      .checkCollide
+    
+.updatePos
     ld      e, l
     ld      d, h
     inc     d           ; wCookieSpeedTable
@@ -174,6 +191,7 @@ UpdateCookies::
     ASSERT GAME_MODE_COUNT - 1 == 1 && GAME_MODE_CLASSIC == 0
     and     a, a
     jr      z, .normalSpeedY
+    
     ldh     a, [hCurrentPowerUp]
     ASSERT POWER_UP_SLOW_COOKIES - 1 == 0
     dec     a
@@ -272,6 +290,7 @@ UpdateCookies::
     ld      e, a
     ld      d, [hl]
     
+.checkCollide
     ; Check if colliding with the player
     ldh     a, [hPlayerInvCountdown]
     ASSERT PLAYER_NOT_INV == LOW(-1)

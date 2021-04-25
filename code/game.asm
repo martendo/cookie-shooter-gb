@@ -334,18 +334,33 @@ InGame::
     
     ; Check for slow cookies power-up
     lb      bc, POWER_UP_SLOW_COOKIES_POINT_RATE / $1000, POWER_UP_SLOW_COOKIES
-.modulo
+:
+    sub     a, b
+    daa
+    jr      c, .checkFreezeCookies
+    jr      nz, :-
+    
+    ; score % rate == 0
+    call    GetPowerUp
+    
+.checkFreezeCookies
+    ld      b, POWER_UP_FREEZE_COOKIES_POINT_RATE / $1000
+    ASSERT POWER_UP_FREEZE_COOKIES == POWER_UP_SLOW_COOKIES + 1
+    inc     c
+    pop     af
+    push    af
+:
     sub     a, b
     daa
     jr      c, .checkExtraLife
-    jr      nz, .modulo
+    jr      nz, :-
     
     ; score % rate == 0
     call    GetPowerUp
     
 .checkExtraLife
     ; Check for extra life "power-up"
-    ASSERT POWER_UP_EXTRA_LIFE == POWER_UP_SLOW_COOKIES + 1
+    ASSERT POWER_UP_EXTRA_LIFE == POWER_UP_FREEZE_COOKIES + 1
     inc     c
     ASSERT (POWER_UP_EXTRA_LIFE_POINT_RATE / $1000) & $0F == 0
     pop     af
