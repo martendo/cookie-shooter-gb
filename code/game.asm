@@ -301,23 +301,26 @@ InGame::
     ldh     a, [hGameMode]
     ASSERT GAME_MODE_COUNT - 1 == 1 && GAME_MODE_CLASSIC == 0
     and     a, a
-    jr      z, .noPowerUp
+    jr      z, .skipPowerUp
     
     ; Score crossed 1000 points?
     ldh     a, [hLastScoreThousands]
     cp      a, b
-    jr      z, .noPowerUp
+    jr      z, .skipPowerUp
     
     ld      a, b
     
-    ld      c, POWER_UP_SLOW_COOKIES
-    ASSERT (POWER_UP_SLOW_COOKIES_POINT_RATE / $1000) & $0F == 0
-    and     a, $0F
-    jr      nz, .noPowerUp
+    push    bc
+    lb      bc, POWER_UP_SLOW_COOKIES_POINT_RATE / $1000, POWER_UP_SLOW_COOKIES
+.modulo
+    sub     a, b
+    daa
+    jr      z, .getPowerUp
+    jr      nc, .modulo
+    jr      .noPowerUp
     
 .getPowerUp
     ld      hl, hPowerUps
-    push    bc
     ld      b, MAX_POWER_UP_COUNT
 .findEmptySlotLoop
     ld      a, [hl]
@@ -333,9 +336,10 @@ InGame::
 .foundEmptySlot
     ld      a, c
     ld      [hl], a
+.noPowerUp
     pop     bc
     
-.noPowerUp
+.skipPowerUp
     ld      a, b
     ldh     [hLastScoreThousands], a
     
