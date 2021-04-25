@@ -171,12 +171,10 @@ UpdateCookies::
     
     ; Y position
     ld      a, [de]     ; Y speed
-    ld      c, a        ; Save speed in c
     
     inc     h
     inc     h           ; wCookieSpeedAccTable
     
-    ld      a, c        ; Get Y speed
     and     a, $F0      ; Get fractional part
     add     a, [hl]
     ld      [hl], a
@@ -184,7 +182,7 @@ UpdateCookies::
     dec     h
     dec     h           ; wCookiePosTable
     
-    ld      a, c        ; Get Y speed again
+    ld      a, [de]     ; Y speed
     rr      c           ; Save carry from fractional part in c
     and     a, $0F      ; Get integer part
     rl      c           ; Restore carry from fractional part
@@ -203,12 +201,10 @@ UpdateCookies::
     ; X position
     inc     e
     ld      a, [de]     ; X speed
-    ld      c, a        ; Save speed in c
     
     inc     h
     inc     h           ; wCookieSpeedAccTable
     
-    ld      a, c        ; Get X speed
     and     a, $F0      ; Get fractional part
     add     a, [hl]
     ld      [hl], a
@@ -216,7 +212,7 @@ UpdateCookies::
     dec     h
     dec     h           ; wCookiePosTable
     
-    ld      a, c        ; Get X speed again
+    ld      a, [de]     ; X speed
     rr      c           ; Save carry from fractional part in c
     and     a, $0F      ; Get integer part
     bit     3, a
@@ -251,21 +247,17 @@ UpdateCookies::
     push    hl
     call    PointHLToCookieHitbox
     ASSERT HIGH(CookieHitboxTable.end - 1) == HIGH(CookieHitboxTable)
-    ld      a, e
-    inc     l
-    inc     l
-    add     a, [hl]     ; cookie.hitbox.x
-    ld      e, a        ; e = cookie.hitbox.left
     ld      a, d
-    dec     l
-    dec     l
     add     a, [hl]     ; cookie.hitbox.y
     ld      d, a        ; d = cookie.hitbox.top
+    inc     l
+    ld      a, e
+    add     a, [hl]     ; cookie.hitbox.x
+    ld      e, a        ; e = cookie.hitbox.left
     
     inc     l
     ld      a, [hli]    ; cookie.hitbox.height
     ld      c, a
-    inc     l
     ld      a, [hl]     ; cookie.hitbox.width
     ldh     [hScratch], a
     
