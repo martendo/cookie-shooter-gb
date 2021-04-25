@@ -183,9 +183,6 @@ InGame::
     and     a, a
     jr      z, .notUsingPowerUp
     
-    ; Remove power-up
-    ld      [hl], NO_POWER_UP
-    
     cp      a, ONE_TIME_POWER_UPS_START
     jr      c, :+
     
@@ -193,12 +190,21 @@ InGame::
     cp      a, POWER_UP_EXTRA_LIFE
     jr      nz, .notUsingPowerUp
     
+    ldh     a, [hPlayerLives]
+    cp      a, PLAYER_MAX_LIVES
+    ; Already at max lives, don't add more
+    jr      nc, .notUsingPowerUp
+    
+    ; Remove power-up
+    ld      [hl], NO_POWER_UP
     ld      l, LOW(hPlayerLives)
     inc     [hl]
     jr      .notUsingPowerUp
     
 :
     ldh     [hCurrentPowerUp], a
+    ; Remove power-up
+    ld      [hl], NO_POWER_UP
     ld      l, LOW(hPowerUpDuration)
     ld      [hl], LOW(POWER_UP_DURATION)
     inc     l
