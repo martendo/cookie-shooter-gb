@@ -14,6 +14,26 @@ LoadGameOverScreen::
     ld      c, SCRN_Y_B - STATUS_BAR_TILE_HEIGHT
     call    LCDMemcopyMap
     
+    ; Remove current power-up
+    ld      hl, vCurrentPowerUp
+:
+    ldh     a, [rSTAT]
+    and     a, STATF_BUSY
+    jr      nz, :-
+    ; 2 cycles
+    ld      a, NO_POWER_UP + POWER_UP_CURRENT_TILES_START
+    ld      [hli], a    ; 2 cycles
+    inc     a           ; 1 cycle
+    ld      [hl], a     ; 2 cycles
+    ASSERT HIGH(vCurrentPowerUp + 1) == HIGH(vCurrentPowerUp + SCRN_VX_B)
+    ; 2 cycles
+    ld      l, LOW(vCurrentPowerUp + SCRN_VX_B)
+    inc     a           ; 1 cycle
+    ld      [hli], a    ; 2 cycles
+    inc     a           ; 1 cycle
+    ld      [hl], a     ; 2 cycles
+    ; Total 15 cycles
+    
     ; Check if this score is a new high score
     ld      a, CART_SRAM_ENABLE
     ld      [rRAMG], a
