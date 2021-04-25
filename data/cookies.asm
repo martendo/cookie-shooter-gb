@@ -2,15 +2,6 @@ INCLUDE "defines.inc"
 
 SECTION "Cookie Data", ROM0
 
-CookieTileTable::
-    RSSET COOKIE_TILE
-    REPT COOKIE_SIZE_COUNT
-        DEF TILE RB COOKIE_TILE_COUNT
-        DB TILE
-        PURGE TILE
-    ENDR
-.end::
-
 MACRO hitbox
     ;   Y,  H,  X,  W
     DB \1, \2, \1, \2

@@ -127,14 +127,13 @@ CopyCookiesToOAM:
     ld      l, e
     ld      h, d
     call    GetCookieSize
-    add     a, LOW(CookieTileTable)
-    ld      l, a
-    ASSERT HIGH(CookieTileTable.end - 1) == HIGH(CookieTileTable)
-    ld      h, HIGH(CookieTileTable)
-    ld      c, [hl]
-    ld      b, c
-    inc     b
-    inc     b
+    ASSERT COOKIE_TILE_COUNT == 4
+    add     a, a
+    add     a, a
+    add     a, COOKIE_TILES_START
+    ld      c, a
+    add     a, 2
+    ld      b, a
     ; c = first tile, b = second tile
     pop     hl
     
