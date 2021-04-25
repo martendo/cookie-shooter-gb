@@ -183,8 +183,22 @@ InGame::
     and     a, a
     jr      z, .notUsingPowerUp
     
-    ldh     [hCurrentPowerUp], a
+    ; Remove power-up
     ld      [hl], NO_POWER_UP
+    
+    cp      a, ONE_TIME_POWER_UPS_START
+    jr      c, :+
+    
+    ; One-time power-ups
+    cp      a, POWER_UP_EXTRA_LIFE
+    jr      nz, .notUsingPowerUp
+    
+    ld      l, LOW(hPlayerLives)
+    inc     [hl]
+    jr      .notUsingPowerUp
+    
+:
+    ldh     [hCurrentPowerUp], a
     ld      l, LOW(hPowerUpDuration)
     ld      [hl], LOW(POWER_UP_DURATION)
     inc     l
@@ -309,34 +323,35 @@ InGame::
     jr      z, .skipPowerUp
     
     ld      a, b
-    
     push    bc
+    push    af
+    
+    ; Check for slow cookies power-up
     lb      bc, POWER_UP_SLOW_COOKIES_POINT_RATE / $1000, POWER_UP_SLOW_COOKIES
 .modulo
     sub     a, b
     daa
-    jr      z, .getPowerUp
-    jr      nc, .modulo
-    jr      .noPowerUp
+    jr      c, .checkExtraLife
+    jr      nz, .modulo
     
-.getPowerUp
-    ld      hl, hPowerUps
-    ld      b, MAX_POWER_UP_COUNT
-.findEmptySlotLoop
-    ld      a, [hl]
-    ASSERT NO_POWER_UP == 0
-    and     a, a
-    jr      z, .foundEmptySlot
-    inc     l
-    dec     b
-    jr      nz, .findEmptySlotLoop
-    ; No more room for a power-up left
-    jr      .noPowerUp
+    ; score % rate == 0
+    call    GetPowerUp
     
-.foundEmptySlot
-    ld      a, c
-    ld      [hl], a
+.checkExtraLife
+    ; Check for extra life "power-up"
+    ASSERT POWER_UP_EXTRA_LIFE == POWER_UP_SLOW_COOKIES + 1
+    inc     c
+    ASSERT (POWER_UP_EXTRA_LIFE_POINT_RATE / $1000) & $0F == 0
+    pop     af
+    push    af
+    and     a, $0F
+    jr      nz, .noPowerUp
+    
+    ; score % rate == 0
+    call    GetPowerUp
+    
 .noPowerUp
+    pop     af
     pop     bc
     
 .skipPowerUp
@@ -365,3 +380,24 @@ InGame::
 :
     call    HaltVBlank
     jp      Main
+
+; Add a power-up to an empty power-up slot
+; @param c  Power-up type
+GetPowerUp:
+    ld      hl, hPowerUps
+    ld      b, MAX_POWER_UP_COUNT
+.findEmptySlotLoop
+    ld      a, [hl]
+    ASSERT NO_POWER_UP == 0
+    and     a, a
+    jr      z, .foundEmptySlot
+    inc     l
+    dec     b
+    jr      nz, .findEmptySlotLoop
+    ; No more room for a power-up left
+    ret
+    
+.foundEmptySlot
+    ld      a, c
+    ld      [hl], a
+    ret
