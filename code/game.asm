@@ -202,13 +202,23 @@ InGame::
     jr      .notUsingPowerUp
     
 :
+    ; Set power-up as current and remove
     ldh     [hCurrentPowerUp], a
-    ; Remove power-up
     ld      [hl], NO_POWER_UP
-    ld      l, LOW(hPowerUpDuration)
-    ld      [hl], LOW(POWER_UP_DURATION)
-    inc     l
-    ld      [hl], HIGH(POWER_UP_DURATION)
+    
+    ; Set duration
+    ASSERT POWER_UPS_START - 1 == 0
+    dec     a
+    add     a, a    ; 1 entry = 2 bytes
+    add     a, LOW(PowerUpDurationTable)
+    ld      l, a
+    ld      h, HIGH(PowerUpDurationTable)
+    ld      a, [hli]
+    ld      b, [hl]
+    
+    ld      hl, hPowerUpDuration
+    ld      [hli], a
+    ld      [hl], b
     
 .notUsingPowerUp
     ld      l, LOW(hPowerUpDuration.hi)
