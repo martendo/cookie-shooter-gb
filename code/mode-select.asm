@@ -32,16 +32,13 @@ LoadModeSelectScreen::
     call    HideAllActors
     ; Selection cursor - a cookie!
     ; Object 1
-    ld      hl, wShadowOAM
-    ld      [hl], MODE_SELECT_CLASSIC_CURSOR_Y
-    inc     l
+    ld      hl, wShadowOAM + 1
     ld      [hl], MODE_SELECT_CURSOR_X
     inc     l
     ld      [hl], COOKIE_TILE
     inc     l
     ld      [hli], a        ; a = 0
     ; Object 2
-    ld      [hl], MODE_SELECT_CLASSIC_CURSOR_Y
     inc     l
     ld      [hl], MODE_SELECT_CURSOR_X + 8
     inc     l
@@ -49,9 +46,11 @@ LoadModeSelectScreen::
     inc     l
     ld      [hl], a         ; a = 0
     
-    ASSERT DEFAULT_GAME_MODE == 0
-    ldh     [hGameMode], a  ; a = 0
-    ret
+    ; Set cursor position based on previously selected game mode
+    ldh     a, [hGameMode]
+    and     a, a
+    jr      z, MoveSelectionUp.setPos
+    jr      MoveSelectionDown.setPos
 
 ModeSelect::
     ldh     a, [hNewKeys]
@@ -69,9 +68,9 @@ ModeSelect::
     ldh     a, [hNewKeys]
     ld      b, a    ; Save in b because a will be overwritten
     bit     PADB_UP, b
-    call    nz, .moveSelectionUp
+    call    nz, MoveSelectionUp
     bit     PADB_DOWN, b
-    call    nz, .moveSelectionDown
+    call    nz, MoveSelectionDown
     ld      a, b
     and     a, PADF_A | PADF_START
     jr      z, :+
@@ -86,7 +85,7 @@ ModeSelect::
     call    HaltVBlank
     jp      Main
 
-.moveSelectionUp
+MoveSelectionUp:
     ldh     a, [hGameMode]
     and     a, a    ; Already at top
     ret     z
@@ -95,12 +94,13 @@ ModeSelect::
     ldh     [hGameMode], a
     
     ASSERT GAME_MODE_COUNT - 1 == 1
+.setPos
     ld      a, MODE_SELECT_CLASSIC_CURSOR_Y
     ld      [wShadowOAM + MODE_SELECT_CURSOR_Y1_OFFSET], a
     ld      [wShadowOAM + MODE_SELECT_CURSOR_Y2_OFFSET], a
     
     ret
-.moveSelectionDown
+MoveSelectionDown:
     ldh     a, [hGameMode]
     ASSERT GAME_MODE_COUNT - 1 == 1
     dec     a   ; Already at bottom
@@ -111,6 +111,7 @@ ModeSelect::
     ldh     [hGameMode], a
     
     ASSERT GAME_MODE_COUNT - 1 == 1
+.setPos
     ld      a, MODE_SELECT_SUPER_CURSOR_Y
     ld      [wShadowOAM + MODE_SELECT_CURSOR_Y1_OFFSET], a
     ld      [wShadowOAM + MODE_SELECT_CURSOR_Y2_OFFSET], a
