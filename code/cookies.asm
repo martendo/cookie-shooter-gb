@@ -126,6 +126,57 @@ CreateCookie::
     
     ret
 
+; Destroy a cookie and award points
+; @param hl Pointer to the cookie's entry in wCookiePosTable
+BlastCookie::
+    ld      [hl], 0     ; Destroy cookie (Y=0)
+    
+    call    GetCookieSize
+    add     a, a        ; 1 entry = 2 bytes
+    add     a, LOW(CookiePointsTable)
+    ld      l, a
+    ASSERT HIGH(CookiePointsTable.end - 1) == HIGH(CookiePointsTable)
+    ld      h, HIGH(CookiePointsTable)
+    ld      a, [hli]
+    ld      b, [hl]
+    ld      c, a        ; bc = points
+    
+    ld      hl, hCookieCount
+    dec     [hl]
+    
+    ; Add points to score
+    ld      l, LOW(hScore)
+    ld      a, [hl]
+    add     a, c
+    daa
+    ld      [hli], a
+    
+    ld      a, [hl]
+    adc     a, b
+    daa
+    ld      [hli], a
+    jr      nc, .doneScore
+    
+    ld      a, [hl]
+    adc     a, 0
+    daa
+    ld      [hl], a
+    
+.doneScore
+    ; Increment cookies blasted counter
+    ld      l, LOW(hCookiesBlasted.lo)
+    ld      a, [hl]
+    add     a, 1        ; `inc` does not affect carry flag
+    daa
+    ld      [hli], a
+    ret     nc
+    
+    ld      a, [hl]     ; hCookiesBlasted.hi
+    add     a, 1
+    daa
+    ld      [hl], a
+    ret
+
 ; Update cookies and their positions
 UpdateCookies::
     ; Update cookie rotation index

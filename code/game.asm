@@ -142,7 +142,7 @@ InGame::
     ldh     a, [hGameMode]
     ASSERT GAME_MODE_COUNT - 1 == 1 && GAME_MODE_CLASSIC == 0
     and     a, a
-    jr      z, .noPowerUps
+    jp      z, .noPowerUps
     
     ; Power-up selection
     ldh     a, [hNewKeys]
@@ -184,35 +184,57 @@ InGame::
     and     a, a
     jr      z, .notUsingPowerUp
     
-    cp      a, ONE_TIME_POWER_UPS_START
-    jr      c, :+
+    cp      a, POWER_UP_BOMB
+    jr      nz, .notSpecialPowerUp
     
-    ; One-time power-ups
+    ; Set power-up as current and remove
+    ldh     [hCurrentPowerUp], a
+    ld      [hl], NO_POWER_UP
+    ; Clear all cookies
+    ld      hl, wCookiePosTable
+    ld      d, MAX_COOKIE_COUNT
+.clearCookiesLoop
+    ld      a, [hl]
+    and     a, a
+    jr      z, :+
+    push    hl
+    call    BlastCookie
+    pop     hl
+:
+    inc     l
+    inc     l
+    dec     d
+    jr      nz, .clearCookiesLoop
+    ld      a, POWER_UP_BOMB
+    jr      .setPowerUpDuration
+    
+.notSpecialPowerUp
     cp      a, POWER_UP_EXTRA_LIFE
-    jr      nz, .notUsingPowerUp
+    jr      nz, .normalPowerUp
     
+    ; Get an extra life
     ldh     a, [hPlayerLives]
     cp      a, PLAYER_MAX_LIVES
     ; Already at max lives, don't add more
     jr      nc, .notUsingPowerUp
     
-    ; Remove power-up
-    ld      [hl], NO_POWER_UP
+    ld      [hl], NO_POWER_UP   ; Remove power-up
     ld      l, LOW(hPlayerLives)
     inc     [hl]
     jr      .notUsingPowerUp
     
-:
+.normalPowerUp
     ; Set power-up as current and remove
     ldh     [hCurrentPowerUp], a
     ld      [hl], NO_POWER_UP
     
-    ; Set duration
+.setPowerUpDuration
     ASSERT POWER_UPS_START - 1 == 0
     dec     a
     add     a, a    ; 1 entry = 2 bytes
     add     a, LOW(PowerUpDurationTable)
     ld      l, a
+    ASSERT HIGH(PowerUpDurationTable) == HIGH(PowerUpDurationTable.end)
     ld      h, HIGH(PowerUpDurationTable)
     ld      a, [hli]
     ld      b, [hl]
@@ -266,15 +288,18 @@ InGame::
     jr      .skipCookieCount
     
 :
-    ; Don't create any new cookies if cookies are frozen
+    ; Don't create any new cookies for certain power-ups
     ldh     a, [hGameMode]
     ASSERT GAME_MODE_COUNT - 1 == 1 && GAME_MODE_CLASSIC == 0
     and     a, a
     jr      z, .updateCookieCount
     
     ldh     a, [hCurrentPowerUp]
+    ASSERT POWER_UP_FREEZE_COOKIES + 1 == POWER_UP_BOMB
+    ASSERT POWER_UP_BOMB + 1 == ONE_TIME_POWER_UPS_START
     cp      a, POWER_UP_FREEZE_COOKIES
-    jr      z, .skipCookieCount
+    ; Don't create new cookies when using cookie freeze or bomb power-up
+    jr      nc, .skipCookieCount
     
 .updateCookieCount
     ; Update target cookie count based on score
