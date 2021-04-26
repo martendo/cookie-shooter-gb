@@ -80,11 +80,11 @@ CheckLaserCollide:
     push    hl          ; Cookie Y position
     
     call    PointHLToCookieHitbox
-    
+    ASSERT HIGH(CookieHitboxTable.end - 1) != HIGH(CookieHitboxTable)
     ld      a, b        ; cookie.y
     add     a, [hl]     ; cookie.hitbox.y
     ld      b, a
-    inc     l
+    inc     hl
     add     a, [hl]     ; cookie.hitbox.height
     cp      a, d        ; cookie.hitbox.bottom < laser.hitbox.top
     jr      c, .noCollision
@@ -95,10 +95,10 @@ CheckLaserCollide:
     jr      c, .noCollision
     
     ldh     a, [hScratch]   ; cookie.x
-    inc     l
+    inc     hl
     add     a, [hl]     ; cookie.hitbox.x
     ld      b, a
-    inc     l
+    inc     hl
     add     a, [hl]     ; cookie.hitbox.width
     cp      a, e        ; cookie.hitbox.right < laser.hitbox.left
     jr      c, .noCollision

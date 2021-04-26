@@ -27,8 +27,8 @@ hCurrentPowerUp::
     DS 1
 ; Remaining frames with the current power-up
 hPowerUpDuration::
-.lo DS 1
-.hi DS 1
+.lo:: DS 1
+.hi:: DS 1
 
 SECTION "In-Game Code", ROM0
 

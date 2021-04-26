@@ -50,13 +50,39 @@ DrawPowerUp::
     ld      a, c
     jr      nz, :+
     
-    add     a, POWER_UP_COUNT * POWER_UP_TILE_COUNT
+    add     a, POWER_UP_SELECTED_TILES_START - POWER_UP_TILES_START
     jr      .draw
 :
     inc     b       ; Currently in-use power-up
     jr      nz, .draw
     
-    add     a, (POWER_UP_COUNT * POWER_UP_TILE_COUNT) * 2
+    ld      b, a
+    ; If near the end of the power-up's duration, flash
+    ldh     a, [hPowerUpDuration.hi]
+    ASSERT HIGH(POWER_UP_END_FLASH_START) == 0
+    and     a, a
+    jr      nz, .currentNormal
+    ldh     a, [hPowerUpDuration.lo]
+    cp      a, LOW(POWER_UP_END_FLASH_START)
+    jr      nc, .currentNormal
+    cp      a, LOW(POWER_UP_END_FLASH_FAST_START)
+    jr      nc, .flashSlow
+    
+    bit     POWER_UP_END_FLASH_FAST_BIT, a
+    jr      z, .currentNormal
+    ; Flash off
+    ld      a, NO_POWER_UP + POWER_UP_CURRENT_TILES_START
+    jr      .draw
+.flashSlow
+    bit     POWER_UP_END_FLASH_BIT, a
+    jr      z, .currentNormal
+    ; Flash off
+    ld      a, NO_POWER_UP + POWER_UP_CURRENT_TILES_START
+    jr      .draw
+    
+.currentNormal
+    ld      a, b
+    add     a, POWER_UP_CURRENT_TILES_START - POWER_UP_TILES_START
 .draw
     ASSERT POWER_UP_TILE_WIDTH == 2
     ld      [hli], a
