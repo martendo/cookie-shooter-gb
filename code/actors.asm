@@ -72,9 +72,8 @@ FindEmptyActorSlot::
     scf
     ret     z
 
-; Make objects with actor data and put them in OAM
-; @param de Pointer to actor data
-CopyActorsToOAM::
+; Use actor data to make objects and put them in OAM
+CopyLasersToOAM::
     ldh     a, [hNextAvailableOAMSlot]
     ld      c, a
     ASSERT sizeof_OAM_ATTRS == 4
@@ -83,12 +82,7 @@ CopyActorsToOAM::
     ld      l, a
     ld      h, HIGH(wShadowOAM)
     
-    ld      a, d
-    cp      a, HIGH(wCookiePosTable)
-    jr      z, CopyCookiesToOAM
-    ; Fallthrough
-
-CopyLasersToOAM:
+    ld      de, wLaserPosTable
     ld      b, MAX_LASER_COUNT
 .loop
     ld      a, [de]     ; Y position
@@ -114,7 +108,21 @@ CopyLasersToOAM:
     
     jr      EndCopyActors
 
-CopyCookiesToOAM:
+CopyCookiesToOAM::
+    ldh     a, [hNextAvailableOAMSlot]
+    ld      c, a
+    ASSERT sizeof_OAM_ATTRS == 4
+    add     a, a
+    add     a, a
+    ld      l, a
+    ld      h, HIGH(wShadowOAM)
+    
+    ldh     a, [hCookieRotationIndex]
+    ASSERT ACTOR_SIZE == 2
+    add     a, a
+    ld      e, a
+    ld      d, HIGH(wCookiePosTable)
+    
     ld      b, MAX_COOKIE_COUNT
 .loop
     ld      a, [de]     ; Y position
@@ -165,15 +173,22 @@ CopyCookiesToOAM:
     pop     bc
     inc     c
     inc     c
+    dec     b
+    jr      z, EndCopyActors
     jr      .next
 .skip
+    dec     b
+    jr      z, EndCopyActors
+    
     inc     e
     inc     e
 .next
-    dec     b
-    jr      nz, .loop
-    
-    ; Fallthrough
+    ld      a, e
+    cp      a, LOW(wCookiePosTable.end)
+    jr      c, .loop
+    ; Gone past end, wrap back to beginning
+    ld      e, LOW(wCookiePosTable)
+    jr      .loop
     
 EndCopyActors:
     ld      a, c

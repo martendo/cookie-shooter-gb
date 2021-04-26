@@ -30,6 +30,9 @@ SECTION "Cookie Variables", HRAM
 hCookieCount::       DS 1
 hTargetCookieCount:: DS 1
 
+; Index of first cookie to add to OAM
+hCookieRotationIndex:: DS 1
+
 SECTION "Cookie Code", ROM0
 
 ; Get a cookie's size using its position in wCookiePosTable
@@ -123,8 +126,18 @@ CreateCookie::
     
     ret
 
-; Update cookies' positions
+; Update cookies and their positions
 UpdateCookies::
+    ; Update cookie rotation index
+    ldh     a, [hCookieRotationIndex]
+    inc     a
+    cp      a, MAX_COOKIE_COUNT
+    jr      c, :+
+    ; Gone past end, wrap back to beginning
+    xor     a, a
+:
+    ldh     [hCookieRotationIndex], a
+    
     ld      hl, wCookiePosTable
     ld      b, MAX_COOKIE_COUNT
 .loop

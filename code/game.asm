@@ -66,6 +66,7 @@ SetUpGame::
     
     ; a = 0
     ldh     [hCookieCount], a
+    ldh     [hCookieRotationIndex], a
     ASSERT PLAYER_NOT_INV == LOW(-1)
     dec     a            ; a = -1
     ldh     [hPlayerInvCountdown], a
@@ -172,10 +173,8 @@ InGame::
     call    UpdateCookies
     
     ; Copy actor data to OAM
-    ld      de, wLaserPosTable
-    call    CopyActorsToOAM
-    ld      de, wCookiePosTable
-    call    CopyActorsToOAM
+    call    CopyLasersToOAM
+    call    CopyCookiesToOAM
     call    HideUnusedObjects
     
     ; Check for game over - no more lives left

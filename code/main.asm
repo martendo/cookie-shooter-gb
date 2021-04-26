@@ -68,8 +68,8 @@ Initialize:
     ld      a, [de]
     cp      a, [hl]
     jr      nz, .initSRAM
-    ASSERT HIGH(SaveDataHeader) != HIGH(SaveDataHeader.end)
-    inc     de
+    ASSERT HIGH(SaveDataHeader) == HIGH(SaveDataHeader.end)
+    inc     e
     ASSERT HIGH(sSaveDataHeader) == HIGH(sSaveDataHeader.end)
     inc     l
     dec     b
@@ -80,8 +80,8 @@ Initialize:
     
 .initSRAM
     ; Write save data header
-    ASSERT HIGH(SaveDataHeader) != HIGH(SaveDataHeader.end)
-    ld      de, SaveDataHeader
+    ASSERT HIGH(SaveDataHeader) == HIGH(SaveDataHeader.end)
+    ld      e, LOW(SaveDataHeader)
     ASSERT HIGH(sSaveDataHeader) == HIGH(sSaveDataHeader.end)
     ld      l, LOW(sSaveDataHeader)
     ld      b, STRLEN(SAVE_DATA_HEADER)
