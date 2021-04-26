@@ -258,11 +258,22 @@ InGame::
     ; Delay game start period - don't create any cookies yet
     ldh     a, [hWaitCountdown]
     and     a, a
-    jr      z, .updateCookieCount
+    jr      z, :+
     
     dec     a
     ldh     [hWaitCountdown], a
     jr      .skipCookieCount
+    
+:
+    ; Don't create any new cookies if cookies are frozen
+    ldh     a, [hGameMode]
+    ASSERT GAME_MODE_COUNT - 1 == 1 && GAME_MODE_CLASSIC == 0
+    and     a, a
+    jr      z, .updateCookieCount
+    
+    ldh     a, [hCurrentPowerUp]
+    cp      a, POWER_UP_FREEZE_COOKIES
+    jr      z, .skipCookieCount
     
 .updateCookieCount
     ; Update target cookie count based on score
