@@ -31,7 +31,8 @@ hCookieCount::       DS 1
 hTargetCookieCount:: DS 1
 
 ; Index of first cookie to add to OAM
-hCookieRotationIndex:: DS 1
+hCookieRotationIndex::
+    DS 1
 
 SECTION "Cookie Code", ROM0
 

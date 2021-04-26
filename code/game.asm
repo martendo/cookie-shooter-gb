@@ -2,31 +2,33 @@ INCLUDE "defines.inc"
 
 SECTION "In-Game Variables", HRAM
 
-hWaitCountdown: DS 1
+hWaitCountdown:
+    DS 1
 
 ; Last frame's game score in thousands (e.g. score of 14200 = last score
 ; thousands of 14)
 ; Used to tell when the player crossed a multiple of 1000 points for
 ; checking whether or not to give a power-up
-hLastScoreThousands:: DS 1
+hLastScoreThousands:
+    DS 1
 
 ; Player's power-up slots
-hPowerUps::
+hPowerUps:
 ASSERT MAX_POWER_UP_COUNT == 3
 .1:: DS 1
 .2:: DS 1
 .3:: DS 1
 .end
-
 ; Currently selected power-up (out of the 3)
-hPowerUpSelection:: DS 1
-
+hPowerUpSelection::
+    DS 1
 ; Currently in-use power-up
-hCurrentPowerUp:: DS 1
+hCurrentPowerUp::
+    DS 1
 ; Remaining frames with the current power-up
 hPowerUpDuration::
-.lo:: DS 1
-.hi:: DS 1
+.lo DS 1
+.hi DS 1
 
 SECTION "In-Game Code", ROM0
 
