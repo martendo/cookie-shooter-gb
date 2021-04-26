@@ -26,6 +26,8 @@ Initialize:
     
     ASSERT INITIAL_GAME_STATE == 0
     ldh     [hGameState], a
+    ASSERT DEFAULT_GAME_MODE == 0
+    ldh     [hGameMode], a
     
     ; a = 0
     ldh     [hNewKeys], a

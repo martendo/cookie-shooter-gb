@@ -30,33 +30,8 @@ SECTION "Cookie Variables", HRAM
 hCookieCount::       DS 1
 hTargetCookieCount:: DS 1
 
-SECTION "Cookie Data", ROM0
-
-CookieTileTable::
-    DB      COOKIE_TILE         ; COOKIE_SIZE_16
-    DB      COOKIE_TILE + 4     ; COOKIE_SIZE_14
-    DB      COOKIE_TILE + 8     ; COOKIE_SIZE_12
-    DB      COOKIE_TILE + 12    ; COOKIE_SIZE_10
-    DB      COOKIE_TILE + 16    ; COOKIE_SIZE_8
-.end::
-
-CookieHitboxTable::
-    ;       Y,  H, X,  W
-    DB      2, 12, 2, 12    ; COOKIE_SIZE_16
-    DB      3, 10, 3, 10    ; COOKIE_SIZE_14
-    DB      4,  8, 4,  8    ; COOKIE_SIZE_12
-    DB      5,  6, 5,  6    ; COOKIE_SIZE_10
-    DB      6,  4, 6,  4    ; COOKIE_SIZE_8
-.end::
-
-; Points values in BCD
-CookiePointsTable::
-    DW      $25     ; COOKIE_SIZE_16
-    DW      $50     ; COOKIE_SIZE_14
-    DW      $75     ; COOKIE_SIZE_12
-    DW      $100    ; COOKIE_SIZE_10
-    DW      $125    ; COOKIE_SIZE_8
-.end::
+; Index of first cookie to add to OAM
+hCookieRotationIndex:: DS 1
 
 SECTION "Cookie Code", ROM0
 
@@ -151,8 +126,18 @@ CreateCookie::
     
     ret
 
-; Update cookies' positions
+; Update cookies and their positions
 UpdateCookies::
+    ; Update cookie rotation index
+    ldh     a, [hCookieRotationIndex]
+    inc     a
+    cp      a, MAX_COOKIE_COUNT
+    jr      c, :+
+    ; Gone past end, wrap back to beginning
+    xor     a, a
+:
+    ldh     [hCookieRotationIndex], a
+    
     ld      hl, wCookiePosTable
     ld      b, MAX_COOKIE_COUNT
 .loop
@@ -209,7 +194,6 @@ UpdateCookies::
     inc     h
     inc     h           ; wCookieSpeedAccTable
     
-    ld      a, c        ; Get Y speed
     and     a, $F0      ; Get fractional part
     add     a, [hl]
     ld      [hl], a
@@ -251,13 +235,11 @@ UpdateCookies::
 .normalSpeedX
     ld      a, [de]     ; X speed
 :
-    
     ld      c, a        ; Save speed in c
     
     inc     h
     inc     h           ; wCookieSpeedAccTable
     
-    ld      a, c        ; Get X speed
     and     a, $F0      ; Get fractional part
     add     a, [hl]
     ld      [hl], a
@@ -301,21 +283,17 @@ UpdateCookies::
     push    hl
     call    PointHLToCookieHitbox
     ASSERT HIGH(CookieHitboxTable.end - 1) == HIGH(CookieHitboxTable)
-    ld      a, e
-    inc     l
-    inc     l
-    add     a, [hl]     ; cookie.hitbox.x
-    ld      e, a        ; e = cookie.hitbox.left
     ld      a, d
-    dec     l
-    dec     l
     add     a, [hl]     ; cookie.hitbox.y
     ld      d, a        ; d = cookie.hitbox.top
+    inc     l
+    ld      a, e
+    add     a, [hl]     ; cookie.hitbox.x
+    ld      e, a        ; e = cookie.hitbox.left
     
     inc     l
     ld      a, [hli]    ; cookie.hitbox.height
     ld      c, a
-    inc     l
     ld      a, [hl]     ; cookie.hitbox.width
     ldh     [hScratch], a
     
