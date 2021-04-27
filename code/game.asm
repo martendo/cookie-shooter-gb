@@ -290,18 +290,15 @@ InGame::
     jr      .skipCookieCount
     
 :
-    ; Don't create any new cookies for certain power-ups
+    ; Don't create any new cookies for a while after the bomb
     ldh     a, [hGameMode]
     ASSERT GAME_MODE_COUNT - 1 == 1 && GAME_MODE_CLASSIC == 0
     and     a, a
     jr      z, .updateCookieCount
     
     ldh     a, [hCurrentPowerUp]
-    ASSERT POWER_UP_FREEZE_COOKIES + 1 == POWER_UP_BOMB
-    ASSERT POWER_UP_BOMB + 1 == ONE_TIME_POWER_UPS_START
-    cp      a, POWER_UP_FREEZE_COOKIES
-    ; Don't create new cookies when using cookie freeze or bomb power-up
-    jr      nc, .skipCookieCount
+    cp      a, POWER_UP_BOMB
+    jr      z, .skipCookieCount
     
 .updateCookieCount
     ; Update target cookie count based on score

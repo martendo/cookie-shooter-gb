@@ -14,7 +14,6 @@ ENDM
 ; Point rate - every X points, give the player a certain power-up
 PowerUpPointRateTable::
     point_rate 5000     ; POWER_UP_SLOW_COOKIES
-    point_rate 15000    ; POWER_UP_FREEZE_COOKIES
     point_rate 20000    ; POWER_UP_BOMB
     
     point_rate 10000    ; POWER_UP_EXTRA_LIFE
@@ -22,6 +21,5 @@ PowerUpPointRateTable::
 ; Power-up duration (in number of frames)
 PowerUpDurationTable::
     DW 15 seconds   ; POWER_UP_SLOW_COOKIES
-    DW 10 seconds   ; POWER_UP_FREEZE_COOKIES
     DW 1 seconds    ; POWER_UP_BOMB
 .end::

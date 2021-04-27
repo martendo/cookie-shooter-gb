@@ -56,10 +56,8 @@ PointHLToCookieHitbox::
     add     a, a        ; * 4: Y, H, X, W
     add     a, LOW(CookieHitboxTable)
     ld      l, a
-    ASSERT HIGH(CookieHitboxTable.end - 1) != HIGH(CookieHitboxTable)
-    adc     a, HIGH(CookieHitboxTable)
-    sub     a, l
-    ld      h, a
+    ASSERT HIGH(CookieHitboxTable.end - 1) == HIGH(CookieHitboxTable)
+    ld      h, HIGH(CookieHitboxTable)
     
     ret
 
@@ -204,23 +202,6 @@ UpdateCookies::
     jp      .next
     
 .update
-    ldh     a, [hGameMode]
-    ASSERT GAME_MODE_COUNT - 1 == 1 && GAME_MODE_CLASSIC == 0
-    and     a, a
-    jr      z, .updatePos
-    
-    ldh     a, [hCurrentPowerUp]
-    cp      a, POWER_UP_FREEZE_COOKIES
-    jr      nz, .updatePos
-    
-    ; Skip updating position
-    ld      d, [hl]     ; d = Y position
-    inc     l
-    ld      e, [hl]     ; e = X position
-    dec     l
-    jr      .checkCollide
-    
-.updatePos
     ld      e, l
     ld      d, h
     inc     d           ; wCookieSpeedTable
@@ -326,7 +307,6 @@ UpdateCookies::
     ld      e, a
     ld      d, [hl]
     
-.checkCollide
     ; Check if colliding with the player
     ldh     a, [hPlayerInvCountdown]
     ASSERT PLAYER_NOT_INV == LOW(-1)
@@ -336,16 +316,16 @@ UpdateCookies::
     
     push    hl
     call    PointHLToCookieHitbox
-    ASSERT HIGH(CookieHitboxTable.end - 1) != HIGH(CookieHitboxTable)
+    ASSERT HIGH(CookieHitboxTable.end - 1) == HIGH(CookieHitboxTable)
     ld      a, d
     add     a, [hl]     ; cookie.hitbox.y
     ld      d, a        ; d = cookie.hitbox.top
-    inc     hl
+    inc     l
     ld      a, e
     add     a, [hl]     ; cookie.hitbox.x
     ld      e, a        ; e = cookie.hitbox.left
     
-    inc     hl
+    inc     l
     ld      a, [hli]    ; cookie.hitbox.height
     ld      c, a
     ld      a, [hl]     ; cookie.hitbox.width
