@@ -213,8 +213,7 @@ UpdateCookies::
     jr      z, .normalSpeedY
     
     ldh     a, [hCurrentPowerUp]
-    ASSERT POWER_UP_SLOW_COOKIES - 1 == 0
-    dec     a
+    cp      a, POWER_UP_SLOW_COOKIES
     jr      nz, .normalSpeedY
     ld      a, [de]     ; Y speed
     swap    a
@@ -259,8 +258,7 @@ UpdateCookies::
     and     a, a
     jr      z, .normalSpeedX
     ldh     a, [hCurrentPowerUp]
-    ASSERT POWER_UP_SLOW_COOKIES - 1 == 0
-    dec     a
+    cp      a, POWER_UP_SLOW_COOKIES
     jr      nz, .normalSpeedX
     ld      a, [de]     ; X speed
     swap    a

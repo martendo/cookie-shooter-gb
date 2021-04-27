@@ -26,7 +26,16 @@ ShootLaser::
 ; Update lasers' positions
 UpdateLasers::
     ld      hl, wLaserPosTable
-    ld      b, MAX_LASER_COUNT
+    lb      bc, MAX_LASER_COUNT, LASER_SPEED
+    ldh     a, [hGameMode]
+    ASSERT GAME_MODE_COUNT - 1 == 1 && GAME_MODE_CLASSIC == 0
+    and     a, a
+    jr      z, .loop
+    ldh     a, [hCurrentPowerUp]
+    ASSERT POWER_UP_FAST_LASERS - 1 == 0
+    dec     a
+    jr      nz, .loop
+    ld      c, LASER_FAST_SPEED
 .loop
     ld      a, [hl]
     and     a, a
@@ -37,7 +46,7 @@ UpdateLasers::
     jr      .next
     
 .update
-    ld      a, LASER_SPEED
+    ld      a, c
     add     a, [hl]     ; Y position
     cp      a, STATUS_BAR_HEIGHT - LASER_HEIGHT + 16
     jr      nc, :+
