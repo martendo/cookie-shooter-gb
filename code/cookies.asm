@@ -236,13 +236,12 @@ UpdateCookies::
     add     a, [hl]     ; cookie.hitbox.y
     ld      d, a        ; d = cookie.hitbox.top
     inc     l
+    ld      a, [hli]    ; cookie.hitbox.height
+    ld      c, a
     ld      a, e
     add     a, [hl]     ; cookie.hitbox.x
     ld      e, a        ; e = cookie.hitbox.left
-    
     inc     l
-    ld      a, [hli]    ; cookie.hitbox.height
-    ld      c, a
     ld      a, [hl]     ; cookie.hitbox.width
     ldh     [hScratch], a
     
