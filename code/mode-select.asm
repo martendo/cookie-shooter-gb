@@ -49,8 +49,13 @@ LoadModeSelectScreen::
     ; Set cursor position based on previously selected game mode
     ldh     a, [hGameMode]
     and     a, a
-    jr      z, MoveSelectionUp.setPos
-    jr      MoveSelectionDown.setPos
+    ld      a, MODE_SELECT_CLASSIC_CURSOR_Y
+    jr      z, :+
+    ld      a, MODE_SELECT_SUPER_CURSOR_Y
+:
+    ld      [wShadowOAM + MODE_SELECT_CURSOR_Y1_OFFSET], a
+    ld      [wShadowOAM + MODE_SELECT_CURSOR_Y2_OFFSET], a
+    ret
 
 ModeSelect::
     ldh     a, [hNewKeys]
@@ -66,16 +71,19 @@ ModeSelect::
     
 :
     ldh     a, [hNewKeys]
-    ld      b, a    ; Save in b because a will be overwritten
-    bit     PADB_UP, b
+    bit     PADB_UP, a
     call    nz, MoveSelectionUp
-    bit     PADB_DOWN, b
+    ldh     a, [hNewKeys]
+    bit     PADB_DOWN, a
     call    nz, MoveSelectionDown
-    ld      a, b
+    ldh     a, [hNewKeys]
     and     a, PADF_A | PADF_START
     jr      z, :+
     
     ; Start game!
+    ld      b, SFX_MENU_START
+    call    SFX_Play
+    
     ld      a, GAME_STATE_IN_GAME
     ld      hl, SetUpGame
     call    StartFade
@@ -99,7 +107,7 @@ MoveSelectionUp:
     ld      [wShadowOAM + MODE_SELECT_CURSOR_Y1_OFFSET], a
     ld      [wShadowOAM + MODE_SELECT_CURSOR_Y2_OFFSET], a
     
-    ret
+    jr      PlaySelectionSfx
 MoveSelectionDown:
     ldh     a, [hGameMode]
     ASSERT GAME_MODE_COUNT - 1 == 1
@@ -116,4 +124,8 @@ MoveSelectionDown:
     ld      [wShadowOAM + MODE_SELECT_CURSOR_Y1_OFFSET], a
     ld      [wShadowOAM + MODE_SELECT_CURSOR_Y2_OFFSET], a
     
-    ret
+    ; Fallthrough
+
+PlaySelectionSfx:
+    ld      b, SFX_MENU_SELECT
+    jp      SFX_Play

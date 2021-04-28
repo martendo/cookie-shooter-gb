@@ -111,6 +111,9 @@ Initialize:
     ld      [rRAMG], a
     
     call    SoundSystem_Init
+    ld      c, BANK(SFX_Table)
+    ld      de, SFX_Table
+    call    SFX_Prepare
     
     ; Set palettes
     ld      a, %11100100

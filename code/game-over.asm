@@ -96,6 +96,9 @@ GameOver::
     jr      z, :+
     
     ; Reset game
+    ld      b, SFX_GAME_OVER_OK
+    call    SFX_Play
+    
     ld      a, GAME_STATE_IN_GAME
     ld      hl, SetUpGame
     call    StartFade

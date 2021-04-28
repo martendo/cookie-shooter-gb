@@ -55,8 +55,10 @@ PointHLToCookieHitbox::
     add     a, a        ; * 4: Y, H, X, W
     add     a, LOW(CookieHitboxTable)
     ld      l, a
-    ASSERT HIGH(CookieHitboxTable.end - 1) == HIGH(CookieHitboxTable)
-    ld      h, HIGH(CookieHitboxTable)
+    ; ASSERT HIGH(CookieHitboxTable.end - 1) != HIGH(CookieHitboxTable)
+    adc     a, HIGH(CookieHitboxTable)
+    sub     a, l
+    ld      h, a
     
     ret
 
@@ -231,17 +233,17 @@ UpdateCookies::
     
     push    hl
     call    PointHLToCookieHitbox
-    ASSERT HIGH(CookieHitboxTable.end - 1) == HIGH(CookieHitboxTable)
+    ; ASSERT HIGH(CookieHitboxTable.end - 1) != HIGH(CookieHitboxTable)
     ld      a, d
     add     a, [hl]     ; cookie.hitbox.y
     ld      d, a        ; d = cookie.hitbox.top
-    inc     l
+    inc     hl
     ld      a, [hli]    ; cookie.hitbox.height
     ld      c, a
     ld      a, e
     add     a, [hl]     ; cookie.hitbox.x
     ld      e, a        ; e = cookie.hitbox.left
-    inc     l
+    inc     hl
     ld      a, [hl]     ; cookie.hitbox.width
     ldh     [hScratch], a
     
@@ -273,6 +275,9 @@ UpdateCookies::
     jr      c, .noCollision
     
     ; Cookie and player are colliding!
+    ld      b, SFX_PLAYER_HIT
+    call    SFX_Play
+    
     ld      hl, hPlayerLives
     dec     [hl]
     ASSERT hPlayerInvCountdown == hPlayerLives + 1

@@ -20,6 +20,10 @@ ShootLaser::
     ld      [hld], a            ; X position
     ld      [hl], LASER_START_Y ; Y position
     
+    ; Play sound effect
+    ld      b, SFX_LASER
+    call    SFX_Play
+    
     ; Generate a random number
     jp      GenerateRandomNumber
 
@@ -109,6 +113,9 @@ CheckLaserCollide:
     jr      c, .noCollision
     
     ; Laser and cookie are colliding!
+    ld      b, SFX_COOKIE_BLASTED
+    call    SFX_Play
+    
     pop     hl          ; Cookie Y position
     ld      [hl], 0     ; Destroy cookie (Y=0)
     
@@ -176,4 +183,4 @@ CheckLaserCollide:
     pop     hl          ; Laser Y position
     inc     l
     pop     bc
-    jr      UpdateLasers.resume
+    jp      UpdateLasers.resume

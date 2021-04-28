@@ -23,6 +23,10 @@ TitleScreen::
     and     a, PADF_A | PADF_START
     jr      z, :+
     
+    ; Move on to the game mode select screen
+    ld      b, SFX_TITLE_START
+    call    SFX_Play
+    
     ld      a, GAME_STATE_MODE_SELECT
     ld      hl, LoadModeSelectScreen
     call    StartFade
