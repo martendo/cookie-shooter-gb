@@ -110,6 +110,8 @@ Initialize:
     xor     a, a
     ld      [rRAMG], a
     
+    call    SoundSystem_Init
+    
     ; Set palettes
     ld      a, %11100100
     ldh     [rBGP], a
