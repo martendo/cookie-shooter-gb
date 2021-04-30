@@ -6,6 +6,11 @@ wLaserPosTable::
     DS MAX_LASER_COUNT * ACTOR_SIZE
 .end::
 
+SECTION "Laser Variables", HRAM
+
+; Index of first laser to add to OAM
+hLaserRotationIndex:: DS 1
+
 SECTION "Laser Code", ROM0
 
 ShootLaser::
@@ -29,6 +34,16 @@ ShootLaser::
 
 ; Update lasers' positions
 UpdateLasers::
+    ; Update laser rotation index
+    ldh     a, [hLaserRotationIndex]
+    inc     a
+    cp      a, MAX_LASER_COUNT
+    jr      c, :+
+    ; Gone past end, wrap back to beginning
+    xor     a, a
+:
+    ldh     [hLaserRotationIndex], a
+    
     ld      hl, wLaserPosTable
     ld      b, MAX_LASER_COUNT
 .loop

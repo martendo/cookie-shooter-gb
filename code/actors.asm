@@ -75,15 +75,19 @@ FindEmptyActorSlot::
 ; Use actor data to make objects and put them in OAM
 CopyLasersToOAM::
     ldh     a, [hNextAvailableOAMSlot]
-    ld      c, a
     ASSERT sizeof_OAM_ATTRS == 4
     add     a, a
     add     a, a
     ld      l, a
     ld      h, HIGH(wShadowOAM)
     
-    ld      de, wLaserPosTable
-    ld      b, MAX_LASER_COUNT
+    ldh     a, [hLaserRotationIndex]
+    ASSERT ACTOR_SIZE == 2
+    add     a, a
+    ld      e, a
+    ld      d, HIGH(wLaserPosTable)
+    
+    lb      bc, MAX_LASER_SPRITE_COUNT, MAX_LASER_COUNT
 .loop
     ld      a, [de]     ; Y position
     and     a, a        ; No laser, skip
@@ -97,20 +101,31 @@ CopyLasersToOAM::
     inc     l
     ld      [hl], 0
     inc     l
-    inc     c
+    
+    ldh     a, [hNextAvailableOAMSlot]
+    ASSERT LASER_OBJ_COUNT == 1
+    inc     a
+    ldh     [hNextAvailableOAMSlot], a
+    
+    dec     b
+    ret     z
     jr      .next
 .skip
     inc     e
     inc     e
 .next
-    dec     b
-    jr      nz, .loop
+    dec     c
+    ret     z
     
-    jr      EndCopyActors
+    ld      a, e
+    cp      a, LOW(wLaserPosTable.end)
+    jr      c, .loop
+    ; Gone past end, wrap back to beginning
+    ld      e, LOW(wLaserPosTable)
+    jr      .loop
 
 CopyCookiesToOAM::
     ldh     a, [hNextAvailableOAMSlot]
-    ld      c, a
     ASSERT sizeof_OAM_ATTRS == 4
     add     a, a
     add     a, a
@@ -123,7 +138,7 @@ CopyCookiesToOAM::
     ld      e, a
     ld      d, HIGH(wCookiePosTable)
     
-    ld      b, MAX_COOKIE_COUNT
+    lb      bc, MAX_COOKIE_SPRITE_COUNT, MAX_COOKIE_COUNT
 .loop
     ld      a, [de]     ; Y position
     and     a, a        ; No cookie, skip
@@ -170,27 +185,24 @@ CopyCookiesToOAM::
     ld      [hl], 0
     inc     l
     
+    ldh     a, [hNextAvailableOAMSlot]
+    add     a, COOKIE_OBJ_COUNT
+    ldh     [hNextAvailableOAMSlot], a
+    
     pop     bc
-    inc     c
-    inc     c
     dec     b
-    jr      z, EndCopyActors
+    ret     z
     jr      .next
 .skip
-    dec     b
-    jr      z, EndCopyActors
-    
     inc     e
     inc     e
 .next
+    dec     c
+    ret     z
+    
     ld      a, e
     cp      a, LOW(wCookiePosTable.end)
     jr      c, .loop
     ; Gone past end, wrap back to beginning
     ld      e, LOW(wCookiePosTable)
     jr      .loop
-    
-EndCopyActors:
-    ld      a, c
-    ldh     [hNextAvailableOAMSlot], a
-    ret

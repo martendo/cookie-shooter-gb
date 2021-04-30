@@ -67,6 +67,7 @@ SetUpGame::
     ; a = 0
     ldh     [hCookieCount], a
     ldh     [hCookieRotationIndex], a
+    ldh     [hLaserRotationIndex], a
     ASSERT PLAYER_NOT_INV == -1
     dec     a            ; a = -1
     ldh     [hPlayerInvCountdown], a
