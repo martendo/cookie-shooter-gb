@@ -21,7 +21,19 @@ ShootLaser::
     ld      [hl], LASER_START_Y ; Y position
     
     ; Play sound effect
-    ld      b, SFX_LASER
+    lb      bc, SFX_LASER, SFX_LASER_NOTE
+    
+    ldh     a, [hGameMode]
+    ASSERT GAME_MODE_COUNT - 1 == 1 && GAME_MODE_CLASSIC == 0
+    and     a, a
+    jr      z, :+
+    
+    ldh     a, [hCurrentPowerUp]
+    ASSERT POWER_UP_FAST_LASERS - 1 == 0
+    dec     a
+    jr      nz, :+
+    ld      c, SFX_LASER_FAST_NOTE
+:
     call    SFX_Play
     
     ; Generate a random number

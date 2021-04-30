@@ -152,24 +152,28 @@ InGame::
     jr      nz, :+
     
     bit     PADB_DOWN, a
-    jr      z, .selectedPowerUp
+    jr      z, .noPowerUpSelectionChange
     
     ; Move power-up selection down
     ldh     a, [hPowerUpSelection]
     cp      a, MAX_POWER_UP_COUNT - 1
-    jr      nc, .selectedPowerUp
+    jr      nc, .noPowerUpSelectionChange
     inc     a
     ldh     [hPowerUpSelection], a
     jr      .selectedPowerUp
 
 :
+    ; Move power-up selection up
     ldh     a, [hPowerUpSelection]
     and     a, a
-    jr      z, .selectedPowerUp
+    jr      z, .noPowerUpSelectionChange
     dec     a
     ldh     [hPowerUpSelection], a
 
 .selectedPowerUp
+    ld      b, SFX_POWER_UP_SELECT
+    call    SFX_Play
+.noPowerUpSelectionChange
     ld      hl, hPowerUps
     
     ldh     a, [hNewKeys]
@@ -207,6 +211,9 @@ InGame::
     inc     l
     dec     d
     jr      nz, .clearCookiesLoop
+    
+    ld      b, SFX_BOMB
+    call    SFX_Play
     ld      a, POWER_UP_BOMB
     jr      .setPowerUpDuration
     
@@ -223,12 +230,21 @@ InGame::
     ld      [hl], NO_POWER_UP   ; Remove power-up
     ld      l, LOW(hPlayerLives)
     inc     [hl]
-    jr      .notUsingPowerUp
+    
+    ld      b, SFX_POWER_UP_USE
+    call    SFX_Play
+    ld      hl, hPowerUpDuration.hi
+    jr      :+
     
 .normalPowerUp
     ; Set power-up as current and remove
     ldh     [hCurrentPowerUp], a
     ld      [hl], NO_POWER_UP
+    
+    push    af
+    ld      b, SFX_POWER_UP_USE
+    call    SFX_Play
+    pop     af
     
 .setPowerUpDuration
     ASSERT POWER_UPS_START - 1 == 0
@@ -247,6 +263,7 @@ InGame::
     
 .notUsingPowerUp
     ld      l, LOW(hPowerUpDuration.hi)
+:
     ld      a, [hld]
     ASSERT NO_POWER_UP_DURATION == HIGH(-1)
     inc     a       ; a = -1
@@ -379,7 +396,6 @@ InGame::
     
     ld      hl, PowerUpPointRateTable
     ld      c, POWER_UPS_START
-    ld      d, HIGH(hPowerUps)  ; GetPowerUp expects this
 .getPowerUpLoop
     ld      b, [hl]     ; b = power-up point rate
 .modulo
@@ -431,7 +447,7 @@ InGame::
 ; Add a power-up to an empty power-up slot
 ; @param c  Power-up type
 GetPowerUp:
-    ld      e, LOW(hPowerUps)
+    ld      de, hPowerUps
     ld      b, MAX_POWER_UP_COUNT
 .findEmptySlotLoop
     ld      a, [de]
@@ -447,4 +463,11 @@ GetPowerUp:
 .foundEmptySlot
     ld      a, c
     ld      [de], a
+    
+    push    bc
+    push    hl
+    ld      b, SFX_POWER_UP_GET
+    call    SFX_Play
+    pop     hl
+    pop     bc
     ret
