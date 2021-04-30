@@ -23,11 +23,6 @@ ShootLaser::
     ; Play sound effect
     lb      bc, SFX_LASER, SFX_LASER_NOTE
     
-    ldh     a, [hGameMode]
-    ASSERT GAME_MODE_COUNT - 1 == 1 && GAME_MODE_CLASSIC == 0
-    and     a, a
-    jr      z, :+
-    
     ldh     a, [hCurrentPowerUp]
     ASSERT POWER_UP_FAST_LASERS - 1 == 0
     dec     a
@@ -43,10 +38,6 @@ ShootLaser::
 UpdateLasers::
     ld      hl, wLaserPosTable
     lb      bc, MAX_LASER_COUNT, LASER_SPEED
-    ldh     a, [hGameMode]
-    ASSERT GAME_MODE_COUNT - 1 == 1 && GAME_MODE_CLASSIC == 0
-    and     a, a
-    jr      z, .loop
     ldh     a, [hCurrentPowerUp]
     ASSERT POWER_UP_FAST_LASERS - 1 == 0
     dec     a

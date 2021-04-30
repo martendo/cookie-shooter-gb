@@ -209,11 +209,6 @@ UpdateCookies::
     inc     d           ; wCookieSpeedTable
     
     ; Y position
-    ldh     a, [hGameMode]
-    ASSERT GAME_MODE_COUNT - 1 == 1 && GAME_MODE_CLASSIC == 0
-    and     a, a
-    jr      z, .normalSpeedY
-    
     ldh     a, [hCurrentPowerUp]
     cp      a, POWER_UP_SLOW_COOKIES
     jr      nz, .normalSpeedY
@@ -255,10 +250,6 @@ UpdateCookies::
     
     ; X position
     inc     e
-    ldh     a, [hGameMode]
-    ASSERT GAME_MODE_COUNT - 1 == 1 && GAME_MODE_CLASSIC == 0
-    and     a, a
-    jr      z, .normalSpeedX
     ldh     a, [hCurrentPowerUp]
     cp      a, POWER_UP_SLOW_COOKIES
     jr      nz, .normalSpeedX

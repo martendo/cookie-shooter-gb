@@ -308,16 +308,10 @@ InGame::
     
 :
     ; Don't create any new cookies for a while after the bomb
-    ldh     a, [hGameMode]
-    ASSERT GAME_MODE_COUNT - 1 == 1 && GAME_MODE_CLASSIC == 0
-    and     a, a
-    jr      z, .updateCookieCount
-    
     ldh     a, [hCurrentPowerUp]
     cp      a, POWER_UP_BOMB
     jr      z, .skipCookieCount
     
-.updateCookieCount
     ; Update target cookie count based on score
     ld      hl, hScore.2
     ld      a, [hld]
@@ -370,6 +364,12 @@ InGame::
     call    UpdateLasers
     call    UpdateCookies
     
+    ; Update power-ups
+    ldh     a, [hGameMode]
+    ASSERT GAME_MODE_COUNT - 1 == 1 && GAME_MODE_CLASSIC == 0
+    and     a, a
+    jr      z, .donePowerUps
+    
     ldh     a, [hScore.2]
     swap    a
     and     a, $F0
@@ -379,12 +379,6 @@ InGame::
     and     a, $0F
     or      a, b
     ld      b, a    ; b = score (thousands)
-    
-    ; Update power-ups
-    ldh     a, [hGameMode]
-    ASSERT GAME_MODE_COUNT - 1 == 1 && GAME_MODE_CLASSIC == 0
-    and     a, a
-    jr      z, .skipPowerUp
     
     ; Score crossed 1000 points?
     ldh     a, [hLastScoreThousands]
