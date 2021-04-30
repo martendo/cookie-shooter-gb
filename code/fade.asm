@@ -28,7 +28,7 @@ StartFade::
 UpdateFade::
     ld      hl, hFadeState
     ld      a, [hl]
-    ASSERT NOT_FADING == LOW(-1)
+    ASSERT NOT_FADING == -1
     inc     a       ; a = -1
     ret     z       ; Not fading, nothing to do
     

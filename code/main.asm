@@ -34,7 +34,7 @@ Initialize:
     dec     a               ; a = $FF = all pressed
     ; Make all keys pressed so hNewKeys is correct
     ldh     [hPressedKeys], a
-    ASSERT NOT_FADING == LOW(-1)
+    ASSERT NOT_FADING == -1
     ; a = $FF = -1
     ldh     [hFadeState], a ; Not fading
     
@@ -141,7 +141,7 @@ Initialize:
 
 Main::
     ldh     a, [hFadeState]
-    ASSERT NOT_FADING == LOW(-1)
+    ASSERT NOT_FADING == -1
     inc     a               ; a = -1
     jr      nz, EmptyLoop   ; Currently fading
     
