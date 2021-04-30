@@ -34,6 +34,7 @@ HideUnusedObjects::
     ld      b, a
     ld      a, OAM_COUNT
     sub     a, b
+    ret     z       ; Nothing to do
     ld      d, a
     
     ld      a, b
@@ -72,20 +73,59 @@ FindEmptyActorSlot::
     scf
     ret     z
 
+; Use an index to active actors and return it in de
+; @param a  N - the index to active actors
+; @param c  Maximum number of actors
+; @param de Pointer to actor position table
+; @return cf Set if no active actors, otherwise reset
+; @return de Pointer to Nth active actor
+PointDEToNthActiveActor:
+    and     a, a        ; Clears carry
+    ret     z
+    ld      b, a
+    ld      l, a        ; Save for comparing
+    ld      h, c        ; Save for resetting
+.loop
+    ld      a, [de]     ; Y position
+    and     a, a        ; No actor, skip (clears carry)
+    jr      z, .next
+    dec     b           ; Doesn't affect carry
+    ret     z
+.next
+    dec     c
+    jr      nz, .noWrap
+    ; Reached end of table
+    ld      a, b
+    cp      a, l        ; No active actors?
+    jr      nz, :+
+    scf
+    ret
+:
+    ; Wrap back to beginning
+    ASSERT LOW(wCookiePosTable) == LOW(wLaserPosTable)
+    ld      e, LOW(wCookiePosTable)
+    ld      c, h
+    jr      .loop
+.noWrap
+    ASSERT ACTOR_SIZE == 2
+    inc     e
+    inc     e
+    jr      .loop
+
 ; Use actor data to make objects and put them in OAM
 CopyLasersToOAM::
+    ldh     a, [hLaserRotationIndex]
+    ld      de, wLaserPosTable
+    ld      c, MAX_LASER_COUNT
+    call    PointDEToNthActiveActor
+    ret     c
+    
     ldh     a, [hNextAvailableOAMSlot]
     ASSERT sizeof_OAM_ATTRS == 4
     add     a, a
     add     a, a
     ld      l, a
     ld      h, HIGH(wShadowOAM)
-    
-    ldh     a, [hLaserRotationIndex]
-    ASSERT ACTOR_SIZE == 2
-    add     a, a
-    ld      e, a
-    ld      d, HIGH(wLaserPosTable)
     
     lb      bc, MAX_LASER_SPRITE_COUNT, MAX_LASER_COUNT
 .loop
@@ -125,20 +165,26 @@ CopyLasersToOAM::
     jr      .loop
 
 CopyCookiesToOAM::
+    ldh     a, [hCookieRotationIndex]
+    ld      de, wCookiePosTable
+    ld      c, MAX_COOKIE_COUNT
+    call    PointDEToNthActiveActor
+    ret     c
+    
     ldh     a, [hNextAvailableOAMSlot]
+    ld      b, a
     ASSERT sizeof_OAM_ATTRS == 4
     add     a, a
     add     a, a
     ld      l, a
     ld      h, HIGH(wShadowOAM)
     
-    ldh     a, [hCookieRotationIndex]
-    ASSERT ACTOR_SIZE == 2
-    add     a, a
-    ld      e, a
-    ld      d, HIGH(wCookiePosTable)
-    
-    lb      bc, MAX_COOKIE_SPRITE_COUNT, MAX_COOKIE_COUNT
+    ld      a, OAM_COUNT
+    sub     a, b        ; Use all remaining OAM slots
+    ASSERT COOKIE_OBJ_COUNT == 2
+    srl     a           ; / 2
+    ld      b, a
+    ld      c, MAX_COOKIE_COUNT
 .loop
     ld      a, [de]     ; Y position
     and     a, a        ; No cookie, skip
