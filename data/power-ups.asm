@@ -13,9 +13,10 @@ ENDM
 
 ; Point rate - every X points, give the player a certain power-up
 PowerUpPointRateTable::
-    point_rate 3000     ; POWER_UP_FAST_LASERS
+    point_rate 4000     ; POWER_UP_FAST_LASERS
     point_rate 5000     ; POWER_UP_BOMB
-    point_rate 8000     ; POWER_UP_SLOW_COOKIES
+    point_rate 7000     ; POWER_UP_SLOW_COOKIES
+    point_rate 9000     ; POWER_UP_DOUBLE_LASERS
     
     point_rate 10000    ; POWER_UP_EXTRA_LIFE
 
@@ -24,4 +25,5 @@ PowerUpDurationTable::
     DW 15 seconds   ; POWER_UP_FAST_LASERS
     DW 1 seconds    ; POWER_UP_BOMB
     DW 15 seconds   ; POWER_UP_SLOW_COOKIES
+    DW 20 seconds   ; POWER_UP_DOUBLE_LASERS
 .end::

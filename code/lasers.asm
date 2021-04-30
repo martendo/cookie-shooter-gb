@@ -19,13 +19,17 @@ ShootLaser::
     call    FindEmptyActorSlot
     ret     c       ; No empty slots
     
+    ldh     a, [hCurrentPowerUp]
+    cp      a, POWER_UP_DOUBLE_LASERS
     ; [hl] = X position
     ld      a, [wShadowOAM + PLAYER_X1_OFFSET]
+    jr      z, .doubleLasers
+    
     add     a, (PLAYER_WIDTH / 2) - (LASER_WIDTH / 2)
     ld      [hld], a            ; X position
     ld      [hl], LASER_START_Y ; Y position
     
-    ; Play sound effect
+.playSoundEffect
     lb      bc, SFX_LASER, SFX_LASER_NOTE
     
     ldh     a, [hCurrentPowerUp]
@@ -38,6 +42,23 @@ ShootLaser::
     
     ; Generate a random number
     jp      GenerateRandomNumber
+
+.doubleLasers
+    add     a, (PLAYER_WIDTH / 2) - DOUBLE_LASER_X_OFFSET - LASER_WIDTH + 1
+    ld      [hld], a            ; X position
+    ld      [hl], LASER_START_Y ; Y position
+    
+    ld      l, LOW(wLaserPosTable)
+    ld      b, MAX_LASER_COUNT
+    call    FindEmptyActorSlot
+    jr      c, .playSoundEffect ; No empty slots
+    
+    ; [hl] = X position
+    ld      a, [wShadowOAM + PLAYER_X1_OFFSET]
+    add     a, (PLAYER_WIDTH / 2) + DOUBLE_LASER_X_OFFSET
+    ld      [hld], a            ; X position
+    ld      [hl], LASER_START_Y ; Y position
+    jr      .playSoundEffect
 
 ; Update lasers' positions
 UpdateLasers::

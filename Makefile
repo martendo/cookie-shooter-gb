@@ -60,7 +60,7 @@ $(RESDIR)/%.pal.json: $(GFXDIR)/%.png
 	superfamiconv palette -M gb -R -i $< -j $@
 $(RESDIR)/%.2bpp: $(GFXDIR)/%.png $(RESDIR)/%.pal.json
 	@mkdir -p $(@D)
-	superfamiconv tiles -M gb -B 2 -R -F -T 256 -i $< -p $(RESDIR)/$*.pal.json -d $@
+	superfamiconv tiles -M gb -B 2 -R -F -T 256 $(SFC_$*_TILES_FLAGS) -i $< -p $(RESDIR)/$*.pal.json -d $@
 
 $(IN_GAME_SUBMAPS): $(RESDIR)/%.tilemap: $(GFXDIR)/%.png $(RESDIR)/in-game-tiles.2bpp $(RESDIR)/in-game-tiles.pal.json
 	@mkdir -p $(@D)
