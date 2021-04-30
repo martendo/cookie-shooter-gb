@@ -15,6 +15,11 @@ LoadGameOverScreen::
     call    LCDMemcopyMap
     
     ; Remove current power-up
+    ldh     a, [hGameMode]
+    ASSERT GAME_MODE_COUNT - 1 == 1 && GAME_MODE_CLASSIC == 0
+    and     a, a
+    jr      z, .noPowerUps
+    
     ld      hl, vCurrentPowerUp
 :
     ldh     a, [rSTAT]
@@ -33,6 +38,7 @@ LoadGameOverScreen::
     inc     a           ; 1 cycle
     ld      [hl], a     ; 2 cycles
     ; Total 15 cycles
+.noPowerUps
     
     ; Check if this score is a new high score
     ld      a, CART_SRAM_ENABLE
@@ -41,7 +47,7 @@ LoadGameOverScreen::
     ; Get corresponding high score to check based on game mode
     ld      de, sClassicHighScore.end - 1
     ldh     a, [hGameMode]
-    ASSERT GAME_MODE_CLASSIC == 0
+    ASSERT GAME_MODE_COUNT - 1 == 1 && GAME_MODE_CLASSIC == 0
     and     a, a
     jr      z, :+
     ASSERT HIGH(sClassicHighScore.end - 1) == HIGH(sSuperHighScore.end - 1)
