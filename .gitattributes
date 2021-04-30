@@ -2,3 +2,4 @@
 *.asm	text linguist-language=Assembly
 # Assembly include files
 *.inc	text linguist-language=Assembly
+*.def	text linguist-language=Assembly

@@ -94,6 +94,8 @@ VBlankHandler:
     ld      a, P1F_GET_NONE
     ldh     [rP1], a
     
+    call    SoundSystem_Process
+    
     pop     hl
     pop     de
     pop     bc

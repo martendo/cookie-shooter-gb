@@ -6,6 +6,9 @@ PauseGame::
     ld      a, GAME_STATE_PAUSED
     ldh     [hGameState], a
     
+    ld      b, SFX_PAUSE
+    call    SFX_Play
+    
     ; Draw "paused" strip
     ld      de, PausedStripMap
     ld      hl, vPausedStrip
@@ -31,6 +34,9 @@ Paused::
     ldh     [hGameState], a
     
     ; Erase "paused" strip
+    ld      b, SFX_RESUME
+    call    SFX_Play
+    
     ld      hl, vPausedStrip
     ld      b, IN_GAME_BACKGROUND_TILE
     ld      d, PAUSED_STRIP_TILE_HEIGHT
@@ -39,6 +45,9 @@ Paused::
 
 .quitGame
     ; Return to game mode select screen
+    ld      b, SFX_QUIT
+    call    SFX_Play
+    
     ld      a, GAME_STATE_MODE_SELECT
     ld      hl, LoadModeSelectScreen
     call    StartFade
