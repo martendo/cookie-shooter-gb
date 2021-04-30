@@ -67,7 +67,7 @@ SetUpGame::
     ; a = 0
     ldh     [hCookieCount], a
     ldh     [hCookieRotationIndex], a
-    ASSERT PLAYER_NOT_INV == LOW(-1)
+    ASSERT PLAYER_NOT_INV == -1
     dec     a            ; a = -1
     ldh     [hPlayerInvCountdown], a
     
@@ -143,7 +143,7 @@ InGame::
     ; Update player invincibility
     ld      hl, hPlayerInvCountdown
     ld      a, [hl]
-    ASSERT PLAYER_NOT_INV == LOW(-1)
+    ASSERT PLAYER_NOT_INV == -1
     inc     a       ; a = -1
     jr      z, :+
     

@@ -226,7 +226,7 @@ UpdateCookies::
     
     ; Check if colliding with the player
     ldh     a, [hPlayerInvCountdown]
-    ASSERT PLAYER_NOT_INV == LOW(-1)
+    ASSERT PLAYER_NOT_INV == -1
     inc     a           ; a = -1
     ; Player is invincible, don't bother
     jr      nz, .skipCollision
