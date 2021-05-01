@@ -69,17 +69,37 @@ DrawPowerUp::
     jr      nc, .flashSlow
     
     bit     POWER_UP_END_FLASH_FAST_BIT, a
-    jr      z, .currentNormal
+    jr      z, .flashFastOn
     ; Flash off
     ld      a, NO_POWER_UP + POWER_UP_CURRENT_TILES_START
     jr      .draw
+.flashFastOn
+    cpl
+    and     a, POWER_UP_END_FLASH_FAST_MASK
+    jr      nz, .currentNormal
+    jr      .playSoundEffect
 .flashSlow
     bit     POWER_UP_END_FLASH_BIT, a
-    jr      z, .currentNormal
+    jr      z, .flashSlowOn
     ; Flash off
     ld      a, NO_POWER_UP + POWER_UP_CURRENT_TILES_START
     jr      .draw
-    
+.flashSlowOn
+    cpl
+    and     a, POWER_UP_END_FLASH_MASK
+    jr      nz, .currentNormal
+.playSoundEffect
+    ; Play tick sound effect
+    push    bc
+    push    de
+    push    hl
+    ld      b, SFX_POWER_UP_TICK
+    call    SFX_Play
+    pop     hl
+    pop     de
+    pop     bc
+    ; Fallthrough
+
 .currentNormal
     ld      a, b
     add     a, POWER_UP_CURRENT_TILES_START - POWER_UP_TILES_START

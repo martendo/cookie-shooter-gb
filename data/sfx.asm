@@ -11,13 +11,15 @@ SFX_Table::
     DW 0, SFX5_CHNL1, 0, 0
     DW 0, SFX6_CHNL1, 0, SFX6_CHNL3
     DW 0, SFX7_CHNL1, 0, 0
-    DW SFX8_CHNL0, 0, 0, 0
-    DW SFX9_CHNL0, 0, 0, 0
+    DW 0, SFX8_CHNL1, 0, 0
+    DW 0, SFX9_CHNL1, 0, 0
     DW SFX10_CHNL0, 0, 0, 0
     DW SFX11_CHNL0, 0, 0, 0
     DW SFX12_CHNL0, 0, 0, 0
     DW SFX13_CHNL0, 0, 0, 0
     DW SFX14_CHNL0, 0, 0, 0
+    DW SFX15_CHNL0, 0, 0, 0
+    DW SFX16_CHNL0, 0, 0, 0
 
 SFX1_CHNL0:
     DB $07, $0A, $80
@@ -124,21 +126,34 @@ SFX7_CHNL1:
     DB $87, $00, $01, $04
     DB $9C, $87, $00, $01
     DB $05, $00, $02
-SFX8_CHNL0:
+SFX8_CHNL1:
+    DB $07, $0A, $40
+    DB $05, $81, $04, $D6
+    DB $87, $00, $02, $05
+    DB $00, $01, $80, $02
+SFX9_CHNL1:
+    DB $07, $0A, $40
+    DB $05, $92, $04, $86
+    DB $86, $00, $04, $04
+    DB $3F, $86, $00, $02
+    DB $04, $EA, $85, $00
+    DB $05, $04, $CA, $85
+    DB $02
+SFX10_CHNL0:
     DB $0B, $08, $07
     DB $0A, $80, $05, $60
     DB $04, $4E, $87, $00
     DB $01, $04, $58, $87
     DB $00, $01, $05, $00
     DB $01, $80, $02
-SFX9_CHNL0:
+SFX11_CHNL0:
     DB $07, $0A, $C0
     DB $05, $80, $0B, $77
     DB $04, $82, $87, $00
     DB $06, $05, $83, $0B
     DB $08, $04, $AC, $87
     DB $02
-SFX10_CHNL0:
+SFX12_CHNL0:
     DB $07, $0B, $08
     DB $0A, $40, $05, $C1
     DB $04, $A2, $87, $00
@@ -152,7 +167,7 @@ SFX10_CHNL0:
     DB $0A, $00, $00, $01
     DB $0A, $40, $04, $C1
     DB $87, $02
-SFX11_CHNL0:
+SFX13_CHNL0:
     DB $07, $0B, $08
     DB $0A, $40, $05, $C1
     DB $04, $C1, $87, $00
@@ -166,7 +181,7 @@ SFX11_CHNL0:
     DB $0A, $00, $00, $01
     DB $0A, $40, $04, $A2
     DB $87, $02
-SFX12_CHNL0:
+SFX14_CHNL0:
     DB $07, $0B, $08
     DB $0A, $00, $05, $F1
     DB $04, $B0, $84, $00
@@ -178,7 +193,7 @@ SFX12_CHNL0:
     DB $03, $04, $91, $80
     DB $00, $03, $04, $20
     DB $80, $02
-SFX13_CHNL0:
+SFX15_CHNL0:
     DB $07, $0B, $08
     DB $0A, $80, $05, $F2
     DB $04, $AC, $87, $00
@@ -196,7 +211,7 @@ SFX13_CHNL0:
     DB $04, $AC, $87, $00
     DB $01, $04, $B5, $87
     DB $02
-SFX14_CHNL0:
+SFX16_CHNL0:
     DB $07, $0B, $08
     DB $0A, $00, $05, $C0
     DB $04, $82, $87, $00
