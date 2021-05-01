@@ -31,7 +31,8 @@ hCookieCount::       DS 1
 hTargetCookieCount:: DS 1
 
 ; Index of first cookie to add to OAM
-hCookieRotationIndex:: DS 1
+hCookieRotationIndex::
+    DS 1
 
 SECTION "Cookie Code", ROM0
 
@@ -128,6 +129,57 @@ CreateCookie::
     
     ret
 
+; Destroy a cookie and award points
+; @param hl Pointer to the cookie's entry in wCookiePosTable
+BlastCookie::
+    ld      [hl], 0     ; Destroy cookie (Y=0)
+    
+    call    GetCookieSize
+    add     a, a        ; 1 entry = 2 bytes
+    add     a, LOW(CookiePointsTable)
+    ld      l, a
+    ASSERT HIGH(CookiePointsTable.end - 1) == HIGH(CookiePointsTable)
+    ld      h, HIGH(CookiePointsTable)
+    ld      a, [hli]
+    ld      b, [hl]
+    ld      c, a        ; bc = points
+    
+    ld      hl, hCookieCount
+    dec     [hl]
+    
+    ; Add points to score
+    ld      l, LOW(hScore)
+    ld      a, [hl]
+    add     a, c
+    daa
+    ld      [hli], a
+    
+    ld      a, [hl]
+    adc     a, b
+    daa
+    ld      [hli], a
+    jr      nc, .doneScore
+    
+    ld      a, [hl]
+    adc     a, 0
+    daa
+    ld      [hl], a
+    
+.doneScore
+    ; Increment cookies blasted counter
+    ld      l, LOW(hCookiesBlasted.lo)
+    ld      a, [hl]
+    add     a, 1        ; `inc` does not affect carry flag
+    daa
+    ld      [hli], a
+    ret     nc
+    
+    ld      a, [hl]     ; hCookiesBlasted.hi
+    add     a, 1
+    daa
+    ld      [hl], a
+    ret
+
 ; Update cookies and their positions
 UpdateCookies::
     ; Update cookie rotation index
@@ -157,7 +209,18 @@ UpdateCookies::
     inc     d           ; wCookieSpeedTable
     
     ; Y position
+    ldh     a, [hCurrentPowerUp]
+    cp      a, POWER_UP_SLOW_COOKIES
+    jr      nz, .normalSpeedY
     ld      a, [de]     ; Y speed
+    swap    a
+    sra     a           ; Half of regular speed
+    swap    a
+    jr      :+
+.normalSpeedY
+    ld      a, [de]     ; Y speed
+:
+    ld      c, a        ; Save speed in c
     
     inc     h
     inc     h           ; wCookieSpeedAccTable
@@ -169,7 +232,7 @@ UpdateCookies::
     dec     h
     dec     h           ; wCookiePosTable
     
-    ld      a, [de]     ; Y speed
+    ld      a, c        ; Get Y speed again
     rr      c           ; Save carry from fractional part in c
     and     a, $0F      ; Get integer part
     rl      c           ; Restore carry from fractional part
@@ -181,13 +244,24 @@ UpdateCookies::
     xor     a, a
     ld      [hli], a
     inc     l
-    jr      .destroy
+    jp      .destroy
 .onscreenY
     ld      [hli], a
     
     ; X position
     inc     e
+    ldh     a, [hCurrentPowerUp]
+    cp      a, POWER_UP_SLOW_COOKIES
+    jr      nz, .normalSpeedX
     ld      a, [de]     ; X speed
+    swap    a
+    sra     a           ; Half of regular speed
+    swap    a
+    jr      :+
+.normalSpeedX
+    ld      a, [de]     ; X speed
+:
+    ld      c, a        ; Save speed in c
     
     inc     h
     inc     h           ; wCookieSpeedAccTable
@@ -199,7 +273,7 @@ UpdateCookies::
     dec     h
     dec     h           ; wCookiePosTable
     
-    ld      a, [de]     ; X speed
+    ld      a, c        ; Get X speed again
     rr      c           ; Save carry from fractional part in c
     and     a, $0F      ; Get integer part
     bit     3, a

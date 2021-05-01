@@ -17,7 +17,7 @@ FIXFLAGS = -v -p $(PADVALUE) -i "$(MFRCODE)" -k "$(LICENSEE)" -l $(OLDLIC) -m $(
 GFXFLAGS = -hu -f
 
 SRCS = $(wildcard $(SRCDIR)/*.asm) $(wildcard $(DATADIR)/*.asm)
-GFX = $(RESDIR)/sprite-tiles.2bpp $(RESDIR)/in-game-tiles.2bpp $(RESDIR)/game-over.2bpp $(RESDIR)/game-over-numbers.2bpp $(RESDIR)/game-over.tilemap $(RESDIR)/title-screen.2bpp $(RESDIR)/title-screen.tilemap $(RESDIR)/mode-select.2bpp $(RESDIR)/mode-select-numbers.2bpp $(RESDIR)/mode-select.tilemap $(IN_GAME_SUBMAPS)
+GFX = $(RESDIR)/sprite-tiles.2bpp $(RESDIR)/in-game-tiles.2bpp $(RESDIR)/power-ups.2bpp $(RESDIR)/game-over.2bpp $(RESDIR)/game-over-numbers.2bpp $(RESDIR)/game-over.tilemap $(RESDIR)/title-screen.2bpp $(RESDIR)/title-screen.tilemap $(RESDIR)/mode-select.2bpp $(RESDIR)/mode-select-numbers.2bpp $(RESDIR)/mode-select.tilemap $(IN_GAME_SUBMAPS)
 IN_GAME_SUBMAPS = $(RESDIR)/status-bar.tilemap $(RESDIR)/paused-strip.tilemap
 
 # Project configuration
@@ -60,7 +60,7 @@ $(RESDIR)/%.pal.json: $(GFXDIR)/%.png
 	superfamiconv palette -M gb -R -i $< -j $@
 $(RESDIR)/%.2bpp: $(GFXDIR)/%.png $(RESDIR)/%.pal.json
 	@mkdir -p $(@D)
-	superfamiconv tiles -M gb -B 2 -R -F -T 256 -i $< -p $(RESDIR)/$*.pal.json -d $@
+	superfamiconv tiles -M gb -B 2 -R -F -T 256 $(SFC_$*_TILES_FLAGS) -i $< -p $(RESDIR)/$*.pal.json -d $@
 
 $(IN_GAME_SUBMAPS): $(RESDIR)/%.tilemap: $(GFXDIR)/%.png $(RESDIR)/in-game-tiles.2bpp $(RESDIR)/in-game-tiles.pal.json
 	@mkdir -p $(@D)

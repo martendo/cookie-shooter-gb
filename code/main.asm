@@ -208,8 +208,6 @@ hCookiesBlasted::
 
 hGameMode:: DS 1
 
-hWaitCountdown:: DS 1
-
 hScratch:: DS 1
 
 SECTION "OAM DMA Routine", ROM0

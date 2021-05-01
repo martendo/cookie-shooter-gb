@@ -31,6 +31,97 @@ DrawHearts::
     jr      nz, .draw
     ret
 
+; Draw a power-up slot
+; @param a  Power-up type
+; @param b  Power-up index (0-2)
+; @param hl Pointer to destination on map
+; @param de SCRN_VX_B
+DrawPowerUp::
+    ; Get tiles with power-up type
+    ASSERT POWER_UP_TILE_COUNT == 4
+    add     a, a    ; * 2
+    add     a, a    ; * 4
+    add     a, POWER_UP_TILES_START
+    
+    ld      c, a
+    ; Is this the currently selected power-up?
+    ldh     a, [hPowerUpSelection]
+    cp      a, b
+    ld      a, c
+    jr      nz, :+
+    
+    add     a, POWER_UP_SELECTED_TILES_START - POWER_UP_TILES_START
+    jr      .draw
+:
+    inc     b       ; Currently in-use power-up
+    jr      nz, .draw
+    
+    ld      b, a
+    ; If near the end of the power-up's duration, flash
+    ldh     a, [hPowerUpDuration.hi]
+    ASSERT HIGH(POWER_UP_END_FLASH_START) == 0
+    and     a, a
+    jr      nz, .currentNormal
+    ldh     a, [hPowerUpDuration.lo]
+    cp      a, LOW(POWER_UP_END_FLASH_START)
+    jr      nc, .currentNormal
+    cp      a, LOW(POWER_UP_END_FLASH_FAST_START)
+    jr      nc, .flashSlow
+    
+    bit     POWER_UP_END_FLASH_FAST_BIT, a
+    jr      z, .flashFastOn
+    ; Flash off
+    ld      a, NO_POWER_UP + POWER_UP_CURRENT_TILES_START
+    jr      .draw
+.flashFastOn
+    cpl
+    and     a, POWER_UP_END_FLASH_FAST_MASK
+    jr      nz, .currentNormal
+    jr      .playSoundEffect
+.flashSlow
+    bit     POWER_UP_END_FLASH_BIT, a
+    jr      z, .flashSlowOn
+    ; Flash off
+    ld      a, NO_POWER_UP + POWER_UP_CURRENT_TILES_START
+    jr      .draw
+.flashSlowOn
+    cpl
+    and     a, POWER_UP_END_FLASH_MASK
+    jr      nz, .currentNormal
+.playSoundEffect
+    ; Play tick sound effect
+    push    bc
+    push    de
+    push    hl
+    ld      b, SFX_POWER_UP_TICK
+    call    SFX_Play
+    pop     hl
+    pop     de
+    pop     bc
+    ; Fallthrough
+
+.currentNormal
+    ld      a, b
+    add     a, POWER_UP_CURRENT_TILES_START - POWER_UP_TILES_START
+.draw
+    ASSERT POWER_UP_TILE_WIDTH == 2
+    ld      [hli], a
+    inc     a
+    ld      [hld], a
+    inc     a
+    
+    add     hl, de
+    ASSERT POWER_UP_TILE_HEIGHT - 1 == 1
+    
+    ASSERT POWER_UP_TILE_WIDTH == 2
+    ld      [hli], a
+    inc     a
+    ld      [hld], a
+    
+    add     hl, de
+    
+    ret
+
 ; Draw a BCD number onto the status bar
 ; @param de Pointer to most significant byte of BCD number
 ; @param hl Pointer to destination on map
