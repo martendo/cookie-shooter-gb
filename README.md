@@ -1,6 +1,8 @@
 # Cookie Shooter GB
 A Game Boy arcade shooter game!
 
+![Screenshot of gameplay](screenshots/cookie-shooter-gb.png)
+
 Based on Cookie Shooter, one of the first games I've made.
 
 ## Building
@@ -29,12 +31,16 @@ High scores are kept separate for each game mode.
 ### Classic Mode
 The original Cookie Shooter, plain and simple.
 
+![Screenshot of gameplay in Classic mode](screenshots/classic-mode.png)
+
 You shoot, hit cookies, and get points.
 You get hit, you lose a life.
 Lose all 3 lives, and the game is over.
 
 ### Super Mode
 A fancy new way to play with power-ups!
+
+![Screenshot of gameplay in Super mode](screenshots/super-mode.png)
 
 All the fun of Classic Cookie Shooter, plus 5 power-ups, usable with the B button.
 
