@@ -194,8 +194,7 @@ InGame::
     cp      a, POWER_UP_BOMB
     jr      nz, .notSpecialPowerUp
     
-    ; Set power-up as current and remove
-    ldh     [hCurrentPowerUp], a
+    ; Remove from power-ups
     ld      [hl], NO_POWER_UP
     ; Clear all cookies
     ld      hl, wCookiePosTable
@@ -215,8 +214,11 @@ InGame::
     
     ld      b, SFX_BOMB
     call    SFX_Play
-    ld      a, POWER_UP_BOMB
-    jr      .setPowerUpDuration
+    ; Don't create any new cookies for a while after the bomb
+    ld      a, POWER_UP_BOMB_WAIT_FRAMES
+    ldh     [hWaitCountdown], a
+    ld      hl, hPowerUpDuration.hi
+    jr      :+
     
 .notSpecialPowerUp
     cp      a, POWER_UP_EXTRA_LIFE
@@ -316,11 +318,6 @@ InGame::
     jr      .skipCookieCount
     
 :
-    ; Don't create any new cookies for a while after the bomb
-    ldh     a, [hCurrentPowerUp]
-    cp      a, POWER_UP_BOMB
-    jr      z, .skipCookieCount
-    
     ; Update target cookie count based on score
     ld      hl, hScore.2
     ld      a, [hld]
@@ -417,8 +414,8 @@ InGame::
     cp      a, POWER_UP_COUNT
     jr      nc, .donePowerUps
     
-    ASSERT HIGH(PowerUpPointRateTable.end - 1) != HIGH(PowerUpPointRateTable)
-    inc     hl
+    ASSERT HIGH(PowerUpPointRateTable.end - 1) == HIGH(PowerUpPointRateTable)
+    inc     l
     ldh     a, [hLastScoreThousands]
     jr      .getPowerUpLoop
     
