@@ -19,6 +19,7 @@ PowerUpPointRateTable::
     point_rate 9000     ; POWER_UP_DOUBLE_LASERS
     
     point_rate 10000    ; POWER_UP_EXTRA_LIFE
+.end::
 
 ; Power-up duration (in number of frames)
 PowerUpDurationTable::

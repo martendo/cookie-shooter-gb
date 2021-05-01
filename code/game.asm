@@ -417,7 +417,8 @@ InGame::
     cp      a, POWER_UP_COUNT
     jr      nc, .donePowerUps
     
-    inc     l
+    ASSERT HIGH(PowerUpPointRateTable.end - 1) != HIGH(PowerUpPointRateTable)
+    inc     hl
     ldh     a, [hLastScoreThousands]
     jr      .getPowerUpLoop
     
