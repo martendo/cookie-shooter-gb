@@ -26,6 +26,13 @@ There are 2 game modes: Classic and Super.
 The game mode selection screen will appear after the title screen. From there, you can select the game mode you want to play.
 High scores are kept separate for each game mode.
 
+### Classic Mode
+The original Cookie Shooter, plain and simple.
+
+You shoot, hit cookies, and get points.
+You get hit, you lose a life.
+Lose all 3 lives, and the game is over.
+
 ### Super Mode
 A fancy new way to play with power-ups!
 
