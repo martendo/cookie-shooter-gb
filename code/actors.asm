@@ -136,8 +136,8 @@ DrawLasers::
     ldh     [hNextAvailableOAMSlot], a
     
     dec     b
-    ret     z
-    jr      .next
+    jr      nz, .next
+    ret
 .skip
     inc     e
     inc     e
@@ -160,19 +160,14 @@ DrawCookies::
     ret     c
     
     ldh     a, [hNextAvailableOAMSlot]
-    ld      b, a
     ASSERT sizeof_OAM_ATTRS == 4
     add     a, a
     add     a, a
     ld      l, a
     ld      h, HIGH(wShadowOAM)
     
-    ld      a, OAM_COUNT
-    sub     a, b        ; Use all remaining OAM slots
-    ASSERT COOKIE_OBJ_COUNT == 2
-    srl     a           ; / 2
-    ld      b, a
-    ld      c, MAX_COOKIE_COUNT
+    ASSERT MAX_COOKIE_COUNT == MAX_COOKIE_SPRITE_COUNT
+    ld      b, MAX_COOKIE_COUNT
 .loop
     ld      a, [de]     ; Y position
     and     a, a        ; No cookie, skip
@@ -223,15 +218,14 @@ DrawCookies::
     
     pop     bc
     dec     b
-    ret     z
-    jr      .next
+    jr      nz, .next
+    ret
 .skip
+    dec     b
+    ret     z
     inc     e
     inc     e
 .next
-    dec     c
-    ret     z
-    
     ld      a, e
     cp      a, LOW(wCookiePosTable.end)
     jr      c, .loop
