@@ -76,9 +76,10 @@ ModeSelect::
     ldh     a, [hNewKeys]
     bit     PADB_DOWN, a
     call    nz, MoveSelectionDown
+    
     ldh     a, [hNewKeys]
     and     a, PADF_A | PADF_START
-    jr      z, :+
+    jp      z, Main
     
     ; Start game!
     ld      b, SFX_MENU_START
@@ -87,10 +88,6 @@ ModeSelect::
     ld      a, GAME_STATE_IN_GAME
     ld      hl, SetUpGame
     call    StartFade
-    jp      Main
-    
-:
-    call    HaltVBlank
     jp      Main
 
 MoveSelectionUp:

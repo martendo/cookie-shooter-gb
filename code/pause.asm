@@ -18,7 +18,7 @@ PauseGame::
 Paused::
     ldh     a, [hNewKeys]
     bit     PADB_START, a
-    jr      z, .continue
+    jp      z, Main
     
     ; Resuming or quitting the game? (SELECT)
     ldh     a, [hPressedKeys]
@@ -51,8 +51,4 @@ Paused::
     ld      a, GAME_STATE_MODE_SELECT
     ld      hl, LoadModeSelectScreen
     call    StartFade
-    jp      Main
-
-.continue
-    call    HaltVBlank
     jp      Main

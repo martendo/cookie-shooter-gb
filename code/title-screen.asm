@@ -21,7 +21,7 @@ LoadTitleScreen::
 TitleScreen::
     ldh     a, [hNewKeys]
     and     a, PADF_A | PADF_START
-    jr      z, :+
+    jp      z, Main
     
     ; Move on to the game mode select screen
     ld      b, SFX_TITLE_START
@@ -30,8 +30,4 @@ TitleScreen::
     ld      a, GAME_STATE_MODE_SELECT
     ld      hl, LoadModeSelectScreen
     call    StartFade
-    jp      Main
-    
-:
-    call    HaltVBlank
     jp      Main

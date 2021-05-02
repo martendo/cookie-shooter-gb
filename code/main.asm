@@ -140,10 +140,19 @@ Initialize:
     ei
 
 Main::
+    ; Wait for VBlank
+    halt
+    ldh     a, [hVBlankFlag]
+    and     a, a
+    jr      z, Main
+    xor     a, a
+    ldh     [hVBlankFlag], a
+    
     ldh     a, [hFadeState]
     ASSERT NOT_FADING == -1
-    inc     a               ; a = -1
-    jr      nz, EmptyLoop   ; Currently fading
+    inc     a       ; a = -1
+    ; Currently fading, don't do anything
+    jr      nz, Main
     
     ldh     a, [hGameState]
     ; GAME_STATE_TITLE_SCREEN
@@ -160,19 +169,6 @@ Main::
     jp      z, GameOver
     ; GAME_STATE_PAUSED
     jp      Paused
-
-EmptyLoop:
-    call    HaltVBlank
-    jr      Main
-
-HaltVBlank::
-    halt
-    ldh     a, [hVBlankFlag]
-    and     a, a
-    jr      z, HaltVBlank
-    xor     a, a
-    ldh     [hVBlankFlag], a
-    ret
 
 SECTION "Stack", WRAMX[$E000 - STACK_SIZE]
 

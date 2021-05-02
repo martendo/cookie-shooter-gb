@@ -119,7 +119,7 @@ LoadGameOverScreen::
 GameOver::
     ldh     a, [hNewKeys]
     and     a, PADF_A | PADF_START
-    jr      z, :+
+    jp      z, Main
     
     ; Reset game
     ld      b, SFX_GAME_OVER_OK
@@ -128,8 +128,4 @@ GameOver::
     ld      a, GAME_STATE_IN_GAME
     ld      hl, SetUpGame
     call    StartFade
-    jp      Main
-    
-:
-    call    HaltVBlank
     jp      Main

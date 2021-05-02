@@ -435,14 +435,11 @@ InGame::
     ; Check for game over - no more lives left
     ldh     a, [hPlayerLives]
     and     a, a
-    jr      nz, :+
+    jp      nz, Main
     
     ld      a, GAME_STATE_GAME_OVER
     ld      hl, LoadGameOverScreen
     call    StartFade
-    jp      Main
-:
-    call    HaltVBlank
     jp      Main
 
 ; Add a power-up to an empty power-up slot
