@@ -9,14 +9,14 @@ LoadTitleScreen::
     ld      hl, _VRAM9000
     ld      bc, TitleScreen9000Tiles.end - TitleScreen9000Tiles
     call    LCDMemcopy
-    ld      de, TitleScreen8800Tiles
+    ASSERT TitleScreen8800Tiles == TitleScreen9000Tiles.end
     ld      hl, _VRAM8800
     ld      bc, TitleScreen8800Tiles.end - TitleScreen8800Tiles
     call    LCDMemcopy
-    ld      de, TitleScreenMap
+    ASSERT TitleScreenMap == TitleScreen8800Tiles.end
     ld      hl, _SCRN0
     ld      c, SCRN_Y_B
-    jp      LCDMemcopyMap
+    jr      LCDMemcopyMap
 
 TitleScreen::
     ldh     a, [hNewKeys]

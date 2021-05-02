@@ -100,17 +100,27 @@ SetUpGame::
     ld      [hli], a    ; a = 0 = PLAYER_TILE
     ld      [hl], OAMF_XFLIP
     
-    ; Clear actor tables
     ; a = 0
     ldh     [hNextAvailableOAMSlot], a
+    
+    ; Clear actor tables
     ld      hl, wLaserPosTable
     ld      b, MAX_LASER_COUNT
+:
     ; a = 0
-    call    ClearActors
+    ld      [hli], a
+    inc     l
+    dec     b
+    jr      nz, :-
+    
     ld      hl, wCookiePosTable
     ld      b, MAX_COOKIE_COUNT
+:
     ; a = 0
-    call    ClearActors
+    ld      [hli], a
+    inc     l
+    dec     b
+    jr      nz, :-
     
     ; a = 0
     ldh     [hCookieCount], a
@@ -138,7 +148,17 @@ InGame::
     res     PADB_START, a
     ldh     [hNewKeys], a
     
-    call    PauseGame
+    ld      a, GAME_STATE_PAUSED
+    ldh     [hGameState], a
+    
+    ld      b, SFX_PAUSE
+    call    SFX_Play
+    
+    ; Draw "paused" strip
+    ld      de, PausedStripMap
+    ld      hl, vPausedStrip
+    ld      c, PAUSED_STRIP_TILE_HEIGHT
+    call    LCDMemcopyMap
     jp      Main
     
 :
@@ -160,8 +180,7 @@ InGame::
     cp      a, MAX_POWER_UP_COUNT - 1
     jr      nc, .noPowerUpSelectionChange
     inc     a
-    ldh     [hPowerUpSelection], a
-    jr      .selectedPowerUp
+    jr      .selectPowerUp
 
 :
     ; Move power-up selection up
@@ -169,9 +188,9 @@ InGame::
     and     a, a
     jr      z, .noPowerUpSelectionChange
     dec     a
-    ldh     [hPowerUpSelection], a
 
-.selectedPowerUp
+.selectPowerUp
+    ldh     [hPowerUpSelection], a
     ld      b, SFX_POWER_UP_SELECT
     call    SFX_Play
 .noPowerUpSelectionChange
@@ -192,7 +211,7 @@ InGame::
     jr      z, .notUsingPowerUp
     
     cp      a, POWER_UP_BOMB
-    jr      nz, .notSpecialPowerUp
+    jr      nz, .notBombPowerUp
     
     ; Remove from power-ups
     ld      [hl], NO_POWER_UP
@@ -220,7 +239,7 @@ InGame::
     ld      hl, hPowerUpDuration.hi
     jr      :+
     
-.notSpecialPowerUp
+.notBombPowerUp
     cp      a, POWER_UP_EXTRA_LIFE
     jr      nz, .normalPowerUp
     
@@ -255,7 +274,7 @@ InGame::
     add     a, a    ; 1 entry = 2 bytes
     add     a, LOW(PowerUpDurationTable)
     ld      l, a
-    ASSERT HIGH(PowerUpDurationTable) == HIGH(PowerUpDurationTable.end)
+    ASSERT HIGH(PowerUpDurationTable.end - 1) == HIGH(PowerUpDurationTable)
     ld      h, HIGH(PowerUpDurationTable)
     ld      a, [hli]
     ld      b, [hl]
@@ -270,7 +289,7 @@ InGame::
     ld      a, [hld]
     ASSERT NO_POWER_UP_DURATION == HIGH(-1)
     inc     a       ; a = -1
-    jr      z, .noCurrentPowerUp
+    jr      z, .noPowerUps
     
     ld      e, [hl]
     inc     l
@@ -284,15 +303,14 @@ InGame::
     ld      [hl], e
     pop     af      ; Restore zero flag
     jr      nz, .noPowerUps
-    ; Power-up just ended
-    ld      b, SFX_POWER_UP_END
-    call    SFX_Play
-    jr      .noPowerUps
     
-.noCurrentPowerUp
+    ; Power-up just ended
     ASSERT NO_POWER_UP == 0
     xor     a, a
     ldh     [hCurrentPowerUp], a
+    
+    ld      b, SFX_POWER_UP_END
+    call    SFX_Play
 
 .noPowerUps
     ; Player movement
@@ -308,7 +326,7 @@ InGame::
     bit     PADB_A, a
     call    nz, ShootLaser
     
-    ; Delay game start period - don't create any cookies yet
+    ; Waiting - don't create any cookies
     ldh     a, [hWaitCountdown]
     and     a, a
     jr      z, :+
@@ -325,8 +343,8 @@ InGame::
     add     a, a    ; * 2
     ld      b, a
     ld      a, [hl] ; hScore.1
-    ASSERT ADD_COOKIE_RATE / 10_00 < 10 && ADD_COOKIE_RATE / 10_00 >= 0
-    cp      a, (ADD_COOKIE_RATE / 10_00) << 4
+    ASSERT ADD_COOKIE_RATE / 10_00 < 10 && ADD_COOKIE_RATE / 10_00 > 0
+    cp      a, (ADD_COOKIE_RATE / 10_00) << 4   ; hScore.1 = hundreds
     ccf             ; Add an extra cookie if >= ADD_COOKIE_RATE
     ld      a, 0    ; Preserve carry
     adc     a, b
@@ -336,11 +354,12 @@ InGame::
     ld      a, MAX_COOKIE_COUNT
 :
     ld      l, LOW(hTargetCookieCount)
-    ld      [hl], a
+    ld      [hld], a
     ; Cookie count is too low, create a new cookie
-    ldh     a, [hCookieCount]
+    ASSERT hCookieCount == hTargetCookieCount - 1
+    dec     a       ; `>` and not `>=`
     cp      a, [hl]
-    call    c, CreateCookie
+    call    nc, CreateCookie
     
 .skipCookieCount
     ; Update player invincibility
@@ -389,17 +408,16 @@ InGame::
     ; Score crossed 1000 points?
     ldh     a, [hLastScoreThousands]
     cp      a, b
-    jr      z, .skipPowerUp
-    
     ld      a, b
     ldh     [hLastScoreThousands], a
+    jr      z, .donePowerUps
     
     ld      hl, PowerUpPointRateTable
     ld      c, POWER_UPS_START
 .getPowerUpLoop
     ld      b, [hl]     ; b = power-up point rate
 .modulo
-    sub     a, b
+    sub     a, b        ; a = score (thousands)
     daa
     jr      c, .nextPowerUp
     jr      nz, .modulo
@@ -419,17 +437,13 @@ InGame::
     ldh     a, [hLastScoreThousands]
     jr      .getPowerUpLoop
     
-.skipPowerUp
-    ld      a, b
-    ldh     [hLastScoreThousands], a
-    
 .donePowerUps
     ld      a, PLAYER_OBJ_COUNT
     ldh     [hNextAvailableOAMSlot], a
     
     ; Copy actor data to OAM
-    call    CopyLasersToOAM
-    call    CopyCookiesToOAM
+    call    DrawLasers
+    call    DrawCookies
     call    HideUnusedObjects
     
     ; Check for game over - no more lives left

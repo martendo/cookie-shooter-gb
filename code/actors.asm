@@ -46,17 +46,6 @@ HideUnusedObjects::
     
     jr      HideObjects
 
-; Clear actors
-; @param hl Pointer to actor data to clear
-; @param b  Maximum number of actors
-; @param a  0
-ClearActors::
-    ld      [hli], a
-    inc     l
-    dec     b
-    jr      nz, ClearActors
-    ret
-
 ; Find an empty slot to in an actor table
 ; @param  hl Pointer to actor data
 ; @param  b  Maximum number of actors
@@ -71,7 +60,7 @@ FindEmptyActorSlot::
     jr      nz, FindEmptyActorSlot
     ; No more slots
     scf
-    ret     z
+    ret
 
 ; Use an index to active actors and return it in de
 ; @param a  N - the index to active actors
@@ -80,8 +69,7 @@ FindEmptyActorSlot::
 ; @return cf Set if no active actors, otherwise reset
 ; @return de Pointer to Nth active actor
 PointDEToNthActiveActor:
-    and     a, a        ; Clears carry
-    ret     z
+    inc     a
     ld      b, a
     ld      l, a        ; Save for comparing
     ld      h, c        ; Save for resetting
@@ -90,7 +78,7 @@ PointDEToNthActiveActor:
     and     a, a        ; No actor, skip (clears carry)
     jr      z, .next
     dec     b           ; Doesn't affect carry
-    ret     z
+    ret     z           ; Carry still reset
 .next
     dec     c
     jr      nz, .noWrap
@@ -113,7 +101,7 @@ PointDEToNthActiveActor:
     jr      .loop
 
 ; Use actor data to make objects and put them in OAM
-CopyLasersToOAM::
+DrawLasers::
     ldh     a, [hLaserRotationIndex]
     ld      de, wLaserPosTable
     ld      c, MAX_LASER_COUNT
@@ -164,7 +152,7 @@ CopyLasersToOAM::
     ld      e, LOW(wLaserPosTable)
     jr      .loop
 
-CopyCookiesToOAM::
+DrawCookies::
     ldh     a, [hCookieRotationIndex]
     ld      de, wCookiePosTable
     ld      c, MAX_COOKIE_COUNT
@@ -191,11 +179,9 @@ CopyCookiesToOAM::
     jr      z, .skip
     
     push    bc
-    push    hl
     ; Get cookie's size's tiles
-    ld      l, e
-    ld      h, d
-    call    GetCookieSize
+    ld      d, HIGH(wCookieSizeTable)
+    ld      a, [de]     ; a = cookie size
     ASSERT COOKIE_TILE_COUNT == 4
     add     a, a
     add     a, a
@@ -204,7 +190,7 @@ CopyCookiesToOAM::
     add     a, 2
     ld      b, a
     ; c = first tile, b = second tile
-    pop     hl
+    ld      d, HIGH(wCookiePosTable)
     
     ld      a, [de]     ; Y position
     ld      [hli], a

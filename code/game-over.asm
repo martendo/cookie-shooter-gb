@@ -62,7 +62,7 @@ LoadGameOverScreen::
     jr      c, .newHighScore    ; High score < Score
     jr      nz, .oldHighScore   ; High score > Score
     dec     b
-    jr      z, .oldHighScore
+    jr      z, .oldHighScore    ; High score == Score
     dec     e
     dec     l
     jr      .checkHighScoreLoop

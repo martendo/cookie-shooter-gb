@@ -99,7 +99,7 @@ Initialize:
     
 .doneCheckingSaveData
     ; Seed random number with high scores
-    ; Use the 2nd byte because it is the most interesting
+    ; Use the 2nd bytes because they're the most interesting
     ld      a, [sClassicHighScore.1]
     ld      b, a
     ld      a, [sSuperHighScore.1]

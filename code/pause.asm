@@ -2,19 +2,6 @@ INCLUDE "defines.inc"
 
 SECTION "Paused Game Code", ROM0
 
-PauseGame::
-    ld      a, GAME_STATE_PAUSED
-    ldh     [hGameState], a
-    
-    ld      b, SFX_PAUSE
-    call    SFX_Play
-    
-    ; Draw "paused" strip
-    ld      de, PausedStripMap
-    ld      hl, vPausedStrip
-    ld      c, PAUSED_STRIP_TILE_HEIGHT
-    jp      LCDMemcopyMap
-
 Paused::
     ldh     a, [hNewKeys]
     bit     PADB_START, a

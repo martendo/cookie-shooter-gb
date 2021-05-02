@@ -91,40 +91,30 @@ UpdateLasers::
 .update
     ld      a, c
     add     a, [hl]     ; Y position
-    cp      a, STATUS_BAR_HEIGHT - LASER_HEIGHT + 16
-    jr      nc, :+
+    cp      a, (STATUS_BAR_HEIGHT - LASER_HEIGHT + 16) + 1
+    jr      nc, :+      ; Y > Status bar
     xor     a, a        ; Out of sight, destroy
     ld      [hli], a
     jr      .resume
 :
     ld      [hli], a
-    jr      nz, CheckLaserCollide
-.resume
-    inc     l           ; Leave X as-is
-.next
-    dec     b
-    jr      nz, .loop
-    ret
-
-; Check for collision between a laser and a cookie
-; @param hl Pointer to laser's X position
-; @param a  Laser's Y position
-CheckLaserCollide:
-    push    bc
+    
+    ; Check for collision between this laser and a cookie
     
     add     a, LASER_HITBOX_Y
     ld      d, a        ; d = laser.hitbox.top
     ld      a, [hld]
-    push    hl          ; Laser Y position
     add     a, LASER_HITBOX_X
     ld      e, a        ; e = laser.hitbox.left
     
+    push    bc
+    push    hl          ; Laser Y position
     ld      hl, wCookiePosTable
     ld      c, MAX_COOKIE_COUNT
-.loop
+.checkCollideLoop
     ld      a, [hli]
     and     a, a        ; No cookie
-    jr      z, .skip
+    jr      z, .skipCookie
     
     ld      b, a
     ld      a, [hld]
@@ -171,17 +161,22 @@ CheckLaserCollide:
     ld      [hli], a    ; Destroy laser (Y=0)
     pop     bc
     
-    jr      UpdateLasers.resume
+    jr      .resume
     
 .noCollision
     pop     hl          ; Cookie Y position
     inc     l
-.skip
+.skipCookie
     inc     l
     dec     c
-    jr      nz, .loop
+    jr      nz, .checkCollideLoop
     
     pop     hl          ; Laser Y position
     inc     l
     pop     bc
-    jp      UpdateLasers.resume
+.resume
+    inc     l           ; Leave X as-is
+.next
+    dec     b
+    jr      nz, .loop
+    ret

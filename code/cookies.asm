@@ -19,7 +19,7 @@ wCookieSpeedAccTable:
 DS $100 - (MAX_COOKIE_COUNT * ACTOR_SIZE)
 
 wCookieSizeTable::
-    DS MAX_COOKIE_COUNT
+    DS MAX_COOKIE_COUNT * ACTOR_SIZE
 
 ASSERT wCookieSpeedTable == wCookiePosTable + (1 << 8)
 ASSERT wCookieSpeedAccTable == wCookieSpeedTable + (1 << 8)
@@ -36,47 +36,37 @@ hCookieRotationIndex::
 
 SECTION "Cookie Code", ROM0
 
-; Get a cookie's size using its position in wCookiePosTable
-; @param hl Pointer to the cookie's entry in wCookiePosTable
-; @return a  Cookie size type (see COOKIE_SIZE_* constants)
-GetCookieSize::
-    srl     l           ; wCookiePosTable entry = 2 bytes, wCookieSizeTable entry = 1 byte
-    ld      h, HIGH(wCookieSizeTable)
-    ld      a, [hl]     ; a = cookie size
-    ret
-
 ; Get a pointer to the dimensions of a certain cookie's hitbox based on
 ; its size using its position in wCookiePosTable
-; @param hl Pointer to the cookie's entry in wCookiePosTable
+; @param hl Pointer to the cookie's entry any cookie actor data table
 ; @return hl Pointer to the cookie's size's hitbox in CookieHitboxTable
 PointHLToCookieHitbox::
-    call    GetCookieSize
+    ld      h, HIGH(wCookieSizeTable)
+    ld      a, [hl]     ; a = cookie size
     ; Get cookie's size's hitbox
     add     a, a
     add     a, a        ; * 4: Y, H, X, W
     add     a, LOW(CookieHitboxTable)
     ld      l, a
-    ; ASSERT HIGH(CookieHitboxTable.end - 1) != HIGH(CookieHitboxTable)
-    adc     a, HIGH(CookieHitboxTable)
-    sub     a, l
-    ld      h, a
-    
+    ASSERT HIGH(CookieHitboxTable.end - 1) == HIGH(CookieHitboxTable)
+    ld      h, HIGH(CookieHitboxTable)
     ret
 
 CreateCookie::
-    ld      hl, hCookieCount
-    inc     [hl]
-    
     ld      hl, wCookiePosTable
     ld      b, MAX_COOKIE_COUNT
     call    FindEmptyActorSlot
     ret     c           ; No empty slots
     
+    ldh     a, [hCookieCount]
+    inc     a
+    ldh     [hCookieCount], a
+    
     ; [hl] = X position
     call    GenerateRandomNumber
-    cp      a, SCRN_X - 16 + 8
+    cp      a, SCRN_X - COOKIE_WIDTH + 8
     jr      c, :+
-    sub     a, (SCRN_X - 16) / 2
+    sub     a, (SCRN_X - COOKIE_WIDTH) / 2
 :
     ld      [hld], a    ; X position
     ld      [hl], COOKIE_START_Y ; Y position
@@ -116,7 +106,6 @@ CreateCookie::
     ld      [hli], a
     ld      [hld], a
     
-    srl     l           ; wCookieSpeedAccTable entry = 2 bytes, wCookieSizeTable entry = 1 byte
     inc     h           ; wCookieSizeTable
     call    GenerateRandomNumber
     and     a, COOKIE_SIZE_MASK
@@ -134,7 +123,8 @@ CreateCookie::
 BlastCookie::
     ld      [hl], 0     ; Destroy cookie (Y=0)
     
-    call    GetCookieSize
+    ld      h, HIGH(wCookieSizeTable)
+    ld      a, [hl]     ; a = cookie size
     add     a, a        ; 1 entry = 2 bytes
     add     a, LOW(CookiePointsTable)
     ld      l, a
@@ -175,7 +165,7 @@ BlastCookie::
     ret     nc
     
     ld      a, [hl]     ; hCookiesBlasted.hi
-    add     a, 1
+    adc     a, 0
     daa
     ld      [hl], a
     ret
@@ -211,15 +201,12 @@ UpdateCookies::
     ; Y position
     ldh     a, [hCurrentPowerUp]
     cp      a, POWER_UP_SLOW_COOKIES
+    ld      a, [de]     ; Y speed
     jr      nz, .normalSpeedY
-    ld      a, [de]     ; Y speed
     swap    a
-    sra     a           ; Half of regular speed
+    srl     a           ; Half of regular speed
     swap    a
-    jr      :+
 .normalSpeedY
-    ld      a, [de]     ; Y speed
-:
     ld      c, a        ; Save speed in c
     
     inc     h
@@ -244,23 +231,20 @@ UpdateCookies::
     xor     a, a
     ld      [hli], a
     inc     l
-    jp      .destroy
+    jp      .destroyed
 .onscreenY
     ld      [hli], a
+    inc     e
     
     ; X position
-    inc     e
     ldh     a, [hCurrentPowerUp]
     cp      a, POWER_UP_SLOW_COOKIES
-    jr      nz, .normalSpeedX
     ld      a, [de]     ; X speed
+    jr      nz, .normalSpeedX
     swap    a
     sra     a           ; Half of regular speed
     swap    a
-    jr      :+
 .normalSpeedX
-    ld      a, [de]     ; X speed
-:
     ld      c, a        ; Save speed in c
     
     inc     h
@@ -284,15 +268,16 @@ UpdateCookies::
     adc     a, [hl]     ; Add integer speed + fractional carry to position
     
     cp      a, SCRN_X + 8
+    ASSERT LOW((-COOKIE_WIDTH + 8) + 1) > LOW(SCRN_X + 8)
     jr      c, .onscreenX
-    cp      a, -16 + 8
+    cp      a, (-COOKIE_WIDTH + 8) + 1
     jr      nc, .onscreenX
     ; Past left/right sides of screen, destroy
     xor     a, a
     dec     l
     ld      [hli], a
     inc     l
-    jr      .destroy
+    jr      .destroyed
 .onscreenX
     ld      [hld], a
     ld      e, a
@@ -307,17 +292,17 @@ UpdateCookies::
     
     push    hl
     call    PointHLToCookieHitbox
-    ; ASSERT HIGH(CookieHitboxTable.end - 1) != HIGH(CookieHitboxTable)
+    ASSERT HIGH(CookieHitboxTable.end - 1) == HIGH(CookieHitboxTable)
     ld      a, d
     add     a, [hl]     ; cookie.hitbox.y
     ld      d, a        ; d = cookie.hitbox.top
-    inc     hl
+    inc     l
     ld      a, [hli]    ; cookie.hitbox.height
     ld      c, a
     ld      a, e
     add     a, [hl]     ; cookie.hitbox.x
     ld      e, a        ; e = cookie.hitbox.left
-    inc     hl
+    inc     l
     ld      a, [hl]     ; cookie.hitbox.width
     ldh     [hScratch], a
     
@@ -337,7 +322,8 @@ UpdateCookies::
     jr      c, .noCollision
     
     ld      a, [hli]
-    add     a, PLAYER_HITBOX_X
+    ASSERT PLAYER_HITBOX_X == 1
+    inc     a
     ld      b, a
     add     a, PLAYER_HITBOX_WIDTH
     cp      a, e        ; player.hitbox.right < cookie.hitbox.left
@@ -369,7 +355,8 @@ UpdateCookies::
     dec     b
     jp      nz, .loop
     ret
-.destroy
+
+.destroyed
     ldh     a, [hCookieCount]
     dec     a
     ldh     [hCookieCount], a
