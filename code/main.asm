@@ -155,20 +155,22 @@ Main::
     jr      nz, Main
     
     ldh     a, [hGameState]
-    ; GAME_STATE_TITLE_SCREEN
+    ASSERT GAME_STATE_TITLE_SCREEN == 0
     and     a, a
     jp      z, TitleScreen
-    ; GAME_STATE_MODE_SELECT
+    ASSERT GAME_STATE_MODE_SELECT == GAME_STATE_TITLE_SCREEN + 1
     dec     a
     jp      z, ModeSelect
-    ; GAME_STATE_IN_GAME
+    ASSERT GAME_STATE_IN_GAME == GAME_STATE_MODE_SELECT + 1
     dec     a
     jp      z, InGame
-    ; GAME_STATE_GAME_OVER
+    ASSERT GAME_STATE_GAME_OVER == GAME_STATE_IN_GAME + 1
     dec     a
     jp      z, GameOver
-    ; GAME_STATE_PAUSED
+    ASSERT GAME_STATE_PAUSED == GAME_STATE_GAME_OVER + 1
     jp      Paused
+    
+    ASSERT GAME_STATE_COUNT == GAME_STATE_PAUSED + 1
 
 SECTION "Stack", WRAMX[$E000 - STACK_SIZE]
 
