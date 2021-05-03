@@ -13,6 +13,12 @@ Requirements:
 
 Run `make` in the root directory of the repository to produce `bin/cookie-shooter.gb`, along with its map and symbol files.
 
+## Attribution
+This game uses [GBSoundSystem](https://github.com/BlitterObjectBob/GBSoundSystem) to play its music and sound effects.
+It is licensed under the MIT License, which can be found in [LICENSE](LICENSE).
+
+# The Game
+
 ## How to Play
 You're a spaceship flying through space with cookies coming at you!
 Press the A button to shoot a laser and get points for blasting a cookie.
