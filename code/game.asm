@@ -136,7 +136,13 @@ SetUpGame::
     
     ld      a, GAME_START_DELAY_FRAMES
     ldh     [hWaitCountdown], a
-    ret
+    
+    ld      c, BANK(Inst_InGame)
+    ld      de, Inst_InGame
+    call    Music_PrepareInst
+    ld      c, BANK(Music_InGame)
+    ld      de, Music_InGame
+    jp      Music_Play
 
 InGame::
     ; Pause the game
@@ -153,6 +159,7 @@ InGame::
     
     ld      b, SFX_PAUSE
     call    SFX_Play
+    call    Music_Pause
     
     ; Draw "paused" strip
     ld      de, PausedStripMap

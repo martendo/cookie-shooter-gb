@@ -20,10 +20,11 @@ Paused::
     ld      a, GAME_STATE_IN_GAME
     ldh     [hGameState], a
     
-    ; Erase "paused" strip
     ld      b, SFX_RESUME
     call    SFX_Play
+    call    Music_Resume
     
+    ; Erase "paused" strip
     ld      hl, vPausedStrip
     ld      b, IN_GAME_BACKGROUND_TILE
     ld      d, PAUSED_STRIP_TILE_HEIGHT

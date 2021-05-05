@@ -114,7 +114,7 @@ LoadGameOverScreen::
     xor     a, a
     ld      [rRAMG], a
     
-    ret
+    jp      Music_Pause
 
 GameOver::
     ldh     a, [hNewKeys]
