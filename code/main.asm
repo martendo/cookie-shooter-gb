@@ -193,15 +193,15 @@ hVBlankFlag::  DS 1
 
 ASSERT SCORE_BYTE_COUNT == 3
 hScore::
-.0:: DS 1
-.1:: DS 1
 .2:: DS 1
+.1:: DS 1
+.0:: DS 1
 .end::
 
 ASSERT COOKIES_BLASTED_BYTE_COUNT == 2
 hCookiesBlasted::
-.lo:: DS 1
 .hi:: DS 1
+.lo:: DS 1
 .end::
 
 hGameMode:: DS 1
@@ -239,14 +239,14 @@ sSaveDataHeader:
 
 ASSERT SCORE_BYTE_COUNT == 3
 sClassicHighScore::
-.0:: DS 1
-.1:: DS 1
 .2:: DS 1
+.1:: DS 1
+.0:: DS 1
 .end::
 
 ASSERT SCORE_BYTE_COUNT == 3
 sSuperHighScore::
-.0:: DS 1
-.1:: DS 1
 .2:: DS 1
+.1:: DS 1
+.0:: DS 1
 .end::

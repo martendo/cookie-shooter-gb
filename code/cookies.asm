@@ -138,16 +138,16 @@ BlastCookie::
     dec     [hl]
     
     ; Add points to score
-    ld      l, LOW(hScore)
+    ld      l, LOW(hScore.end - 1)
     ld      a, [hl]
     add     a, c
     daa
-    ld      [hli], a
+    ld      [hld], a
     
     ld      a, [hl]
     adc     a, b
     daa
-    ld      [hli], a
+    ld      [hld], a
     jr      nc, .doneScore
     
     ld      a, [hl]
@@ -161,7 +161,7 @@ BlastCookie::
     ld      a, [hl]
     add     a, 1        ; `inc` does not affect carry flag
     daa
-    ld      [hli], a
+    ld      [hld], a
     ret     nc
     
     ld      a, [hl]     ; hCookiesBlasted.hi

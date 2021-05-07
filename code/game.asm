@@ -345,7 +345,7 @@ InGame::
 :
     ; Update target cookie count based on score
     ld      hl, hScore.2
-    ld      a, [hld]
+    ld      a, [hli]
     ASSERT 01_00_00 / ADD_COOKIE_RATE == 2
     add     a, a    ; * 2
     ld      b, a

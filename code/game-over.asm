@@ -45,16 +45,16 @@ LoadGameOverScreen::
     ld      [rRAMG], a
     
     ; Get corresponding high score to check based on game mode
-    ld      de, sClassicHighScore.end - 1
+    ld      de, sClassicHighScore
     ldh     a, [hGameMode]
     ASSERT GAME_MODE_COUNT - 1 == 1 && GAME_MODE_CLASSIC == 0
     and     a, a
     jr      z, :+
-    ASSERT HIGH(sClassicHighScore.end - 1) == HIGH(sSuperHighScore.end - 1)
-    ld      e, LOW(sSuperHighScore.end - 1)
+    ASSERT HIGH(sClassicHighScore) == HIGH(sSuperHighScore)
+    ld      e, LOW(sSuperHighScore)
 :
     push    de      ; Save to draw it onscreen later
-    ld      hl, hScore.end - 1
+    ld      hl, hScore
     ld      b, SCORE_BYTE_COUNT
 .checkHighScoreLoop
     ld      a, [de]
@@ -63,8 +63,8 @@ LoadGameOverScreen::
     jr      nz, .oldHighScore   ; High score > Score
     dec     b
     jr      z, .oldHighScore    ; High score == Score
-    dec     e
-    dec     l
+    inc     e
+    inc     l
     jr      .checkHighScoreLoop
     
 .newHighScore
@@ -73,13 +73,12 @@ LoadGameOverScreen::
     ; Overwrite high score
     pop     de
     push    de
-    ld      l, LOW(hScore.end - 1)  ; h unchanged
-    ld      a, [hld]
+    ld      l, LOW(hScore)  ; h unchanged
+    REPT SCORE_BYTE_COUNT - 1
+    ld      a, [hli]
     ld      [de], a
-    dec     e
-    ld      a, [hld]
-    ld      [de], a
-    dec     e
+    inc     e
+    ENDR
     ld      a, [hl]
     ld      [de], a
     

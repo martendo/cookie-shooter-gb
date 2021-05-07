@@ -15,11 +15,11 @@ LoadModeSelectScreen::
     ld      a, CART_SRAM_ENABLE
     ld      [rRAMG], a
     
-    ld      de, sClassicHighScore.end - 1
+    ld      de, sClassicHighScore
     ld      hl, vModeSelectClassicHighScore
     lb      bc, MODE_SELECT_NUMBER_TILES_START, SCORE_BYTE_COUNT
     call    LCDDrawBCDWithOffset
-    ld      de, sSuperHighScore.end - 1
+    ld      de, sSuperHighScore
     ld      hl, vModeSelectSuperHighScore
     lb      bc, MODE_SELECT_NUMBER_TILES_START, SCORE_BYTE_COUNT
     call    LCDDrawBCDWithOffset

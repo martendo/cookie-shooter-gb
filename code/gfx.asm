@@ -129,7 +129,7 @@ DrawPowerUp::
 DrawStatusBarBCD::
     ASSERT NUMBER_TILES_START == 1
     ld      a, [de]
-    dec     e
+    inc     e
     ld      b, a
     ; High nibble
     swap    a
@@ -169,7 +169,7 @@ LCDDrawBCDWithOffset::
     ld      [hli], a    ; 2 cycles
     ; Total 16 cycles! Perfect fit!
     
-    dec     e
+    inc     e
     dec     c
     jr      nz, LCDDrawBCDWithOffset
     ret

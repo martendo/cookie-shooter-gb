@@ -57,13 +57,13 @@ VBlankHandler:
 .noPowerUps
 .notInGame
     ; Draw score and cookies blasted
-    ld      de, hCookiesBlasted.end - 1
-    ld      hl, vCookiesBlasted
-    ld      c, hCookiesBlasted.end - hCookiesBlasted
-    call    DrawStatusBarBCD
-    ASSERT hScore.end == hCookiesBlasted
+    ld      de, hScore
     ld      hl, vScore
-    ld      c, hScore.end - hScore
+    ld      c, SCORE_BYTE_COUNT
+    call    DrawStatusBarBCD
+    ASSERT hCookiesBlasted == hScore.end
+    ld      hl, vCookiesBlasted
+    ld      c, COOKIES_BLASTED_BYTE_COUNT
     call    DrawStatusBarBCD
 .noStatus
     
