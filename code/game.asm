@@ -301,14 +301,14 @@ InGame::
     ld      e, [hl]
     inc     l
     ld      d, [hl]
+    
     dec     de
     ld      a, e
     or      a, d
-    push    af      ; Save zero flag
-    ld      [hl], d
-    dec     l
+    
+    ld      a, d
+    ld      [hld], a    ; Preserve the zero flag (don't use `ld [hl], d / dec l`)
     ld      [hl], e
-    pop     af      ; Restore zero flag
     jr      nz, .noPowerUps
     
     ; Power-up just ended
