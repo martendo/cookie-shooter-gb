@@ -154,5 +154,37 @@ STATHandler:
     res     LCDCB_OBJ, [hl]
 .finished
     pop     hl
-    pop     af
-    reti
+    
+    ; Return at the start of HBlank for any code that waits for VRAM to
+    ; become accessible, since this interrupt handler might be called
+    ; while waiting
+:
+    ; Wait for mode 3, which comes before HBlank
+    ldh     a, [rSTAT]
+    ; (%11 + 1) & %11 == 0
+    inc     a
+    and     a, STAT_MODE_MASK
+    jr      nz, :-
+    
+:
+    ; Wait for HBlank -> ensured the beginning of HBlank by above
+    ldh     a, [rSTAT]
+    and     a, STAT_MODE_MASK
+    jr      nz, :-
+    
+    ; This interrupt handler should return with at least 16 cycles left
+    ; of accessible VRAM, which is what any VRAM accessibility-waiting
+    ; code would assume it has
+    
+    ; Remaining time = Minimum HBlank time - Loop above + Mode 2 time
+    ;                = 21 cycles - 4 cycles + 20 cycles
+    ;                = 37 cycles
+    
+    pop     af  ; 3 cycles
+    reti        ; 4 cycles
+    
+    ; 30 remaining VRAM-accessible cycles
+    
+    ; Not waiting for specifically the beginning of HBlank (i.e. just
+    ; waiting for HBlank) would result in 30 - 21 (HBlank) = only 9
+    ; cycles!!!
