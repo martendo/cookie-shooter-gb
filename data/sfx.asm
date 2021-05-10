@@ -1,4 +1,4 @@
-SECTION "Sound Effect Data", ROMX
+SECTION "Sound Effect Data", ROM0
 
 ; Created with Stephane Hockenhull's Game Boy Tracker
 ; Modified slightly by hand due to bugs in the tracker

@@ -109,7 +109,6 @@ Initialize::
     ld      [rRAMG], a
     
     call    SoundSystem_Init
-    ld      c, BANK(SFX_Table)
     ld      de, SFX_Table
     call    SFX_Prepare
     
@@ -173,7 +172,7 @@ Main::
     
     ASSERT GAME_STATE_COUNT == GAME_STATE_PAUSED + 1
 
-SECTION "Stack", WRAMX[$E000 - STACK_SIZE]
+SECTION "Stack", WRAM0[$E000 - STACK_SIZE]
 
     DS STACK_SIZE
 wStackBottom:

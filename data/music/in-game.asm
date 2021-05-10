@@ -2,13 +2,13 @@
 
 ; Music Patterns
 
-SECTION "In-Game Theme Pattern 0", ROMX
+SECTION "In-Game Theme Pattern 0", ROM0
 PATTERN_InGame0:
     DB $0A
     DB $05, $0E, $12, $01, $03, $A1, $01, $0F, $05, $01, $1A, $0A, $0C, $01, $1B, $0A, $0C, $12, $41, $01, $0E, $05, $01, $1A, $0A, $0C, $01, $18, $0A, $0C, $01, $0C
     DB $05, $01, $1A, $0A, $0C, $12, $81, $03, $B1, $01, $0E, $05, $01, $1B, $0A, $0C, $12, $41, $01, $0C, $05, $01, $1C, $0A, $03, $93, $02, $17, $0C, $12, $01, $03
     DB $C1, $01, $09, $05, $01, $1F, $0A, $03, $53, $02, $17, $0B, $02, $17, $00, $04, $07
-SECTION "In-Game Theme Pattern 1", ROMX
+SECTION "In-Game Theme Pattern 1", ROM0
 PATTERN_InGame1:
     DB $0A
     DB $05, $12, $41, $03, $D1, $01, $07, $05, $01, $21, $0A, $05, $02, $02, $17, $0C, $12, $81, $01, $09, $05, $02, $17, $0C, $02, $10, $12, $01, $01, $0F, $05, $01
@@ -37,7 +37,7 @@ PATTERN_InGame1:
     DB $41, $01, $0C, $05, $01, $24, $0A, $03, $53, $02, $17, $0C, $01, $09, $05, $01, $21, $0A, $02, $17, $0C, $12, $01, $01, $0F, $05, $01, $1B, $0A, $02, $17, $0C
     DB $02, $10, $12, $81, $01, $0E, $05, $01, $1C, $0A, $03, $93, $02, $17, $0C, $12, $01, $01, $0C, $05, $01, $1F, $0A, $03, $53, $02, $17, $0B, $02, $17, $00, $04
     DB $07
-SECTION "In-Game Theme Pattern 2", ROMX
+SECTION "In-Game Theme Pattern 2", ROM0
 PATTERN_InGame2:
     DB $0A
     DB $05, $12, $41, $03, $A1, $01, $07, $05, $04, $12, $01, $2D, $0E, $02, $17, $0C, $12, $81, $01, $09, $05, $01, $28, $0E, $02, $17, $0C, $12, $01, $01, $0F, $05
@@ -65,7 +65,7 @@ PATTERN_InGame2:
     DB $93, $02, $17, $0C, $12, $41, $01, $0C, $05, $01, $26, $0E, $03, $53, $02, $17, $0C, $01, $09, $05, $01, $28, $0E, $02, $17, $0B, $01, $2B, $0E, $0B, $12, $01
     DB $01, $0F, $05, $01, $28, $0E, $02, $17, $0B, $01, $27, $0E, $0B, $12, $81, $01, $0E, $05, $01, $2B, $0E, $03, $93, $02, $17, $0B, $01, $2D, $0E, $0B, $12, $41
     DB $01, $0C, $05, $01, $2B, $0E, $03, $53, $02, $17, $0B, $01, $30, $0E, $02, $17, $00, $04, $07
-SECTION "In-Game Theme Pattern 3", ROMX
+SECTION "In-Game Theme Pattern 3", ROM0
 PATTERN_InGame3:
     DB $0A
     DB $05, $01, $15, $1D, $01, $09, $1A, $02, $17, $0C, $02, $17, $0C, $02, $10, $01, $15, $1D, $01, $09, $1A, $03, $93, $02, $17, $0B, $02, $02, $0B, $01, $0F, $1D
@@ -93,22 +93,22 @@ PATTERN_InGame3:
     DB $02, $02, $0B, $01, $18, $1D, $01, $09, $1A, $03, $53, $02, $17, $0B, $02, $02, $0B, $02, $10, $01, $1A, $1D, $01, $09, $1A, $02, $17, $0B, $02, $02, $0B, $01
     DB $0F, $1D, $01, $09, $1A, $02, $17, $0B, $02, $02, $0B, $02, $10, $01, $10, $1D, $01, $09, $1A, $03, $93, $02, $17, $0B, $02, $02, $0B, $01, $13, $1D, $01, $09
     DB $1A, $03, $53, $02, $17, $0B, $02, $02, $02, $17, $00, $04, $07
-SECTION "In-Game Theme Pattern End", ROMX
+SECTION "In-Game Theme Pattern End", ROM0
 PATTERN_InGameLAST:
-    DB $08, $E4, $FF, $07
+    DB $08, $F2, $FF, $07
 
 ; Music Pattern Order Table
 
-SECTION "In-Game Theme Pattern Table", ROMX
+SECTION "In-Game Theme Pattern Table", ROM0
 Music_InGame::
-    DW PATTERN_InGame0, BANK(PATTERN_InGame0)
-    DW PATTERN_InGame1, BANK(PATTERN_InGame1)
-    DW PATTERN_InGame1, BANK(PATTERN_InGame1)
-    DW PATTERN_InGame2, BANK(PATTERN_InGame2)
-    DW PATTERN_InGame1, BANK(PATTERN_InGame1)
-    DW PATTERN_InGame1, BANK(PATTERN_InGame1)
-    DW PATTERN_InGame3, BANK(PATTERN_InGame3)
-    DW PATTERN_InGameLAST, BANK(PATTERN_InGameLAST)
+    DW PATTERN_InGame0
+    DW PATTERN_InGame1
+    DW PATTERN_InGame1
+    DW PATTERN_InGame2
+    DW PATTERN_InGame1
+    DW PATTERN_InGame1
+    DW PATTERN_InGame3
+    DW PATTERN_InGameLAST
 
 ; Instruments
 

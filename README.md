@@ -14,8 +14,10 @@ Requirements:
 Run `make` in the root directory of the repository to produce `bin/cookie-shooter.gb`, along with its map and symbol files.
 
 ## Attribution
-This game uses [GBSoundSystem](https://github.com/BlitterObjectBob/GBSoundSystem) to play its music and sound effects.
-It is licensed under the MIT License, which can be found in [LICENSE](LICENSE).
+### GBSoundSystem
+This game uses a slightly modified version of [GBSoundSystem](https://github.com/BlitterObjectBob/GBSoundSystem) to play its music and sound effects.
+
+GBSoundSystem and the modifications made to it as part of this project are licensed under the MIT License, which can be found in [LICENSE](LICENSE).
 
 # The Game
 

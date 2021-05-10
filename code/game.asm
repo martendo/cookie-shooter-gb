@@ -137,10 +137,8 @@ SetUpGame::
     ld      a, GAME_START_DELAY_FRAMES
     ldh     [hWaitCountdown], a
     
-    ld      c, BANK(Inst_InGame)
     ld      de, Inst_InGame
     call    Music_PrepareInst
-    ld      c, BANK(Music_InGame)
     ld      de, Music_InGame
     jp      Music_Play
 
