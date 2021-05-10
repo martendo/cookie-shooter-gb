@@ -12,22 +12,6 @@ LoadModeSelectScreen::
     ld      c, SCRN_Y_B
     call    LCDMemcopyMap
     
-    ld      a, CART_SRAM_ENABLE
-    ld      [rRAMG], a
-    
-    ld      de, sClassicHighScore
-    ld      hl, vModeSelectClassicHighScore
-    lb      bc, MODE_SELECT_NUMBER_TILES_START, SCORE_BYTE_COUNT
-    call    LCDDrawBCDWithOffset
-    ld      de, sSuperHighScore
-    ld      hl, vModeSelectSuperHighScore
-    lb      bc, MODE_SELECT_NUMBER_TILES_START, SCORE_BYTE_COUNT
-    call    LCDDrawBCDWithOffset
-    
-    ASSERT CART_SRAM_DISABLE == 0
-    xor     a, a
-    ld      [rRAMG], a
-    
     ; May be coming from exiting a game, hide all objects but the first 2
     call    HideAllActors
     ; Selection cursor - a cookie!

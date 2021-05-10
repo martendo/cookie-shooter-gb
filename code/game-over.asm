@@ -39,80 +39,6 @@ LoadGameOverScreen::
     ld      [hl], a     ; 2 cycles
     ; Total 15 cycles
 .noPowerUps
-    
-    ; Check if this score is a new high score
-    ld      a, CART_SRAM_ENABLE
-    ld      [rRAMG], a
-    
-    ; Get corresponding high score to check based on game mode
-    ld      de, sClassicHighScore
-    ldh     a, [hGameMode]
-    ASSERT GAME_MODE_COUNT - 1 == 1 && GAME_MODE_CLASSIC == 0
-    and     a, a
-    jr      z, :+
-    ASSERT HIGH(sClassicHighScore) == HIGH(sSuperHighScore)
-    ld      e, LOW(sSuperHighScore)
-:
-    push    de      ; Save to draw it onscreen later
-    ld      hl, hScore
-    ld      b, SCORE_BYTE_COUNT
-.checkHighScoreLoop
-    ld      a, [de]
-    cp      a, [hl]
-    jr      c, .newHighScore    ; High score < Score
-    jr      nz, .oldHighScore   ; High score > Score
-    dec     b
-    jr      z, .oldHighScore    ; High score == Score
-    inc     e
-    inc     l
-    jr      .checkHighScoreLoop
-    
-.newHighScore
-    ; New high score
-    
-    ; Overwrite high score
-    pop     de
-    push    de
-    ld      l, LOW(hScore)  ; h unchanged
-    REPT SCORE_BYTE_COUNT - 1
-    ld      a, [hli]
-    ld      [de], a
-    inc     e
-    ENDR
-    ld      a, [hl]
-    ld      [de], a
-    
-    ; Show "NEW" sprite
-    ld      hl, wShadowOAM
-    ; Object 1
-    ld      [hl], NEW_HIGH_SCORE_Y
-    inc     l
-    ld      [hl], NEW_HIGH_SCORE_X
-    inc     l
-    ld      [hl], NEW_HIGH_SCORE_TILE
-    inc     l
-    xor     a, a
-    ld      [hli], a
-    ; Object 2
-    ld      [hl], NEW_HIGH_SCORE_Y
-    inc     l
-    ld      [hl], NEW_HIGH_SCORE_X + 8
-    inc     l
-    ld      [hl], NEW_HIGH_SCORE_TILE + 2
-    inc     l
-    ld      [hl], a     ; a = 0
-    
-.oldHighScore
-    ; Draw high score
-    pop     de
-    ld      hl, vGameOverHighScore
-    lb      bc, GAME_OVER_NUMBER_TILES_START, SCORE_BYTE_COUNT
-    call    LCDDrawBCDWithOffset
-    
-    ASSERT CART_SRAM_DISABLE == 0
-    xor     a, a
-    ld      [rRAMG], a
-    
     jp      Music_Pause
 
 GameOver::
@@ -120,11 +46,11 @@ GameOver::
     and     a, PADF_A | PADF_START
     jp      z, Main
     
-    ; Reset game
-    ld      b, SFX_GAME_OVER_OK
+    ; Move on to the top scores screen
+    ld      b, SFX_OK
     call    SFX_Play
     
-    ld      a, GAME_STATE_IN_GAME
-    ld      hl, SetUpGame
+    ld      a, GAME_STATE_TOP_SCORES
+    ld      hl, LoadTopScoresScreen
     call    StartFade
     jp      Main

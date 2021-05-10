@@ -16,7 +16,7 @@ LoadTitleScreen::
     ASSERT TitleScreenMap == TitleScreen8800Tiles.end
     ld      hl, _SCRN0
     ld      c, SCRN_Y_B
-    jr      LCDMemcopyMap
+    jp      LCDMemcopyMap
 
 TitleScreen::
     ldh     a, [hNewKeys]

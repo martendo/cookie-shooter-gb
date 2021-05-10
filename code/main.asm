@@ -68,9 +68,9 @@ Initialize:
     ld      a, [de]
     cp      a, [hl]
     jr      nz, .initSRAM
-    ASSERT HIGH(SaveDataHeader) == HIGH(SaveDataHeader.end)
+    ASSERT HIGH(SaveDataHeader.end - 1) == HIGH(SaveDataHeader)
     inc     e
-    ASSERT HIGH(sSaveDataHeader) == HIGH(sSaveDataHeader.end)
+    ASSERT HIGH(sSaveDataHeader.end - 1) == HIGH(sSaveDataHeader)
     inc     l
     dec     b
     jr      nz, .checkSaveDataHeaderLoop
@@ -80,29 +80,34 @@ Initialize:
     
 .initSRAM
     ; Write save data header
-    ASSERT HIGH(SaveDataHeader) == HIGH(SaveDataHeader.end)
+    ASSERT HIGH(SaveDataHeader.end - 1) == HIGH(SaveDataHeader)
     ld      e, LOW(SaveDataHeader)
-    ASSERT HIGH(sSaveDataHeader) == HIGH(sSaveDataHeader.end)
+    ASSERT HIGH(sSaveDataHeader.end - 1) == HIGH(sSaveDataHeader)
     ld      l, LOW(sSaveDataHeader)
-    ld      b, STRLEN(SAVE_DATA_HEADER)
-    call    MemcopySmall
-    ; Clear high score
+    REPT STRLEN(SAVE_DATA_HEADER) - 1
+    ld      a, [de]
+    ld      [hli], a
+    inc     e
+    ENDR
+    ld      a, [de]
+    ld      [hl], a
+    
+    ; Clear top scores
+    ld      hl, sClassicTopScores
+    ld      b, sClassicTopScores.end - sClassicTopScores
     xor     a, a
-    ASSERT sClassicHighScore == sSaveDataHeader.end
-    REPT SCORE_BYTE_COUNT
-    ld      [hli], a
-    ENDR
-    ASSERT sSuperHighScore == sClassicHighScore.end
-    REPT SCORE_BYTE_COUNT
-    ld      [hli], a
-    ENDR
+    call    MemsetSmall
+    ld      hl, sSuperTopScores
+    ld      b, sSuperTopScores.end - sSuperTopScores
+    ; a = 0
+    call    MemsetSmall
     
 .doneCheckingSaveData
-    ; Seed random number with high scores
+    ; Seed random number with top scores
     ; Use the 2nd bytes because they're the most interesting
-    ld      a, [sClassicHighScore.1]
+    ld      a, [sClassicTopScores + 1]
     ld      b, a
-    ld      a, [sSuperHighScore.1]
+    ld      a, [sSuperTopScores + 1]
     xor     a, b
     ldh     [hRandomNumber], a
     
@@ -161,7 +166,10 @@ Main::
     ASSERT GAME_STATE_MODE_SELECT == GAME_STATE_TITLE_SCREEN + 1
     dec     a
     jp      z, ModeSelect
-    ASSERT GAME_STATE_IN_GAME == GAME_STATE_MODE_SELECT + 1
+    ASSERT GAME_STATE_TOP_SCORES == GAME_STATE_MODE_SELECT + 1
+    dec     a
+    jp      z, TopScores
+    ASSERT GAME_STATE_IN_GAME == GAME_STATE_TOP_SCORES + 1
     dec     a
     jp      z, InGame
     ASSERT GAME_STATE_GAME_OVER == GAME_STATE_IN_GAME + 1
@@ -225,28 +233,26 @@ SECTION "OAM DMA", HRAM
 hOAMDMA::
     DS OAMDMA.end - OAMDMA
 
-SECTION "Save Data Header", ROM0
+SECTION "Save Data Header String", ROM0
 
 SaveDataHeader:
     DB SAVE_DATA_HEADER
 .end
 
-SECTION "Save Data", SRAM
+SECTION "Save Data Header", SRAM
 
 sSaveDataHeader:
     DS STRLEN(SAVE_DATA_HEADER)
 .end
 
-ASSERT SCORE_BYTE_COUNT == 3
-sClassicHighScore::
-.2:: DS 1
-.1:: DS 1
-.0:: DS 1
+SECTION "Classic Mode Top Scores", SRAM, ALIGN[8]
+
+sClassicTopScores::
+    DS TOP_SCORE_COUNT * SCORE_BYTE_COUNT
 .end::
 
-ASSERT SCORE_BYTE_COUNT == 3
-sSuperHighScore::
-.2:: DS 1
-.1:: DS 1
-.0:: DS 1
+SECTION "Super Mode Top Scores", SRAM, ALIGN[8]
+
+sSuperTopScores::
+    DS TOP_SCORE_COUNT * SCORE_BYTE_COUNT
 .end::

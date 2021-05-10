@@ -25,14 +25,19 @@ INCBIN "res/title-screen.tilemap"
 
 ModeSelectTiles::
 INCBIN "res/mode-select.2bpp"
-INCBIN "res/mode-select-numbers.2bpp"
 .end::
 ModeSelectMap::
 INCBIN "res/mode-select.tilemap"
 
 GameOverTiles::
 INCBIN "res/game-over.2bpp"
-INCBIN "res/game-over-numbers.2bpp"
 .end::
 GameOverMap::
 INCBIN "res/game-over.tilemap"
+
+TopScoresTiles::
+INCBIN "res/top-scores.2bpp"
+INCBIN "res/top-scores-numbers.2bpp"
+.end::
+TopScoresMap::
+INCBIN "res/top-scores.tilemap"

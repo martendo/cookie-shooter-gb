@@ -1,2 +1,4 @@
 ; Save data header
 DEF SAVE_DATA_HEADER EQUS "\"CKSH\""
+
+DEF TOP_SCORE_COUNT EQU 5
