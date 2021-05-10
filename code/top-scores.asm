@@ -19,9 +19,10 @@ LoadTopScoresScreen::
     ; Get corresponding top scores list to check based on game mode
     ld      de, sClassicTopScores
     ldh     a, [hGameMode]
-    ASSERT GAME_MODE_COUNT - 1 == 1 && GAME_MODE_CLASSIC == 0
+    ASSERT GAME_MODE_CLASSIC == 0
     and     a, a
     jr      z, :+
+    ASSERT GAME_MODE_COUNT - 1 == 1
     ASSERT sSuperTopScores == sClassicTopScores + (1 << 8)
     inc     d
 :

@@ -16,10 +16,11 @@ LoadGameOverScreen::
     
     ; Remove current power-up
     ldh     a, [hGameMode]
-    ASSERT GAME_MODE_COUNT - 1 == 1 && GAME_MODE_CLASSIC == 0
+    ASSERT GAME_MODE_CLASSIC == 0
     and     a, a
     jr      z, .noPowerUps
     
+    ASSERT GAME_MODE_COUNT - 1 == 1
     ld      hl, vCurrentPowerUp
 :
     ldh     a, [rSTAT]

@@ -89,6 +89,7 @@ MoveSelectionUp:
     ld      [wShadowOAM + MODE_SELECT_CURSOR_Y2_OFFSET], a
     
     jr      PlaySelectionSfx
+
 MoveSelectionDown:
     ldh     a, [hGameMode]
     ASSERT GAME_MODE_COUNT - 1 == 1

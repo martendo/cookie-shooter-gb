@@ -15,7 +15,7 @@ MovePlayerLeft::
 
 MovePlayerRight::
     ld      a, PLAYER_SPEED
-    jr      MovePlayer
+    ; Fallthrough
 
 ; @param a Change in X position (speed)
 MovePlayer:

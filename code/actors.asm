@@ -66,7 +66,6 @@ FindEmptyActorSlot::
 ; @param a  N - the index to active actors
 ; @param c  Maximum number of actors
 ; @param de Pointer to actor position table
-; @return cf Set if no active actors, otherwise reset
 ; @return de Pointer to Nth active actor
 PointDEToNthActiveActor:
     inc     a
@@ -75,10 +74,10 @@ PointDEToNthActiveActor:
     ld      h, c        ; Save for resetting
 .loop
     ld      a, [de]     ; Y position
-    and     a, a        ; No actor, skip (clears carry)
+    and     a, a        ; No actor, skip
     jr      z, .next
-    dec     b           ; Doesn't affect carry
-    ret     z           ; Carry still reset
+    dec     b
+    ret     z
 .next
     dec     c
     jr      nz, .noWrap
@@ -86,7 +85,8 @@ PointDEToNthActiveActor:
     ld      a, b
     cp      a, l        ; No active actors?
     jr      nz, :+
-    scf
+    ; Don't draw anything -> skip return to DrawXXX
+    pop     af
     ret
 :
     ; Wrap back to beginning
@@ -106,7 +106,6 @@ DrawLasers::
     ld      de, wLaserPosTable
     ld      c, MAX_LASER_COUNT
     call    PointDEToNthActiveActor
-    ret     c
     
     ldh     a, [hNextAvailableOAMSlot]
     ASSERT sizeof_OAM_ATTRS == 4
@@ -124,7 +123,6 @@ DrawLasers::
     inc     e
     ld      a, [de]     ; X position
     ld      [hli], a
-    inc     e
     ld      [hl], LASER_TILE
     inc     l
     ld      [hl], 0
@@ -140,8 +138,8 @@ DrawLasers::
     ret
 .skip
     inc     e
-    inc     e
 .next
+    inc     e
     dec     c
     ret     z
     
@@ -157,7 +155,6 @@ DrawCookies::
     ld      de, wCookiePosTable
     ld      c, MAX_COOKIE_COUNT
     call    PointDEToNthActiveActor
-    ret     c
     
     ldh     a, [hNextAvailableOAMSlot]
     ASSERT sizeof_OAM_ATTRS == 4
@@ -192,13 +189,11 @@ DrawCookies::
     inc     e
     ld      a, [de]     ; X position
     ld      [hli], a
-    inc     e
     ld      [hl], c     ; First tile
     inc     l
     ld      [hl], 0
     inc     l
     
-    dec     e
     dec     e
     ld      a, [de]     ; Y position
     ld      [hli], a
@@ -206,7 +201,6 @@ DrawCookies::
     ld      a, [de]     ; X position
     add     a, 8
     ld      [hli], a
-    inc     e
     ld      [hl], b     ; Second tile
     inc     l
     ld      [hl], 0
@@ -224,8 +218,8 @@ DrawCookies::
     dec     b
     ret     z
     inc     e
-    inc     e
 .next
+    inc     e
     ld      a, e
     cp      a, LOW(wCookiePosTable.end)
     jr      c, .loop

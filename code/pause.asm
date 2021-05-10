@@ -13,10 +13,6 @@ Paused::
     jr      nz, .quitGame
     
     ; Resume game
-    ; Don't immediately pause the game again
-    res     PADB_START, a
-    ldh     [hNewKeys], a
-    
     ld      a, GAME_STATE_IN_GAME
     ldh     [hGameState], a
     

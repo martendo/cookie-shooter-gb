@@ -131,10 +131,10 @@ Initialize::
     ld      a, IEF_VBLANK | IEF_LCDC
     ldh     [rIE], a
     
+    ei
+    
     ld      a, LCDCF_ON | LCDCF_WINOFF | LCDCF_BG8800 | LCDCF_BG9800 | LCDCF_OBJ16 | LCDCF_OBJON | LCDCF_BGON
     ldh     [rLCDC], a
-    
-    ei
 
 Main::
     ; Wait for VBlank

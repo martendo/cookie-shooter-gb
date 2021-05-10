@@ -15,9 +15,9 @@ hLastScoreThousands:
 ; Player's power-up slots
 hPowerUps:
 ASSERT MAX_POWER_UP_COUNT == 3
+.0:: DS 1
 .1:: DS 1
 .2:: DS 1
-.3:: DS 1
 .end
 ; Currently selected power-up (out of the 3)
 hPowerUpSelection::
@@ -46,8 +46,9 @@ SetUpGame::
     ld      [hli], a
     ENDR
     
-    ASSERT hPowerUps != hCookiesBlasted.end
-    ld      l, LOW(hPowerUps)
+    ld      l, LOW(hLastScoreThousands)
+    ld      [hli], a
+    ASSERT hPowerUps == hLastScoreThousands + 1
     ASSERT NO_POWER_UP == 0
     REPT MAX_POWER_UP_COUNT
     ld      [hli], a
@@ -124,7 +125,6 @@ SetUpGame::
     
     ; a = 0
     ldh     [hCookieCount], a
-    ldh     [hLastScoreThousands], a
     ldh     [hCookieRotationIndex], a
     ldh     [hLaserRotationIndex], a
     ASSERT PLAYER_NOT_INV == -1
@@ -148,10 +148,6 @@ InGame::
     bit     PADB_START, a
     jr      z, :+
     
-    ; Don't immediately resume the game
-    res     PADB_START, a
-    ldh     [hNewKeys], a
-    
     ld      a, GAME_STATE_PAUSED
     ldh     [hGameState], a
     
@@ -168,10 +164,11 @@ InGame::
     
 :
     ldh     a, [hGameMode]
-    ASSERT GAME_MODE_COUNT - 1 == 1 && GAME_MODE_CLASSIC == 0
+    ASSERT GAME_MODE_CLASSIC == 0
     and     a, a
     jp      z, .noPowerUps
     
+    ASSERT GAME_MODE_COUNT - 1 == 1
     ; Power-up selection
     ldh     a, [hNewKeys]
     bit     PADB_UP, a
@@ -199,7 +196,6 @@ InGame::
     ld      b, SFX_POWER_UP_SELECT
     call    SFX_Play
 .noPowerUpSelectionChange
-    ld      hl, hPowerUps
     
     ldh     a, [hNewKeys]
     bit     PADB_B, a
@@ -207,8 +203,9 @@ InGame::
     
     ; Use a power-up
     ldh     a, [hPowerUpSelection]
-    add     a, l
+    add     a, LOW(hPowerUps)
     ld      l, a
+    ld      h, HIGH(hPowerUps)
     
     ld      a, [hl]
     ASSERT NO_POWER_UP == 0
@@ -236,13 +233,13 @@ InGame::
     dec     d
     jr      nz, .clearCookiesLoop
     
-    ld      b, SFX_BOMB
-    call    SFX_Play
     ; Don't create any new cookies for a while after the bomb
     ld      a, POWER_UP_BOMB_WAIT_FRAMES
     ldh     [hWaitCountdown], a
-    ld      hl, hPowerUpDuration.hi
-    jr      :+
+    
+    ld      b, SFX_BOMB
+    call    SFX_Play
+    jr      .notUsingPowerUp
     
 .notBombPowerUp
     cp      a, POWER_UP_EXTRA_LIFE
@@ -257,23 +254,13 @@ InGame::
     ld      [hl], NO_POWER_UP   ; Remove power-up
     ld      l, LOW(hPlayerLives)
     inc     [hl]
-    
-    ld      b, SFX_POWER_UP_USE
-    call    SFX_Play
-    ld      hl, hPowerUpDuration.hi
-    jr      :+
+    jr      .usedPowerUp
     
 .normalPowerUp
     ; Set power-up as current and remove
     ldh     [hCurrentPowerUp], a
     ld      [hl], NO_POWER_UP
     
-    push    af
-    ld      b, SFX_POWER_UP_USE
-    call    SFX_Play
-    pop     af
-    
-.setPowerUpDuration
     ASSERT POWER_UPS_START - 1 == 0
     dec     a
     add     a, a    ; 1 entry = 2 bytes
@@ -288,9 +275,11 @@ InGame::
     ld      [hli], a
     ld      [hl], b
     
+.usedPowerUp
+    ld      b, SFX_POWER_UP_USE
+    call    SFX_Play
 .notUsingPowerUp
-    ld      l, LOW(hPowerUpDuration.hi)
-:
+    ld      hl, hPowerUpDuration.hi
     ld      a, [hld]
     ASSERT NO_POWER_UP_DURATION == HIGH(-1)
     inc     a       ; a = -1
@@ -351,9 +340,8 @@ InGame::
     ASSERT ADD_COOKIE_RATE / 10_00 < 10 && ADD_COOKIE_RATE / 10_00 > 0
     cp      a, (ADD_COOKIE_RATE / 10_00) << 4   ; hScore.1 = hundreds
     ccf             ; Add an extra cookie if >= ADD_COOKIE_RATE
-    ld      a, 0    ; Preserve carry
+    ld      a, START_TARGET_COOKIE_COUNT
     adc     a, b
-    add     a, START_TARGET_COOKIE_COUNT
     cp      a, MAX_COOKIE_COUNT + 1
     jr      c, :+   ; a <= MAX_COOKIE_COUNT
     ld      a, MAX_COOKIE_COUNT
@@ -372,7 +360,7 @@ InGame::
     ld      a, [hl]
     ASSERT PLAYER_NOT_INV == -1
     inc     a       ; a = -1
-    jr      z, :+
+    jr      z, .playerNotInvincible
     
     dec     [hl]
     
@@ -382,24 +370,25 @@ InGame::
     bit     PLAYER_INV_FLASH_BIT, [hl]
     jr      nz, .writePlayerTile
     ASSERT PLAYER_INV_TILE == LOW(-1)
-    dec     a
+    dec     a   ; a = -1
 .writePlayerTile
     ld      hl, wShadowOAM + PLAYER_TILE1_OFFSET
     ld      [hl], a
     ld      l, LOW(wShadowOAM + PLAYER_TILE2_OFFSET)
     ld      [hl], a
     
-:
+.playerNotInvincible
     ; Update actors
     call    UpdateLasers
     call    UpdateCookies
     
     ; Update power-ups
     ldh     a, [hGameMode]
-    ASSERT GAME_MODE_COUNT - 1 == 1 && GAME_MODE_CLASSIC == 0
+    ASSERT GAME_MODE_CLASSIC == 0
     and     a, a
     jr      z, .donePowerUps
     
+    ASSERT GAME_MODE_COUNT - 1 == 1
     ldh     a, [hScore.2]
     swap    a
     and     a, $F0
@@ -465,17 +454,19 @@ InGame::
 ; @param c  Power-up type
 GetPowerUp:
     ld      de, hPowerUps
-    ld      b, MAX_POWER_UP_COUNT
-.findEmptySlotLoop
+    
+    REPT MAX_POWER_UP_COUNT - 1
     ld      a, [de]
     ASSERT NO_POWER_UP == 0
     and     a, a
     jr      z, .foundEmptySlot
     inc     e
-    dec     b
-    jr      nz, .findEmptySlotLoop
+    ENDR
+    ld      a, [de]
+    ASSERT NO_POWER_UP == 0
+    and     a, a
     ; No more room for a power-up left
-    ret
+    ret     z
     
 .foundEmptySlot
     ld      a, c
