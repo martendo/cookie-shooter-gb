@@ -1,17 +1,8 @@
 INCLUDE "defines.inc"
 
-SECTION "Entry Point", ROM0[$0100]
-
-    di
-    jp      Initialize
-    
-    DS      $0150 - @, 0
-
 SECTION "Initialization and Main Loop", ROM0
 
-Initialize:
-    ld      sp, wStackBottom
-    
+Initialize::
     ; Wait for VBlank to disable the LCD
 .waitVBL
     ldh     a, [rLY]
@@ -20,6 +11,8 @@ Initialize:
     
     xor     a, a
     ldh     [rLCDC], a
+    
+    ld      sp, wStackBottom
     
     ; Reset variables
     ldh     [hVBlankFlag], a
