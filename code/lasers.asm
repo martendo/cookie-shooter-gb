@@ -29,14 +29,28 @@ ShootLaser::
     ld      [hld], a            ; X position
     ld      [hl], LASER_START_Y ; Y position
     
-.playSoundEffect
-    lb      bc, SFX_LASER, SFX_LASER_NOTE
-    
     ldh     a, [hCurrentPowerUp]
     ASSERT POWER_UP_FAST_LASERS - 1 == 0
     dec     a
-    jr      nz, :+
-    ld      c, SFX_LASER_FAST_NOTE
+    jr      nz, .playSoundEffect
+    
+    ; Shoot a second laser higher up to act like a longer laser
+    ld      l, LOW(wLaserPosTable)
+    ld      b, MAX_LASER_COUNT
+    call    FindEmptyActorSlot
+    jr      c, .noSecondLaser   ; No empty slots
+    
+    ; [hl] = X position
+    ld      a, [wShadowOAM + PLAYER_X1_OFFSET]
+    add     a, (PLAYER_WIDTH / 2) - (LASER_WIDTH / 2)
+    ld      [hld], a            ; X position
+    ld      [hl], LASER_START_Y - LASER_VISUAL_HEIGHT ; Y position
+.noSecondLaser
+    lb      bc, SFX_LASER, SFX_LASER_FAST_NOTE
+    jr      :+
+    
+.playSoundEffect
+    lb      bc, SFX_LASER, SFX_LASER_NOTE
 :
     call    SFX_Play
     
