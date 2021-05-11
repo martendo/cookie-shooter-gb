@@ -40,7 +40,7 @@ rebuild:
 # Build the ROM, along with map and symbol files
 $(BINDIR)/%.$(ROMEXT) $(BINDIR)/%.sym $(BINDIR)/%.map: $(GFX) $(patsubst %.asm,$(OBJDIR)/%.o,$(SRCS))
 	@mkdir -p $(@D)
-	rgblink $(LDFLAGS) -m $(BINDIR)/$*.map -n $(BINDIR)/$*.sym -o $(BINDIR)/$*.$(ROMEXT) $(patsubst %.asm,$(OBJDIR)/%.o,$(SRCS))
+	rgblink $(LDFLAGS) -l layout.link -m $(BINDIR)/$*.map -n $(BINDIR)/$*.sym -o $(BINDIR)/$*.$(ROMEXT) $(patsubst %.asm,$(OBJDIR)/%.o,$(SRCS))
 	rgbfix $(FIXFLAGS) $(BINDIR)/$*.$(ROMEXT)
 
 # Assemble an assembly file, save dependencies

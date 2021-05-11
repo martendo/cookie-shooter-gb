@@ -1,0 +1,9 @@
+WRAM0
+    ALIGN 8
+    "Cookie Position Table"
+    ALIGN 8
+    "Cookie Speed Table"
+    ALIGN 8
+    "Cookie Speed Fractional Accumulator Table"
+    ALIGN 8
+    "Cookie Size Type Table"

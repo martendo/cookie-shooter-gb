@@ -1,22 +1,22 @@
 INCLUDE "defines.inc"
 
-SECTION "Cookie Tables", WRAM0, ALIGN[8]
+SECTION "Cookie Position Table", WRAM0, ALIGN[8]
 
 wCookiePosTable::
     DS MAX_COOKIE_COUNT * ACTOR_SIZE
 .end::
 
-DS $100 - (MAX_COOKIE_COUNT * ACTOR_SIZE)
+SECTION "Cookie Speed Table", WRAM0, ALIGN[8]
 
 wCookieSpeedTable:
     DS MAX_COOKIE_COUNT * ACTOR_SIZE
 
-DS $100 - (MAX_COOKIE_COUNT * ACTOR_SIZE)
+SECTION "Cookie Speed Fractional Accumulator Table", WRAM0, ALIGN[8]
 
 wCookieSpeedAccTable:
     DS MAX_COOKIE_COUNT * ACTOR_SIZE
 
-DS $100 - (MAX_COOKIE_COUNT * ACTOR_SIZE)
+SECTION "Cookie Size Type Table", WRAM0, ALIGN[8]
 
 wCookieSizeTable::
     DS MAX_COOKIE_COUNT * ACTOR_SIZE
