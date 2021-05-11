@@ -22,8 +22,6 @@ IN_GAME_SUBMAPS = $(RESDIR)/status-bar.tilemap $(RESDIR)/paused-strip.tilemap
 
 # Project configuration
 include project.mk
-# Graphics conversion configuration
-include gfx.mk
 
 .PHONY: clean all rebuild
 
