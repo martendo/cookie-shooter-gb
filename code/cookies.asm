@@ -344,6 +344,9 @@ UpdateCookies::
     inc     l           ; hPlayerInvCountdown
     ld      [hl], PLAYER_INV_FRAMES
     
+    ; Draw hearts (player's lives)
+    call    DrawHearts
+    
 .noCollision
     pop     bc
     pop     hl

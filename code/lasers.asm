@@ -156,6 +156,7 @@ UpdateLasers::
     
     pop     hl          ; Cookie Y position
     call    BlastCookie
+    call    UpdateStatusBar
     pop     hl          ; Laser Y position
     xor     a, a
     ld      [hli], a    ; Destroy laser (Y=0)

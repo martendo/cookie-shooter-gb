@@ -5,6 +5,7 @@ SECTION "Graphics Code", ROM0
 ; Draw hearts to show player's remaining lives
 DrawHearts::
     ldh     a, [hPlayerLives]
+.skip::
     and     a, a    ; Nothing to draw
     ret     z
     
@@ -23,13 +24,42 @@ DrawHearts::
     ; Fallthrough
 
 .draw
-    ld      [hl], b
+    ldh     [hScratch], a
+:
+    ldh     a, [rSTAT]
+    and     a, STATF_BUSY
+    jr      nz, :-
+    
+    ldh     a, [hScratch]   ; 3 cycles
+    ld      [hl], b         ; 2 cycles
+    add     hl, de          ; 2 cycles
+    ld      [hl], c         ; 2 cycles
     add     hl, de
-    ld      [hl], c
-    add     hl, de
+    ; Total 9 cycles
+    
     dec     a
     jr      nz, .draw
     ret
+
+; Draw all power-ups, including the currently in-use power-up
+DrawAllPowerUps::
+    ld      hl, vPowerUps
+    ld      de, SCRN_VX_B
+    
+    ldh     a, [hPowerUps.0]
+    ld      b, 0
+    call    DrawPowerUp
+    ldh     a, [hPowerUps.1]
+    ld      b, 1
+    call    DrawPowerUp
+    ldh     a, [hPowerUps.2]
+    ld      b, 2
+    call    DrawPowerUp
+    
+    ld      hl, vCurrentPowerUp
+    ldh     a, [hCurrentPowerUp]
+    ld      b, -1
+    ; Fallthrough
 
 ; Draw a power-up slot
 ; @param a  Power-up type
@@ -51,10 +81,10 @@ DrawPowerUp::
     jr      nz, :+
     
     add     a, POWER_UP_SELECTED_TILES_START - POWER_UP_TILES_START
-    jr      .draw
+    jr      .saveAndDraw
 :
     inc     b       ; Currently in-use power-up
-    jr      nz, .draw
+    jr      nz, .saveAndDraw
     
     ld      b, a
     ; If near the end of the power-up's duration, flash
@@ -71,7 +101,7 @@ DrawPowerUp::
     bit     POWER_UP_END_FLASH_FAST_BIT, a
     jr      z, .flashFastOn
     ; Flash off
-    ld      a, NO_POWER_UP + POWER_UP_CURRENT_TILES_START
+    ld      b, NO_POWER_UP + POWER_UP_CURRENT_TILES_START
     jr      .draw
 .flashFastOn
     cpl
@@ -82,7 +112,7 @@ DrawPowerUp::
     bit     POWER_UP_END_FLASH_BIT, a
     jr      z, .flashSlowOn
     ; Flash off
-    ld      a, NO_POWER_UP + POWER_UP_CURRENT_TILES_START
+    ld      b, NO_POWER_UP + POWER_UP_CURRENT_TILES_START
     jr      .draw
 .flashSlowOn
     cpl
@@ -103,47 +133,44 @@ DrawPowerUp::
 .currentNormal
     ld      a, b
     add     a, POWER_UP_CURRENT_TILES_START - POWER_UP_TILES_START
+.saveAndDraw
+    ld      b, a
 .draw
-    ASSERT POWER_UP_TILE_WIDTH == 2
-    ld      [hli], a
-    inc     a
-    ld      [hld], a
-    inc     a
+    ldh     a, [rSTAT]
+    and     a, STATF_BUSY
+    jr      nz, .draw
     
-    add     hl, de
+    ld      a, b        ; 1 cycle
+    ASSERT POWER_UP_TILE_WIDTH == 2
+    ld      [hli], a    ; 2 cycles
+    inc     a           ; 1 cycle
+    ld      [hld], a    ; 2 cycles
+    inc     a           ; 1 cycle
+    
+    add     hl, de      ; 2 cycles
     ASSERT POWER_UP_TILE_HEIGHT - 1 == 1
     
     ASSERT POWER_UP_TILE_WIDTH == 2
-    ld      [hli], a
-    inc     a
-    ld      [hld], a
+    ld      [hli], a    ; 2 cycles
+    inc     a           ; 1 cycles
+    ld      [hld], a    ; 2 cycles
+    ; Total 14 cycles
     
     add     hl, de
     
     ret
 
-; Draw a BCD number onto the status bar
-; @param de Pointer to most significant byte of BCD number
-; @param hl Pointer to destination on map
-; @param c  Number of bytes to draw
-DrawStatusBarBCD::
-    ASSERT NUMBER_TILES_START == 1
-    ld      a, [de]
-    inc     e
-    ld      b, a
-    ; High nibble
-    swap    a
-    and     a, $0F
-    inc     a       ; add a, NUMBER_TILES_START
-    ld      [hli], a
-    ld      a, b
-    ; Low nibble
-    and     a, $0F
-    inc     a       ; add a, NUMBER_TILES_START
-    ld      [hli], a
-    dec     c
-    jr      nz, DrawStatusBarBCD
-    ret
+; Redraw the score and number of cookies blasted on the status bar
+UpdateStatusBar::
+    ld      de, hScore
+    ld      hl, vScore
+    lb      bc, NUMBER_TILES_START, SCORE_BYTE_COUNT
+    call    LCDDrawBCDWithOffset
+    
+    ASSERT hCookiesBlasted == hScore.end
+    ld      hl, vCookiesBlasted
+    lb      bc, NUMBER_TILES_START, COOKIES_BLASTED_BYTE_COUNT
+    ; Fallthrough
 
 ; Draw a BCD number onto the background map with an arbitrary tile
 ; ID offset, even if the LCD is on

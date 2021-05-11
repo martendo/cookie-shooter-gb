@@ -33,39 +33,6 @@ hPowerUpDuration::
 SECTION "In-Game Code", ROM0
 
 SetUpGame::
-    ; VBlank interrupt handler will read and draw these things on the
-    ; screen (graphics loading will take a while) so initialize them
-    ; right away
-    xor     a, a
-    ld      hl, hScore
-    REPT SCORE_BYTE_COUNT
-    ld      [hli], a
-    ENDR
-    ASSERT hScore.end == hCookiesBlasted
-    REPT COOKIES_BLASTED_BYTE_COUNT
-    ld      [hli], a
-    ENDR
-    
-    ld      l, LOW(hLastScoreThousands)
-    ld      [hli], a
-    ASSERT hPowerUps == hLastScoreThousands + 1
-    ASSERT NO_POWER_UP == 0
-    REPT MAX_POWER_UP_COUNT
-    ld      [hli], a
-    ENDR
-    ASSERT hPowerUpSelection == hPowerUps.end
-    ld      [hli], a
-    ASSERT hCurrentPowerUp == hPowerUpSelection + 1
-    ld      [hli], a
-    ASSERT hPowerUpDuration == hCurrentPowerUp + 1
-    ASSERT NO_POWER_UP_DURATION == HIGH(-1)
-    dec     a       ; a = -1
-    ld      [hli], a
-    ld      [hl], a
-    
-    ld      a, PLAYER_START_LIVES
-    ldh     [hPlayerLives], a
-    
     ; Tiles
     ld      de, InGameTiles
     ld      hl, _VRAM9000
@@ -123,7 +90,54 @@ SetUpGame::
     dec     b
     jr      nz, :-
     
+    ; Reset variables
     ; a = 0
+    ld      hl, hScore
+    REPT SCORE_BYTE_COUNT
+    ld      [hli], a
+    ENDR
+    ASSERT hScore.end == hCookiesBlasted
+    REPT COOKIES_BLASTED_BYTE_COUNT
+    ld      [hli], a
+    ENDR
+    
+    ld      l, LOW(hLastScoreThousands)
+    ld      [hli], a
+    ASSERT hPowerUps == hLastScoreThousands + 1
+    ASSERT NO_POWER_UP == 0
+    REPT MAX_POWER_UP_COUNT
+    ld      [hli], a
+    ENDR
+    ASSERT hPowerUpSelection == hPowerUps.end
+    ld      [hli], a
+    ASSERT hCurrentPowerUp == hPowerUpSelection + 1
+    ld      [hli], a
+    ASSERT hPowerUpDuration == hCurrentPowerUp + 1
+    ASSERT NO_POWER_UP_DURATION == HIGH(-1)
+    dec     a       ; a = -1
+    ld      [hli], a
+    ld      [hl], a
+    
+    ; Draw score and cookies blasted
+    call    UpdateStatusBar
+    
+    ld      a, PLAYER_START_LIVES
+    ldh     [hPlayerLives], a
+    
+    ; Draw hearts (player's lives)
+    call    DrawHearts.skip     ; a = [hPlayerLives]
+    
+    ldh     a, [hGameMode]
+    ASSERT GAME_MODE_CLASSIC == 0
+    and     a, a
+    jr      z, .noPowerUps
+    ASSERT GAME_MODE_COUNT - 1 == 1
+    
+    ; Draw power-ups
+    call    DrawAllPowerUps
+    
+.noPowerUps
+    xor     a, a
     ldh     [hCookieCount], a
     ldh     [hCookieRotationIndex], a
     ldh     [hLaserRotationIndex], a
@@ -232,6 +246,8 @@ InGame::
     inc     l
     dec     d
     jr      nz, .clearCookiesLoop
+    
+    call    UpdateStatusBar
     
     ; Don't create any new cookies for a while after the bomb
     ld      a, POWER_UP_BOMB_WAIT_FRAMES
@@ -404,7 +420,7 @@ InGame::
     cp      a, b
     ld      a, b
     ldh     [hLastScoreThousands], a
-    jr      z, .donePowerUps
+    jr      z, .noNewPowerUps
     
     ld      hl, PowerUpPointRateTable
     ld      c, POWER_UPS_START
@@ -424,12 +440,16 @@ InGame::
     inc     c
     ld      a, c
     cp      a, POWER_UP_COUNT
-    jr      nc, .donePowerUps
+    jr      nc, .noNewPowerUps
     
     ASSERT HIGH(PowerUpPointRateTable.end - 1) == HIGH(PowerUpPointRateTable)
     inc     l
     ldh     a, [hLastScoreThousands]
     jr      .getPowerUpLoop
+    
+.noNewPowerUps
+    ; Draw power-ups
+    call    DrawAllPowerUps
     
 .donePowerUps
     ld      a, PLAYER_OBJ_COUNT

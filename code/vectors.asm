@@ -22,58 +22,6 @@ VBlankHandler:
     ld      l, LOW(hVBlankFlag)
     ld      [hl], h         ; Non-zero
     
-    ldh     a, [hFadeState]
-    ASSERT NOT_FADING == -1
-    inc     a       ; a = -1
-    ; Currently fading, nothing is changing
-    jr      nz, .noStatus
-    
-    ldh     a, [hGameState]
-    cp      a, GAME_STATE_IN_GAME
-    jr      c, .noStatus
-    jr      nz, .notInGame  ; Only draw hearts + power-ups in-game
-    
-    ; Draw hearts (player's lives)
-    call    DrawHearts
-    
-    ; Draw power-ups
-    ldh     a, [hGameMode]
-    ASSERT GAME_MODE_CLASSIC == 0
-    and     a, a
-    jr      z, .noPowerUps
-    
-    ASSERT GAME_MODE_COUNT - 1 == 1
-    ld      hl, vPowerUps
-    ld      de, SCRN_VX_B
-    
-    ldh     a, [hPowerUps.0]
-    ld      b, 0
-    call    DrawPowerUp
-    ldh     a, [hPowerUps.1]
-    ld      b, 1
-    call    DrawPowerUp
-    ldh     a, [hPowerUps.2]
-    ld      b, 2
-    call    DrawPowerUp
-    
-    ld      hl, vCurrentPowerUp
-    ldh     a, [hCurrentPowerUp]
-    ld      b, -1
-    call    DrawPowerUp
-    
-.noPowerUps
-.notInGame
-    ; Draw score and cookies blasted
-    ld      de, hScore
-    ld      hl, vScore
-    ld      c, SCORE_BYTE_COUNT
-    call    DrawStatusBarBCD
-    ASSERT hCookiesBlasted == hScore.end
-    ld      hl, vCookiesBlasted
-    ld      c, COOKIES_BLASTED_BYTE_COUNT
-    call    DrawStatusBarBCD
-.noStatus
-    
     call    UpdateFade
     
     ; Read joypad
