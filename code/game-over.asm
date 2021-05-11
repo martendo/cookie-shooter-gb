@@ -52,6 +52,5 @@ GameOver::
     call    SFX_Play
     
     ld      a, GAME_STATE_TOP_SCORES
-    ld      hl, LoadTopScoresScreen
     call    StartFade
     jp      Main

@@ -6,23 +6,25 @@ hFadeNewGameState:
     DS 1
 hFadeState::
     DS 1
-hFadeMidwayCall:
-.lo DS 1
-.hi DS 1
+
+SECTION "Fade Midway Subroutine Table", ROM0
+
+FadeMidwayRoutineTable:
+    DW LoadTitleScreen      ; GAME_STATE_TITLE_SCREEN
+    DW LoadModeSelectScreen ; GAME_STATE_MODE_SELECT
+    DW LoadTopScoresScreen  ; GAME_STATE_TOP_SCORES
+    DW SetUpGame            ; GAME_STATE_IN_GAME
+    DW LoadGameOverScreen   ; GAME_STATE_GAME_OVER
+.end
 
 SECTION "Fade Code", ROM0
 
 ; Start a fade to black and back
 ; @param a  New game state to set midway through the fade
-; @param hl Address to call midway through the fade
 StartFade::
     ldh     [hFadeNewGameState], a
     ld      a, FADE_OUT | FADE_PHASE_FRAMES
     ldh     [hFadeState], a
-    ld      a, l
-    ldh     [hFadeMidwayCall.lo], a
-    ld      a, h
-    ldh     [hFadeMidwayCall.hi], a
     ret
 
 UpdateFade::
@@ -63,8 +65,12 @@ UpdateFade::
     ld      [hl], FADE_IN | FADE_PHASE_FRAMES
     
     ; Jump to midway subroutine
-    ASSERT hFadeMidwayCall == hFadeState + 1
-    inc     l
+    ; a = game state
+    add     a, a
+    add     a, LOW(FadeMidwayRoutineTable)
+    ld      l, a
+    ASSERT HIGH(FadeMidwayRoutineTable.end - 1) == HIGH(FadeMidwayRoutineTable)
+    ld      h, HIGH(FadeMidwayRoutineTable)
     ld      a, [hli]
     ld      h, [hl]
     ld      l, a

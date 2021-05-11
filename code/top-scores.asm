@@ -143,6 +143,5 @@ TopScores::
     call    SFX_Play
     
     ld      a, GAME_STATE_IN_GAME
-    ld      hl, SetUpGame
     call    StartFade
     jp      Main

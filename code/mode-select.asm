@@ -49,7 +49,6 @@ ModeSelect::
     ; Return to title screen
     ASSERT GAME_STATE_TITLE_SCREEN == 0
     xor     a, a
-    ld      hl, LoadTitleScreen
     call    StartFade
     jp      Main
     
@@ -70,7 +69,6 @@ ModeSelect::
     call    SFX_Play
     
     ld      a, GAME_STATE_IN_GAME
-    ld      hl, SetUpGame
     call    StartFade
     jp      Main
 
