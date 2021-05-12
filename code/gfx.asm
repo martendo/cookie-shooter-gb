@@ -6,15 +6,18 @@ SECTION "Graphics Code", ROM0
 DrawHearts::
     ldh     a, [hPlayerLives]
 .skip::
-    and     a, a    ; Nothing to draw
-    ret     z
+    and     a, a    ; No hearts to draw
     
     ld      hl, vHearts
     ld      de, SCRN_VX_B
+    
+    jr      z, .noHearts
+    
     lb      bc, HEART_TILE1, HEART_TILE2
     ; a = player lives
     call    .draw
     ldh     a, [hPlayerLives]
+.noHearts
     ld      b, a
     ld      a, PLAYER_MAX_LIVES
     sub     a, b    ; a = heart spaces to erase
