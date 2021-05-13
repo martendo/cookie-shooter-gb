@@ -1,3 +1,5 @@
+.SUFFIXES:
+
 SRCDIR := code
 DATADIR := data
 GFXDIR := gfx
