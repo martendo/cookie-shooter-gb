@@ -128,7 +128,7 @@ Initialize::
     
     xor     a, a
     ldh     [rIF], a
-    ld      a, IEF_VBLANK | IEF_LCDC
+    ld      a, IEF_VBLANK | IEF_STAT
     ldh     [rIE], a
     
     ei
