@@ -2,7 +2,7 @@
 
 PADVALUE := 0xFF
 
-LDFLAGS += -d -t
+LDFLAGS += -d -t -l layout.link
 
 VERSION := 0
 MFRCODE := MART
