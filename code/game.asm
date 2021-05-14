@@ -486,7 +486,7 @@ GetPowerUp:
     ASSERT NO_POWER_UP == 0
     and     a, a
     ; No more room for a power-up left
-    ret     z
+    ret     nz
     
 .foundEmptySlot
     ld      a, c
