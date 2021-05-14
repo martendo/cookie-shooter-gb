@@ -270,6 +270,7 @@ InGame::
     ld      [hl], NO_POWER_UP   ; Remove power-up
     ld      l, LOW(hPlayerLives)
     inc     [hl]
+    call    DrawHearts          ; Update hearts
     jr      .usedPowerUp
     
 .normalPowerUp
