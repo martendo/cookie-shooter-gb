@@ -51,6 +51,9 @@ ActionSelect::
     jr      z, :+
     
     ; Return to title screen
+    ld      b, SFX_MENU_BACK
+    call    SFX_Play
+    
     ASSERT GAME_STATE_TITLE_SCREEN == 0
     xor     a, a
     call    StartFade

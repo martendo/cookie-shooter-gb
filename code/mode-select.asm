@@ -47,6 +47,9 @@ ModeSelect::
     jr      z, :+
     
     ; Return to action select screen
+    ld      b, SFX_MENU_BACK
+    call    SFX_Play
+    
     ld      a, GAME_STATE_ACTION_SELECT
     call    StartFade
     jp      Main

@@ -109,6 +109,9 @@ TopScores::
     jp      z, Main
     
     ; Return to mode select screen
+    ld      b, SFX_MENU_BACK
+    call    SFX_Play
+    
     ld      a, GAME_STATE_MODE_SELECT
     call    StartFade
     jp      Main

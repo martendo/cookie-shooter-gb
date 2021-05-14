@@ -70,9 +70,8 @@ UpdateFade::
     add     a, a
     add     a, LOW(FadeMidwayRoutineTable)
     ld      l, a
-    adc     a, HIGH(FadeMidwayRoutineTable)
-    sub     a, l
-    ld      h, a
+    ASSERT HIGH(FadeMidwayRoutineTable.end - 1) == HIGH(FadeMidwayRoutineTable)
+    ld      h, HIGH(FadeMidwayRoutineTable)
     ld      a, [hli]
     ld      h, [hl]
     ld      l, a
