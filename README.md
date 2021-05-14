@@ -30,11 +30,17 @@ The smaller the cookie, the more points you get for hitting it &mdash; from 25 t
 
 As your score climbs, the game gets harder: more and more cookies will be on screen at once!
 
+## Actions
+The action selection screen will appear after the title screen.
+You can choose whether you want to play a game ("Play") or just to view your top scores ("Top Scores").
+
+You will see the game mode selection screen after selecting one of the options, more on that below...
+
 ## Game Modes
 There are 2 game modes: Classic and Super.
 
-The game mode selection screen will appear after the title screen. From there, you can select the game mode you want to play.
-High scores are kept separate for each game mode.
+The game mode selection screen will appear after the action selection screen.
+From there, you can select the game mode you want to play or view top scores for.
 
 ### Classic Mode
 The original Cookie Shooter, plain and simple.

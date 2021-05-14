@@ -10,11 +10,12 @@ hFadeState::
 SECTION "Fade Midway Subroutine Table", ROM0
 
 FadeMidwayRoutineTable:
-    DW LoadTitleScreen      ; GAME_STATE_TITLE_SCREEN
-    DW LoadModeSelectScreen ; GAME_STATE_MODE_SELECT
-    DW LoadTopScoresScreen  ; GAME_STATE_TOP_SCORES
-    DW SetUpGame            ; GAME_STATE_IN_GAME
-    DW LoadGameOverScreen   ; GAME_STATE_GAME_OVER
+    DW LoadTitleScreen          ; GAME_STATE_TITLE_SCREEN
+    DW LoadActionSelectScreen   ; GAME_STATE_ACTION_SELECT
+    DW LoadModeSelectScreen     ; GAME_STATE_MODE_SELECT
+    DW SetUpGame                ; GAME_STATE_IN_GAME
+    DW LoadTopScoresScreen      ; GAME_STATE_TOP_SCORES
+    DW LoadGameOverScreen       ; GAME_STATE_GAME_OVER
 .end
 
 SECTION "Fade Code", ROM0
@@ -69,8 +70,9 @@ UpdateFade::
     add     a, a
     add     a, LOW(FadeMidwayRoutineTable)
     ld      l, a
-    ASSERT HIGH(FadeMidwayRoutineTable.end - 1) == HIGH(FadeMidwayRoutineTable)
-    ld      h, HIGH(FadeMidwayRoutineTable)
+    adc     a, HIGH(FadeMidwayRoutineTable)
+    sub     a, l
+    ld      h, a
     ld      a, [hli]
     ld      h, [hl]
     ld      l, a

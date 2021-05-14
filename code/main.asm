@@ -21,6 +21,8 @@ Initialize::
     ldh     [hGameState], a
     ASSERT DEFAULT_GAME_MODE == 0
     ldh     [hGameMode], a
+    ASSERT DEFAULT_ACTION == 0
+    ldh     [hActionSelection], a
     
     ; a = 0
     ldh     [hNewKeys], a
@@ -155,16 +157,19 @@ Main::
     ASSERT GAME_STATE_TITLE_SCREEN == 0
     and     a, a
     jp      z, TitleScreen
-    ASSERT GAME_STATE_MODE_SELECT == GAME_STATE_TITLE_SCREEN + 1
+    ASSERT GAME_STATE_ACTION_SELECT == GAME_STATE_TITLE_SCREEN + 1
+    dec     a
+    jp      z, ActionSelect
+    ASSERT GAME_STATE_MODE_SELECT == GAME_STATE_ACTION_SELECT + 1
     dec     a
     jp      z, ModeSelect
-    ASSERT GAME_STATE_TOP_SCORES == GAME_STATE_MODE_SELECT + 1
-    dec     a
-    jp      z, TopScores
-    ASSERT GAME_STATE_IN_GAME == GAME_STATE_TOP_SCORES + 1
+    ASSERT GAME_STATE_IN_GAME == GAME_STATE_MODE_SELECT + 1
     dec     a
     jp      z, InGame
-    ASSERT GAME_STATE_GAME_OVER == GAME_STATE_IN_GAME + 1
+    ASSERT GAME_STATE_TOP_SCORES == GAME_STATE_IN_GAME + 1
+    dec     a
+    jp      z, TopScores
+    ASSERT GAME_STATE_GAME_OVER == GAME_STATE_TOP_SCORES + 1
     dec     a
     jp      z, GameOver
     ASSERT GAME_STATE_PAUSED == GAME_STATE_GAME_OVER + 1

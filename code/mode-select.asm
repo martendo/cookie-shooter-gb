@@ -1,6 +1,6 @@
 INCLUDE "defines.inc"
 
-SECTION "Mode Select Scree", ROM0
+SECTION "Mode Select Screen", ROM0
 
 LoadModeSelectScreen::
     ld      de, ModeSelectTiles
@@ -46,9 +46,8 @@ ModeSelect::
     bit     PADB_B, a
     jr      z, :+
     
-    ; Return to title screen
-    ASSERT GAME_STATE_TITLE_SCREEN == 0
-    xor     a, a
+    ; Return to action select screen
+    ld      a, GAME_STATE_ACTION_SELECT
     call    StartFade
     jp      Main
     
@@ -68,7 +67,11 @@ ModeSelect::
     ld      b, SFX_MENU_START
     call    SFX_Play
     
-    ld      a, GAME_STATE_IN_GAME
+    ldh     a, [hActionSelection]
+    cp      a, ACTION_PLAY
+    ASSERT ACTION_COUNT - 1 == 1 && ACTION_TOP_SCORES == ACTION_PLAY + 1
+    ASSERT GAME_STATE_TOP_SCORES == GAME_STATE_IN_GAME + 1
+    adc     a, GAME_STATE_IN_GAME
     call    StartFade
     jp      Main
 

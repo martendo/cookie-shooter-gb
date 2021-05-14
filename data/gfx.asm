@@ -23,6 +23,12 @@ INCBIN "res/title-screen.2bpp", (8 * 2) * $80
 TitleScreenMap::
 INCBIN "res/title-screen.tilemap"
 
+ActionSelectTiles::
+INCBIN "res/action-select.2bpp"
+.end::
+ActionSelectMap::
+INCBIN "res/action-select.tilemap"
+
 ModeSelectTiles::
 INCBIN "res/mode-select.2bpp"
 .end::

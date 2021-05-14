@@ -12,6 +12,19 @@ LoadTopScoresScreen::
     ld      c, SCRN_Y_B
     call    LCDMemcopyMap
     
+    ldh     a, [hActionSelection]
+    ASSERT ACTION_COUNT - 1 == 1 && ACTION_TOP_SCORES != 0
+    and     a, a
+    jr      z, :+
+    ; Coming from mode select (after "Top Scores" action), hide
+    ; selection cursor
+    xor     a, a
+    ld      [wShadowOAM + MODE_SELECT_CURSOR_Y1_OFFSET], a
+    ld      [wShadowOAM + MODE_SELECT_CURSOR_Y2_OFFSET], a
+    ; Just viewing top scores, never a new top score
+    jr      .drawTopScores
+:
+    
     ; Check if there's a new top score
     ldh     a, [hScratch]   ; Index of new top score
     ASSERT NO_NEW_TOP_SCORE + 1 == 0
@@ -43,7 +56,7 @@ LoadTopScoresScreen::
     ld      [hl], 0
     
 .drawTopScores
-    ; Draw high score
+    ; Draw top scores
     ld      a, CART_SRAM_ENABLE
     ld      [rRAMG], a
     
@@ -74,7 +87,12 @@ LoadTopScoresScreen::
     ret
 
 TopScores::
+    ldh     a, [hActionSelection]
+    ASSERT ACTION_PLAY == 0
+    and     a, a
     ldh     a, [hNewKeys]
+    jr      nz, .viewing
+    
     and     a, PADF_A | PADF_START
     jp      z, Main
     
@@ -83,5 +101,14 @@ TopScores::
     call    SFX_Play
     
     ld      a, GAME_STATE_IN_GAME
+    call    StartFade
+    jp      Main
+
+.viewing
+    bit     PADB_B, a
+    jp      z, Main
+    
+    ; Return to mode select screen
+    ld      a, GAME_STATE_MODE_SELECT
     call    StartFade
     jp      Main

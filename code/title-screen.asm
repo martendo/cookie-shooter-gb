@@ -27,6 +27,6 @@ TitleScreen::
     ld      b, SFX_TITLE_START
     call    SFX_Play
     
-    ld      a, GAME_STATE_MODE_SELECT
+    ld      a, GAME_STATE_ACTION_SELECT
     call    StartFade
     jp      Main
