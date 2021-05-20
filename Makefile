@@ -16,7 +16,6 @@ WARNINGS := all extra
 ASFLAGS  = -h $(addprefix -i ,$(INCDIRS)) -p $(PADVALUE) $(addprefix -W,$(WARNINGS))
 LDFLAGS  = -p $(PADVALUE)
 FIXFLAGS = -v -p $(PADVALUE) -i "$(MFRCODE)" -k "$(LICENSEE)" -l $(OLDLIC) -m $(MBC) -n $(VERSION) -r $(SRAMSIZE) -t $(TITLE)
-GFXFLAGS = -hu -f
 
 SRCS = $(wildcard $(SRCDIR)/*.asm) $(wildcard $(DATADIR)/*.asm) $(wildcard $(DATADIR)/**/*.asm)
 GFX = $(RESDIR)/sprite-tiles.2bpp $(RESDIR)/in-game-tiles.2bpp $(RESDIR)/power-ups.2bpp $(RESDIR)/game-over.2bpp $(RESDIR)/game-over.tilemap $(RESDIR)/title-screen.2bpp $(RESDIR)/title-screen.tilemap $(RESDIR)/mode-select.2bpp $(RESDIR)/mode-select.tilemap $(RESDIR)/action-select.2bpp $(RESDIR)/action-select.tilemap $(RESDIR)/top-scores.2bpp $(RESDIR)/top-scores-numbers.2bpp $(RESDIR)/top-scores.tilemap $(IN_GAME_SUBMAPS)
@@ -51,10 +50,6 @@ $(OBJDIR)/%.o $(DEPDIR)/%.mk: $(GFX) %.asm
 	rgbasm $(ASFLAGS) -M $(DEPDIR)/$*.mk -MG -MP -MQ $(OBJDIR)/$*.o -MQ $(DEPDIR)/$*.mk -o $(OBJDIR)/$*.o $*.asm
 
 # Graphics conversion
-$(RESDIR)/sprite-tiles.2bpp: $(GFXDIR)/sprite-tiles.png
-	@mkdir -p $(@D)
-	rgbgfx -d 2 $(GFXFLAGS) -o $(RESDIR)/sprite-tiles.2bpp $<
-
 $(RESDIR)/%.pal.json: $(GFXDIR)/%.png
 	@mkdir -p $(@D)
 	superfamiconv palette -M gb -R -i $< -j $@

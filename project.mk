@@ -20,6 +20,8 @@ ROMEXT  := gb
 
 # Graphics conversion configuration
 
+SFC_sprite-tiles_TILES_FLAGS := -H 16
+
 SFC_game-over_MAP_FLAGS := -T 128
 
 SFC_power-ups_TILES_FLAGS := -D
