@@ -165,9 +165,9 @@ InGame::
     ld      a, GAME_STATE_PAUSED
     ldh     [hGameState], a
     
+    call    Music_Pause
     ld      b, SFX_PAUSE
     call    SFX_Play
-    call    Music_Pause
     
     ; Draw "paused" strip
     ld      de, PausedStripMap
