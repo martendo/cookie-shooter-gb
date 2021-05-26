@@ -22,6 +22,11 @@ VBlankHandler:
     ld      l, LOW(hVBlankFlag)
     ld      [hl], h         ; Non-zero
     
+    call    SoundSystem_Process
+    
+    ; Graphics loading may be done by a subroutine called by UpdateFade,
+    ; so don't let that delay the above
+    ei
     call    UpdateFade
     
     ; Read joypad
@@ -45,13 +50,11 @@ VBlankHandler:
     ld      a, P1F_GET_NONE
     ldh     [rP1], a
     
-    call    SoundSystem_Process
-    
     pop     hl
     pop     de
     pop     bc
     pop     af
-    reti
+    ret         ; Interrupts enabled above
 
 ; @param a  Byte to write to rP1
 ; @return a  Reading from rP1, ignoring non-input bits
