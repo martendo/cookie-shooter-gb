@@ -16,11 +16,18 @@ VBlankHandler:
     lb      bc, (OAM_COUNT * sizeof_OAM_ATTRS) / DMA_LOOP_CYCLES + 1, LOW(rDMA)
     call    hOAMDMA
     
+    ldh     a, [hGameState]
+    cp      a, GAME_STATE_IN_GAME
+    jr      z, :+
+    cp      a, GAME_STATE_PAUSED
+    jr      nz, .noStatusBar
+:
     ; Disable objects for status bar
     ld      hl, rLCDC
     res     LCDCB_OBJ, [hl]
-    ld      l, LOW(hVBlankFlag)
-    ld      [hl], h         ; Non-zero
+.noStatusBar
+    inc     a   ; Ensure non-zero (game states start at 0)
+    ldh     [hVBlankFlag], a
     
     call    SoundSystem_Process
     
@@ -53,8 +60,46 @@ VBlankHandler:
     pop     hl
     pop     de
     pop     bc
-    pop     af
-    ret         ; Interrupts enabled above
+    
+    ; SoundSystem_Process may take too long and this may be outside of
+    ; VBlank
+    ldh     a, [rLY]
+    cp      a, SCRN_Y
+    jr      nc, .finished
+    
+    ; Return at the start of HBlank for any code that waits for VRAM to
+    ; become accessible, since this interrupt handler might be called
+    ; while waiting
+:
+    ; Wait for mode 3, which comes before HBlank
+    ldh     a, [rSTAT]
+    ; (%11 + 1) & %11 == 0
+    inc     a
+    and     a, STAT_MODE_MASK
+    jr      nz, :-
+    
+:
+    ; Wait for HBlank -> ensured the beginning of HBlank by above
+    ldh     a, [rSTAT]
+    and     a, STAT_MODE_MASK
+    jr      nz, :-
+    
+    ; This interrupt handler should return with at least 16 cycles left
+    ; of accessible VRAM, which is what any VRAM accessibility-waiting
+    ; code would assume it has
+    
+    ; Remaining time = Minimum HBlank time - Loop above + Mode 2 time
+    ;                = 21 cycles - 4 cycles + 20 cycles
+    ;                = 37 cycles
+.finished
+    pop     af  ; 3 cycles
+    ret         ; 4 cycles  Interrupts enabled above
+    
+    ; 30 remaining VRAM-accessible cycles
+    
+    ; Not waiting for specifically the beginning of HBlank (i.e. just
+    ; waiting for HBlank) would result in 16 - 7 (pop + ret) = only 9
+    ; cycles!!!
 
 ; @param a  Byte to write to rP1
 ; @return a  Reading from rP1, ignoring non-input bits
@@ -73,6 +118,14 @@ SECTION "STAT Interrupt", ROM0[$0048]
 
 STATHandler:
     push    af
+    
+    ldh     a, [hGameState]
+    cp      a, GAME_STATE_IN_GAME
+    jr      z, :+
+    cp      a, GAME_STATE_PAUSED
+    ; Nothing to do
+    jr      nz, .doNothing
+:
     push    hl
 .waitHBL
     ldh     a, [rSTAT]
@@ -108,6 +161,7 @@ STATHandler:
     res     LCDCB_OBJ, [hl]
 .finished
     pop     hl
+.doNothing
     
     ; Return at the start of HBlank for any code that waits for VRAM to
     ; become accessible, since this interrupt handler might be called
@@ -140,5 +194,5 @@ STATHandler:
     ; 30 remaining VRAM-accessible cycles
     
     ; Not waiting for specifically the beginning of HBlank (i.e. just
-    ; waiting for HBlank) would result in 30 - 21 (HBlank) = only 9
+    ; waiting for HBlank) would result in 16 - 7 (pop + ret) = only 9
     ; cycles!!!
