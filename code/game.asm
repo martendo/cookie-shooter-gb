@@ -166,6 +166,7 @@ InGame::
     ldh     [hGameState], a
     
     call    Music_Pause
+    call    SFX_Stop
     ld      b, SFX_PAUSE
     call    SFX_Play
     
