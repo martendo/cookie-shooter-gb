@@ -16,18 +16,21 @@ VBlankHandler:
     lb      bc, (OAM_COUNT * sizeof_OAM_ATTRS) / DMA_LOOP_CYCLES + 1, LOW(rDMA)
     call    hOAMDMA
     
+    ; Disable objects for status bar
+    ld      hl, rLCDC
+    
     ldh     a, [hGameState]
     cp      a, GAME_STATE_IN_GAME
     jr      z, :+
     cp      a, GAME_STATE_PAUSED
     jr      nz, .noStatusBar
 :
-    ; Disable objects for status bar
-    ld      hl, rLCDC
     res     LCDCB_OBJ, [hl]
+    DB      $01         ; ld bc, d16 to consume the next 2 bytes
 .noStatusBar
-    inc     a   ; Ensure non-zero (game states start at 0)
-    ldh     [hVBlankFlag], a
+    set     LCDCB_OBJ, [hl]
+    ld      l, LOW(hVBlankFlag)
+    ld      [hl], h     ; Non-zero
     
     call    SoundSystem_Process
     
