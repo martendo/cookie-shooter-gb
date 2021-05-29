@@ -2,6 +2,11 @@ INCLUDE "defines.inc"
 
 SECTION "Player Variables", HRAM
 
+hPlayerY::
+    DS 1
+hPlayerX::
+    DS 1
+
 hPlayerLives::
     DS 1
 hPlayerInvCountdown::
@@ -19,18 +24,38 @@ MovePlayerRight::
 
 ; @param a Change in X position (speed)
 MovePlayer:
-    ld      hl, wShadowOAM + PLAYER_X1_OFFSET
+    ld      hl, hPlayerX
     add     a, [hl]
     
-    ; x < 0
-    cp      a, 0 + 8
-    ret     c   ; Moving out of bounds on the left
-    ; x > SCRN_X - PLAYER_WIDTH
-    cp      a, SCRN_X - PLAYER_WIDTH + 8 + 1
-    ret     nc  ; Moving out of bounds on the right
+    ; x > SCRN_X - PLAYER_WIDTH || x < 0
+    cp      a, SCRN_X - PLAYER_WIDTH + 1
+    ret     nc  ; Moving out of bounds
     
     ld      [hl], a
-    ld      l, LOW(wShadowOAM + PLAYER_X2_OFFSET)
+    ret
+
+; @param c Tile number to draw the player with
+DrawPlayer::
+    ld      hl, wShadowOAM
+    ldh     a, [hPlayerY]
+    add     a, 16
+    ld      [hli], a
+    ld      b, a
+    ldh     a, [hPlayerX]
     add     a, 8
-    ld      [hl], a
+    ld      [hli], a
+    ld      [hl], c
+    inc     l
+    ld      [hl], 0
+    inc     l
+    ld      [hl], b
+    inc     l
+    add     a, 8
+    ld      [hli], a
+    ld      [hl], c
+    inc     l
+    ld      [hl], OAMF_XFLIP
+    
+    ld      a, PLAYER_OBJ_COUNT
+    ldh     [hNextAvailableOAMSlot], a
     ret

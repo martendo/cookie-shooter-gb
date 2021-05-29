@@ -22,7 +22,7 @@ ShootLaser::
     ldh     a, [hCurrentPowerUp]
     cp      a, POWER_UP_DOUBLE_LASERS
     ; [hl] = X position
-    ld      a, [wShadowOAM + PLAYER_X1_OFFSET]
+    ldh     a, [hPlayerX]
     jr      z, .doubleLasers
     
     add     a, (PLAYER_WIDTH / 2) - (LASER_WIDTH / 2)
@@ -41,7 +41,7 @@ ShootLaser::
     jr      c, .noSecondLaser   ; No empty slots
     
     ; [hl] = X position
-    ld      a, [wShadowOAM + PLAYER_X1_OFFSET]
+    ldh     a, [hPlayerX]
     add     a, (PLAYER_WIDTH / 2) - (LASER_WIDTH / 2)
     ld      [hld], a            ; X position
     ld      [hl], LASER_START_Y - LASER_VISUAL_HEIGHT ; Y position
@@ -68,7 +68,7 @@ ShootLaser::
     jr      c, .playSoundEffect ; No empty slots
     
     ; [hl] = X position
-    ld      a, [wShadowOAM + PLAYER_X1_OFFSET]
+    ldh     a, [hPlayerX]
     add     a, (PLAYER_WIDTH / 2) + DOUBLE_LASER_X_OFFSET
     ld      [hld], a            ; X position
     ld      [hl], LASER_START_Y ; Y position
@@ -105,7 +105,7 @@ UpdateLasers::
 .update
     ld      a, c
     add     a, [hl]     ; Y position
-    cp      a, (STATUS_BAR_HEIGHT - LASER_HEIGHT + 16) + 1
+    cp      a, (STATUS_BAR_HEIGHT - LASER_HEIGHT) + 1
     jr      nc, :+      ; Y > Status bar
     xor     a, a        ; Out of sight, destroy
     ld      [hli], a
@@ -195,3 +195,55 @@ UpdateLasers::
     dec     b
     jr      nz, .loop
     ret
+
+; Use actor data to make objects and put them in OAM
+DrawLasers::
+    ldh     a, [hLaserRotationIndex]
+    ld      de, wLaserPosTable
+    ld      c, MAX_LASER_COUNT
+    call    PointDEToNthActiveActor
+    
+    ldh     a, [hNextAvailableOAMSlot]
+    ASSERT sizeof_OAM_ATTRS == 4
+    add     a, a
+    add     a, a
+    ld      l, a
+    ld      h, HIGH(wShadowOAM)
+    
+    lb      bc, MAX_LASER_SPRITE_COUNT, MAX_LASER_COUNT
+.loop
+    ld      a, [de]     ; Y position
+    and     a, a        ; No laser, skip
+    jr      z, .skip
+    add     a, 16
+    ld      [hli], a
+    inc     e
+    ld      a, [de]     ; X position
+    add     a, 8
+    ld      [hli], a
+    ld      [hl], LASER_TILE
+    inc     l
+    ld      [hl], 0
+    inc     l
+    
+    ldh     a, [hNextAvailableOAMSlot]
+    ASSERT LASER_OBJ_COUNT == 1
+    inc     a
+    ldh     [hNextAvailableOAMSlot], a
+    
+    dec     b
+    jr      nz, .next
+    ret
+.skip
+    inc     e
+.next
+    inc     e
+    dec     c
+    ret     z
+    
+    ld      a, e
+    cp      a, LOW(wLaserPosTable.end)
+    jr      c, .loop
+    ; Gone past end, wrap back to beginning
+    ld      e, LOW(wLaserPosTable)
+    jr      .loop

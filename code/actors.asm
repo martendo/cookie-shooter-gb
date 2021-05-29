@@ -24,7 +24,7 @@ HideObjects:
 
 ; Hide all objects that aren't the player
 HideAllActors::
-    ld      hl, wShadowOAM + PLAYER_END_OFFSET
+    ld      hl, wShadowOAM + (PLAYER_OBJ_COUNT * sizeof_OAM_ATTRS)
     ld      d, OAM_COUNT - PLAYER_OBJ_COUNT
     jr      HideObjects
 
@@ -67,7 +67,7 @@ FindEmptyActorSlot::
 ; @param c  Maximum number of actors
 ; @param de Pointer to actor position table
 ; @return de Pointer to Nth active actor
-PointDEToNthActiveActor:
+PointDEToNthActiveActor::
     inc     a
     ld      b, a
     ld      l, a        ; Save for comparing
@@ -98,131 +98,4 @@ PointDEToNthActiveActor:
     ASSERT ACTOR_SIZE == 2
     inc     e
     inc     e
-    jr      .loop
-
-; Use actor data to make objects and put them in OAM
-DrawLasers::
-    ldh     a, [hLaserRotationIndex]
-    ld      de, wLaserPosTable
-    ld      c, MAX_LASER_COUNT
-    call    PointDEToNthActiveActor
-    
-    ldh     a, [hNextAvailableOAMSlot]
-    ASSERT sizeof_OAM_ATTRS == 4
-    add     a, a
-    add     a, a
-    ld      l, a
-    ld      h, HIGH(wShadowOAM)
-    
-    lb      bc, MAX_LASER_SPRITE_COUNT, MAX_LASER_COUNT
-.loop
-    ld      a, [de]     ; Y position
-    and     a, a        ; No laser, skip
-    jr      z, .skip
-    ld      [hli], a
-    inc     e
-    ld      a, [de]     ; X position
-    ld      [hli], a
-    ld      [hl], LASER_TILE
-    inc     l
-    ld      [hl], 0
-    inc     l
-    
-    ldh     a, [hNextAvailableOAMSlot]
-    ASSERT LASER_OBJ_COUNT == 1
-    inc     a
-    ldh     [hNextAvailableOAMSlot], a
-    
-    dec     b
-    jr      nz, .next
-    ret
-.skip
-    inc     e
-.next
-    inc     e
-    dec     c
-    ret     z
-    
-    ld      a, e
-    cp      a, LOW(wLaserPosTable.end)
-    jr      c, .loop
-    ; Gone past end, wrap back to beginning
-    ld      e, LOW(wLaserPosTable)
-    jr      .loop
-
-DrawCookies::
-    ldh     a, [hCookieRotationIndex]
-    ld      de, wCookiePosTable
-    ld      c, MAX_COOKIE_COUNT
-    call    PointDEToNthActiveActor
-    
-    ldh     a, [hNextAvailableOAMSlot]
-    ASSERT sizeof_OAM_ATTRS == 4
-    add     a, a
-    add     a, a
-    ld      l, a
-    ld      h, HIGH(wShadowOAM)
-    
-    ASSERT MAX_COOKIE_COUNT == MAX_COOKIE_SPRITE_COUNT
-    ld      b, MAX_COOKIE_COUNT
-.loop
-    ld      a, [de]     ; Y position
-    and     a, a        ; No cookie, skip
-    jr      z, .skip
-    
-    push    bc
-    ; Get cookie's size's tiles
-    ld      d, HIGH(wCookieSizeTable)
-    ld      a, [de]     ; a = cookie size
-    ASSERT COOKIE_TILE_COUNT == 4
-    add     a, a
-    add     a, a
-    add     a, COOKIE_TILES_START
-    ld      c, a
-    add     a, 2
-    ld      b, a
-    ; c = first tile, b = second tile
-    ld      d, HIGH(wCookiePosTable)
-    
-    ld      a, [de]     ; Y position
-    ld      [hli], a
-    inc     e
-    ld      a, [de]     ; X position
-    ld      [hli], a
-    ld      [hl], c     ; First tile
-    inc     l
-    ld      [hl], 0
-    inc     l
-    
-    dec     e
-    ld      a, [de]     ; Y position
-    ld      [hli], a
-    inc     e
-    ld      a, [de]     ; X position
-    add     a, 8
-    ld      [hli], a
-    ld      [hl], b     ; Second tile
-    inc     l
-    ld      [hl], 0
-    inc     l
-    
-    ldh     a, [hNextAvailableOAMSlot]
-    add     a, COOKIE_OBJ_COUNT
-    ldh     [hNextAvailableOAMSlot], a
-    
-    pop     bc
-    dec     b
-    jr      nz, .next
-    ret
-.skip
-    dec     b
-    ret     z
-    inc     e
-.next
-    inc     e
-    ld      a, e
-    cp      a, LOW(wCookiePosTable.end)
-    jr      c, .loop
-    ; Gone past end, wrap back to beginning
-    ld      e, LOW(wCookiePosTable)
     jr      .loop

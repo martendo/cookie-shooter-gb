@@ -66,7 +66,7 @@ CreateCookie::
     
     ; [hl] = X position
     call    GenerateRandomNumber
-    cp      a, SCRN_X - COOKIE_WIDTH + 8
+    cp      a, SCRN_X - COOKIE_WIDTH
     jr      c, :+
     sub     a, (SCRN_X - COOKIE_WIDTH) / 2
 :
@@ -227,7 +227,7 @@ UpdateCookies::
     rl      c           ; Restore carry from fractional part
     adc     a, [hl]     ; Add integer speed + fractional carry to position
     
-    cp      a, SCRN_Y + 16
+    cp      a, SCRN_Y
     jr      c, .onscreenY
     ; Past bottom of screen, destroy
     xor     a, a
@@ -269,10 +269,10 @@ UpdateCookies::
     rl      c           ; Restore carry from fractional part
     adc     a, [hl]     ; Add integer speed + fractional carry to position
     
-    cp      a, SCRN_X + 8
-    ASSERT LOW((-COOKIE_WIDTH + 8) + 1) > LOW(SCRN_X + 8)
+    cp      a, SCRN_X
+    ASSERT LOW(-COOKIE_WIDTH + 1) > LOW(SCRN_X)
     jr      c, .onscreenX
-    cp      a, (-COOKIE_WIDTH + 8) + 1
+    cp      a, -COOKIE_WIDTH + 1
     jr      nc, .onscreenX
     ; Past left/right sides of screen, destroy
     xor     a, a
@@ -293,6 +293,7 @@ UpdateCookies::
     jr      nz, .skipCollision
     
     push    hl
+    push    bc
     call    PointHLToCookieHitbox
     ASSERT HIGH(CookieHitboxTable.end - 1) == HIGH(CookieHitboxTable)
     ld      a, d
@@ -300,40 +301,37 @@ UpdateCookies::
     ld      d, a        ; d = cookie.hitbox.top
     inc     l
     ld      a, [hli]    ; cookie.hitbox.height
-    ld      c, a
+    ld      b, a
     ld      a, e
     add     a, [hl]     ; cookie.hitbox.x
     ld      e, a        ; e = cookie.hitbox.left
     inc     l
     ld      a, [hl]     ; cookie.hitbox.width
-    ldh     [hScratch], a
+    ld      c, a
     
-    ld      hl, wShadowOAM + PLAYER_Y_OFFSET
-    push    bc
-    
-    ld      a, [hli]
+    ldh     a, [hPlayerY]
     add     a, PLAYER_HITBOX_Y
-    ld      b, a
+    ld      l, a
     add     a, PLAYER_HITBOX_HEIGHT
     cp      a, d        ; player.hitbox.bottom < cookie.hitbox.top
     jr      c, .noCollision
     
     ld      a, d
-    add     a, c        ; cookie.hitbox.height
-    cp      a, b        ; cookie.hitbox.bottom < player.hitbox.top
+    add     a, b        ; cookie.hitbox.height
+    cp      a, l        ; cookie.hitbox.bottom < player.hitbox.top
     jr      c, .noCollision
     
-    ld      a, [hli]
+    ldh     a, [hPlayerX]
     ASSERT PLAYER_HITBOX_X == 1
     inc     a
-    ld      b, a
+    ld      l, a
     add     a, PLAYER_HITBOX_WIDTH
     cp      a, e        ; player.hitbox.right < cookie.hitbox.left
     jr      c, .noCollision
     
-    ldh     a, [hScratch]   ; cookie.hitbox.width
+    ld      a, c        ; cookie.hitbox.width
     add     a, e
-    cp      a, b        ; cookie.hitbox.right < player.hitbox.left
+    cp      a, l        ; cookie.hitbox.right < player.hitbox.left
     jr      c, .noCollision
     
     ; Cookie and player are colliding!
@@ -366,3 +364,83 @@ UpdateCookies::
     dec     a
     ldh     [hCookieCount], a
     jr      .next
+
+DrawCookies::
+    ldh     a, [hCookieRotationIndex]
+    ld      de, wCookiePosTable
+    ld      c, MAX_COOKIE_COUNT
+    call    PointDEToNthActiveActor
+    
+    ldh     a, [hNextAvailableOAMSlot]
+    ASSERT sizeof_OAM_ATTRS == 4
+    add     a, a
+    add     a, a
+    ld      l, a
+    ld      h, HIGH(wShadowOAM)
+    
+    ASSERT MAX_COOKIE_COUNT == MAX_COOKIE_SPRITE_COUNT
+    ld      b, MAX_COOKIE_COUNT
+.loop
+    ld      a, [de]     ; Y position
+    and     a, a        ; No cookie, skip
+    jr      z, .skip
+    
+    push    bc
+    ; Get cookie's size's tiles
+    ld      d, HIGH(wCookieSizeTable)
+    ld      a, [de]     ; a = cookie size
+    ASSERT COOKIE_TILE_COUNT == 4
+    add     a, a
+    add     a, a
+    add     a, COOKIE_TILES_START
+    ld      c, a
+    add     a, 2
+    ld      b, a
+    ; c = first tile, b = second tile
+    ld      d, HIGH(wCookiePosTable)
+    
+    ld      a, [de]     ; Y position
+    add     a, 16
+    ld      [hli], a
+    inc     e
+    ld      a, [de]     ; X position
+    add     a, 8
+    ld      [hli], a
+    ld      [hl], c     ; First tile
+    inc     l
+    ld      [hl], 0
+    inc     l
+    
+    dec     e
+    ld      a, [de]     ; Y position
+    add     a, 16
+    ld      [hli], a
+    inc     e
+    ld      a, [de]     ; X position
+    add     a, 8 + 8
+    ld      [hli], a
+    ld      [hl], b     ; Second tile
+    inc     l
+    ld      [hl], 0
+    inc     l
+    
+    ldh     a, [hNextAvailableOAMSlot]
+    add     a, COOKIE_OBJ_COUNT
+    ldh     [hNextAvailableOAMSlot], a
+    
+    pop     bc
+    dec     b
+    jr      nz, .next
+    ret
+.skip
+    dec     b
+    ret     z
+    inc     e
+.next
+    inc     e
+    ld      a, e
+    cp      a, LOW(wCookiePosTable.end)
+    jr      c, .loop
+    ; Gone past end, wrap back to beginning
+    ld      e, LOW(wCookiePosTable)
+    jr      .loop

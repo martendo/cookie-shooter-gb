@@ -51,24 +51,14 @@ SetUpGame::
     
     call    HideAllActors
     ; Set up player
-    ld      hl, wShadowOAM + PLAYER_OFFSET
-    ; Object 1
-    ld      [hl], PLAYER_Y
-    inc     l
-    ld      [hl], PLAYER_START_X
-    inc     l
-    ASSERT PLAYER_TILE == 0
-    ld      [hli], a    ; a = 0 = PLAYER_TILE
-    ld      [hli], a    ; a = 0
-    ; Object 2
-    ld      [hl], PLAYER_Y
-    inc     l
-    ld      [hl], PLAYER_START_X + 8
-    inc     l
-    ld      [hli], a    ; a = 0 = PLAYER_TILE
-    ld      [hl], OAMF_XFLIP
+    ld      a, PLAYER_Y
+    ldh     [hPlayerY], a
+    ld      a, PLAYER_START_X
+    ldh     [hPlayerX], a
+    ld      c, PLAYER_TILE
+    call    DrawPlayer
     
-    ; a = 0
+    xor     a, a
     ldh     [hNextAvailableOAMSlot], a
     
     ; Clear actor tables
@@ -373,29 +363,6 @@ InGame::
     call    nc, CreateCookie
     
 .skipCookieCount
-    ; Update player invincibility
-    ld      hl, hPlayerInvCountdown
-    ld      a, [hl]
-    ASSERT PLAYER_NOT_INV == -1
-    inc     a       ; a = -1
-    jr      z, .playerNotInvincible
-    
-    dec     [hl]
-    
-    ; Flash player to show invincibility
-    ASSERT PLAYER_TILE == 0
-    xor     a, a
-    bit     PLAYER_INV_FLASH_BIT, [hl]
-    jr      nz, .writePlayerTile
-    ASSERT PLAYER_INV_TILE == LOW(-1)
-    dec     a   ; a = -1
-.writePlayerTile
-    ld      hl, wShadowOAM + PLAYER_TILE1_OFFSET
-    ld      [hl], a
-    ld      l, LOW(wShadowOAM + PLAYER_TILE2_OFFSET)
-    ld      [hl], a
-    
-.playerNotInvincible
     ; Update actors
     call    UpdateLasers
     call    UpdateCookies
@@ -454,8 +421,23 @@ InGame::
     call    DrawAllPowerUps
     
 .donePowerUps
-    ld      a, PLAYER_OBJ_COUNT
-    ldh     [hNextAvailableOAMSlot], a
+    ; Update player invincibility
+    ld      hl, hPlayerInvCountdown
+    ld      a, [hl]
+    ASSERT PLAYER_NOT_INV == -1
+    inc     a       ; a = -1
+    ld      c, PLAYER_TILE
+    jr      z, .drawPlayer
+    
+    dec     [hl]
+    
+    ; Flash player to show invincibility
+    bit     PLAYER_INV_FLASH_BIT, [hl]
+    jr      nz, .drawPlayer
+    ASSERT PLAYER_INV_TILE == LOW(-1)
+    dec     c   ; c = -1
+.drawPlayer
+    call    DrawPlayer
     
     ; Copy actor data to OAM
     call    DrawLasers
