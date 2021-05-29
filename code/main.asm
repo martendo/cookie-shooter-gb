@@ -71,8 +71,15 @@ Initialize::
     jr      nz, .checkSaveDataHeaderLoop
     
     ; Save header is correct
-    jr      .doneCheckingSaveData
     
+    ; Check top scores checksum
+    call    CalcTopScoresChecksum
+    ld      hl, sChecksum
+    cp      a, [hl]
+    ; Checksum is correct
+    jr      z, .doneCheckingSaveData
+    ; No need to rewrite header
+    jr      .initTopScores
 .initSRAM
     ; Write save data header
     ASSERT HIGH(SaveDataHeader.end - 1) == HIGH(SaveDataHeader)
@@ -86,7 +93,7 @@ Initialize::
     ENDR
     ld      a, [de]
     ld      [hl], a
-    
+.initTopScores
     ; Clear top scores
     ld      hl, sClassicTopScores
     ld      b, sClassicTopScores.end - sClassicTopScores
@@ -96,12 +103,20 @@ Initialize::
     ld      b, sSuperTopScores.end - sSuperTopScores
     ; a = 0
     call    MemsetSmall
+    ; a = 0
+    ld      [sChecksum], a
+    jr      :+
     
 .doneCheckingSaveData
     ; Seed random number with top scores
+    ld      a, [sChecksum]
+    swap    a
+:
+    xor     a, "C"
+    ld      b, a
     ; Use the 2nd bytes because they're the most interesting
     ld      a, [sClassicTopScores + 1]
-    ld      b, a
+    and     a, b
     ld      a, [sSuperTopScores + 1]
     xor     a, b
     ldh     [hRandomNumber], a
@@ -229,27 +244,3 @@ SECTION "OAM DMA", HRAM
 
 hOAMDMA::
     DS OAMDMA.end - OAMDMA
-
-SECTION "Save Data Header String", ROM0
-
-SaveDataHeader:
-    DB SAVE_DATA_HEADER
-.end
-
-SECTION "Save Data Header", SRAM
-
-sSaveDataHeader:
-    DS STRLEN(SAVE_DATA_HEADER)
-.end
-
-SECTION "Classic Mode Top Scores", SRAM, ALIGN[8]
-
-sClassicTopScores::
-    DS TOP_SCORE_COUNT * SCORE_BYTE_COUNT
-.end::
-
-SECTION "Super Mode Top Scores", SRAM, ALIGN[8]
-
-sSuperTopScores::
-    DS TOP_SCORE_COUNT * SCORE_BYTE_COUNT
-.end::

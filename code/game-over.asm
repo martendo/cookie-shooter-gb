@@ -118,6 +118,10 @@ LoadGameOverScreen::
     ld      a, [hl]
     ld      [de], a
     
+    ; Update checksum of top scores
+    call    CalcTopScoresChecksum
+    ld      [sChecksum], a
+    
     ; Save the index of the new top score for the top scores screen
     ld      a, c
     DB      $01     ; ld bc, d16 to consume the next 2 bytes
