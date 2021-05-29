@@ -123,7 +123,8 @@ CreateCookie::
 ; Destroy a cookie and award points
 ; @param hl Pointer to the cookie's entry in wCookiePosTable
 BlastCookie::
-    ld      [hl], 0     ; Destroy cookie (Y=0)
+    ; Destroy cookie
+    ld      [hl], NO_ACTOR
     
     ld      h, HIGH(wCookieSizeTable)
     ld      a, [hl]     ; a = cookie size
@@ -188,7 +189,8 @@ UpdateCookies::
     ld      b, MAX_COOKIE_COUNT
 .loop
     ld      a, [hl]
-    and     a, a
+    ASSERT NO_ACTOR == -1
+    inc     a
     jr      nz, .update
     ; No cookie, skip
     inc     l
@@ -230,8 +232,8 @@ UpdateCookies::
     cp      a, SCRN_Y
     jr      c, .onscreenY
     ; Past bottom of screen, destroy
-    xor     a, a
-    ld      [hli], a
+    ld      [hl], NO_ACTOR
+    inc     l
     inc     l
     jp      .destroyed
 .onscreenY
@@ -275,9 +277,9 @@ UpdateCookies::
     cp      a, -COOKIE_WIDTH + 1
     jr      nc, .onscreenX
     ; Past left/right sides of screen, destroy
-    xor     a, a
     dec     l
-    ld      [hli], a
+    ld      [hl], NO_ACTOR
+    inc     l
     inc     l
     jr      .destroyed
 .onscreenX
@@ -382,7 +384,8 @@ DrawCookies::
     ld      b, MAX_COOKIE_COUNT
 .loop
     ld      a, [de]     ; Y position
-    and     a, a        ; No cookie, skip
+    ASSERT NO_ACTOR == -1
+    inc     a           ; No cookie, skip
     jr      z, .skip
     
     push    bc

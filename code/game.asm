@@ -64,8 +64,8 @@ SetUpGame::
     ; Clear actor tables
     ld      hl, wLaserPosTable
     ld      b, MAX_LASER_COUNT
+    ld      a, NO_ACTOR
 :
-    ; a = 0
     ld      [hli], a
     inc     l
     dec     b
@@ -74,14 +74,14 @@ SetUpGame::
     ld      hl, wCookiePosTable
     ld      b, MAX_COOKIE_COUNT
 :
-    ; a = 0
+    ; a = NO_ACTOR
     ld      [hli], a
     inc     l
     dec     b
     jr      nz, :-
     
     ; Reset variables
-    ; a = 0
+    xor     a, a
     ld      hl, hScore
     REPT SCORE_BYTE_COUNT
     ld      [hli], a

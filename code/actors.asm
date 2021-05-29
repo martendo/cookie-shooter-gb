@@ -51,13 +51,17 @@ HideUnusedObjects::
 ; @param  b  Maximum number of actors
 ; @return cf Set if no empty slot was found, otherwise reset
 FindEmptyActorSlot::
-    ld      a, [hli]    ; If Y is 0, slot is empty
-    and     a, a        ; Clears carry
+    ; Clear carry (no instructions in the loop affect the carry)
+    and     a, a
+.loop
+    ld      a, [hli]
+    ASSERT NO_ACTOR == -1
+    inc     a
     ret     z
     
     inc     l
     dec     b
-    jr      nz, FindEmptyActorSlot
+    jr      nz, .loop
     ; No more slots
     scf
     ret
@@ -74,7 +78,8 @@ PointDEToNthActiveActor::
     ld      h, c        ; Save for resetting
 .loop
     ld      a, [de]     ; Y position
-    and     a, a        ; No actor, skip
+    ASSERT NO_ACTOR == -1
+    inc     a           ; No actor, skip
     jr      z, .next
     dec     b
     ret     z

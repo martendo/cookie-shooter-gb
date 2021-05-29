@@ -95,7 +95,8 @@ UpdateLasers::
     ld      c, LASER_FAST_SPEED
 .loop
     ld      a, [hl]
-    and     a, a
+    ASSERT NO_ACTOR == -1
+    inc     a
     jr      nz, .update
     ; No laser, skip
     inc     l
@@ -105,14 +106,19 @@ UpdateLasers::
 .update
     ld      a, c
     add     a, [hl]     ; Y position
-    cp      a, (STATUS_BAR_HEIGHT - LASER_HEIGHT) + 1
-    jr      nc, :+      ; Y > Status bar
-    xor     a, a        ; Out of sight, destroy
+    ASSERT (STATUS_BAR_HEIGHT - LASER_HEIGHT) == 0
+    jr      z, :+       ; Y == (STATUS_BAR_HEIGHT - LASER_HEIGHT)
+    bit     7, a
+    jr      nz, :+      ; Y < (STATUS_BAR_HEIGHT - LASER_HEIGHT)
     ld      [hli], a
-    jr      .resume
+    jr      .checkCollide
 :
-    ld      [hli], a
+    ; Out of sight, destroy
+    ld      [hl], NO_ACTOR
+    inc     l
+    jr      .nextSkipX
     
+.checkCollide
     ; Check for collision between this laser and a cookie
     
     add     a, LASER_HITBOX_Y
@@ -127,9 +133,11 @@ UpdateLasers::
     ld      c, MAX_COOKIE_COUNT
 .checkCollideLoop
     ld      a, [hli]
-    and     a, a        ; No cookie
+    ASSERT NO_ACTOR == -1
+    inc     a           ; No cookie
     jr      z, .skipCookie
     
+    dec     a           ; Undo inc
     ld      b, a
     ld      a, [hld]
     ldh     [hScratch], a
@@ -172,10 +180,8 @@ UpdateLasers::
     call    BlastCookie
     call    UpdateStatusBar
     pop     hl          ; Laser Y position
-    xor     a, a
-    ld      [hli], a    ; Destroy laser (Y=0)
-    pop     bc
-    
+    ; Destroy laser
+    ld      [hl], NO_ACTOR
     jr      .resume
     
 .noCollision
@@ -187,9 +193,10 @@ UpdateLasers::
     jr      nz, .checkCollideLoop
     
     pop     hl          ; Laser Y position
+.resume
     inc     l
     pop     bc
-.resume
+.nextSkipX
     inc     l           ; Leave X as-is
 .next
     dec     b
@@ -213,9 +220,10 @@ DrawLasers::
     lb      bc, MAX_LASER_SPRITE_COUNT, MAX_LASER_COUNT
 .loop
     ld      a, [de]     ; Y position
-    and     a, a        ; No laser, skip
+    ASSERT NO_ACTOR == -1
+    inc     a           ; No laser, skip
     jr      z, .skip
-    add     a, 16
+    add     a, 16 - 1   ; Undo inc
     ld      [hli], a
     inc     e
     ld      a, [de]     ; X position
