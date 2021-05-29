@@ -12,7 +12,7 @@ LoadModeSelectScreen::
     ld      c, SCRN_Y_B
     call    LCDMemcopyMap
     
-    ; May be coming from exiting a game, hide all objects but the first 2
+    ; May be coming from exiting a game
     call    HideAllActors
     ; Selection cursor - a cookie!
     ; Object 1
@@ -39,7 +39,17 @@ LoadModeSelectScreen::
 :
     ld      [wShadowOAM + MODE_SELECT_CURSOR_Y1_OFFSET], a
     ld      [wShadowOAM + MODE_SELECT_CURSOR_Y2_OFFSET], a
-    ret
+    
+    ; Start menu music if not already playing
+    ld      a, [wMusicPlayState]
+    ASSERT MUSIC_STATE_STOPPED == 0
+    and     a, a
+    ret     nz
+    
+    ld      de, Inst_Menu
+    call    Music_PrepareInst
+    ld      de, Music_Menu
+    jp      Music_Play
 
 ModeSelect::
     ldh     a, [hNewKeys]
@@ -66,16 +76,22 @@ ModeSelect::
     and     a, PADF_A | PADF_START
     jp      z, Main
     
-    ; Start game!
+    ldh     a, [hActionSelection]
+    ASSERT ACTION_PLAY == 0
+    and     a, a
+    jr      nz, :+
+    ASSERT ACTION_COUNT - 1 == 1
+    
+    ; Start game - pause music
+    call    Music_Pause
+    ld      a, GAME_STATE_IN_GAME
+    DB      $01     ; ld bc, d16 to consume the next 2 bytes
+:
+    ld      a, GAME_STATE_TOP_SCORES
+    call    StartFade
     ld      b, SFX_MENU_START
     call    SFX_Play
     
-    ldh     a, [hActionSelection]
-    cp      a, ACTION_PLAY
-    ASSERT ACTION_COUNT - 1 == 1 && ACTION_TOP_SCORES == ACTION_PLAY + 1
-    ASSERT GAME_STATE_TOP_SCORES == GAME_STATE_IN_GAME + 1
-    adc     a, GAME_STATE_IN_GAME
-    call    StartFade
     jp      Main
 
 MoveSelectionUp:

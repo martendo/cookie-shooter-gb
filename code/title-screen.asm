@@ -16,7 +16,18 @@ LoadTitleScreen::
     ASSERT TitleScreenMap == TitleScreen8800Tiles.end
     ld      hl, _SCRN0
     ld      c, SCRN_Y_B
-    jp      LCDMemcopyMap
+    call    LCDMemcopyMap
+    
+    ; Start menu music if not already playing
+    ld      a, [wMusicPlayState]
+    ASSERT MUSIC_STATE_STOPPED == 0
+    and     a, a
+    ret     nz
+    
+    ld      de, Inst_Menu
+    call    Music_PrepareInst
+    ld      de, Music_Menu
+    jp      Music_Play
 
 TitleScreen::
     ldh     a, [hNewKeys]

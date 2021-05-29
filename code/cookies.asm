@@ -48,8 +48,10 @@ PointHLToCookieHitbox::
     add     a, a        ; * 4: Y, H, X, W
     add     a, LOW(CookieHitboxTable)
     ld      l, a
-    ASSERT HIGH(CookieHitboxTable.end - 1) == HIGH(CookieHitboxTable)
-    ld      h, HIGH(CookieHitboxTable)
+    ; ASSERT HIGH(CookieHitboxTable.end - 1) != HIGH(CookieHitboxTable)
+    adc     a, HIGH(CookieHitboxTable)
+    sub     a, l
+    ld      h, a
     ret
 
 CreateCookie::
