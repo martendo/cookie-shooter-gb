@@ -7,7 +7,7 @@ hRandomNumber::
 
 SECTION "Random Number", ROM0
 
-; @return a Random number
+; @return   a   Random number
 GenerateRandomNumber::
     push    hl
     ld      hl, hRandomNumber

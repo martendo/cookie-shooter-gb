@@ -22,7 +22,7 @@ MovePlayerRight::
     ld      a, PLAYER_SPEED
     ; Fallthrough
 
-; @param a Change in X position (speed)
+; @param    a   Change in X position (speed)
 MovePlayer:
     ld      hl, hPlayerX
     add     a, [hl]
@@ -34,7 +34,7 @@ MovePlayer:
     ld      [hl], a
     ret
 
-; @param c Tile number to draw the player with
+; @param    c   Tile number to draw the player with
 DrawPlayer::
     ld      hl, wShadowOAM
     ldh     a, [hPlayerY]

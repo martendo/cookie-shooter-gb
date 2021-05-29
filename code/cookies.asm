@@ -38,8 +38,8 @@ SECTION "Cookie Code", ROM0
 
 ; Get a pointer to the dimensions of a certain cookie's hitbox based on
 ; its size using its position in wCookiePosTable
-; @param hl Pointer to the cookie's entry any cookie actor data table
-; @return hl Pointer to the cookie's size's hitbox in CookieHitboxTable
+; @param    hl  Pointer to the cookie's entry any cookie actor data table
+; @return   hl  Pointer to the cookie's size's hitbox in CookieHitboxTable
 PointHLToCookieHitbox::
     ld      h, HIGH(wCookieSizeTable)
     ld      a, [hl]     ; a = cookie size
@@ -121,7 +121,7 @@ CreateCookie::
     ret
 
 ; Destroy a cookie and award points
-; @param hl Pointer to the cookie's entry in wCookiePosTable
+; @param    hl  Pointer to the cookie's entry in wCookiePosTable
 BlastCookie::
     ; Destroy cookie
     ld      [hl], NO_ACTOR

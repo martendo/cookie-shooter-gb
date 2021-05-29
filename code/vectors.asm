@@ -104,8 +104,8 @@ VBlankHandler:
     ; waiting for HBlank) would result in 16 - 7 (pop + ret) = only 9
     ; cycles!!!
 
-; @param a  Byte to write to rP1
-; @return a  Reading from rP1, ignoring non-input bits
+; @param    a   Byte to write to rP1
+; @return   a   Reading from rP1, ignoring non-input bits
 .readPadNibble
     ldh     [rP1], a
     ; Burn 16 cycles between write and read

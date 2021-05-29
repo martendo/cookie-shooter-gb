@@ -454,7 +454,7 @@ InGame::
     jp      Main
 
 ; Add a power-up to an empty power-up slot
-; @param c  Power-up type
+; @param    c   Power-up type
 GetPowerUp:
     ld      de, hPowerUps
     

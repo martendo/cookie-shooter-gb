@@ -21,7 +21,7 @@ FadeMidwayRoutineTable:
 SECTION "Fade Code", ROM0
 
 ; Start a fade to black and back
-; @param a  New game state to set midway through the fade
+; @param    a   New game state to set midway through the fade
 StartFade::
     ldh     [hFadeNewGameState], a
     ld      a, FADE_OUT | FADE_PHASE_FRAMES

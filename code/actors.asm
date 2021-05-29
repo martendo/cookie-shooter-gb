@@ -47,9 +47,9 @@ HideUnusedObjects::
     jr      HideObjects
 
 ; Find an empty slot to in an actor table
-; @param  hl Pointer to actor data
-; @param  b  Maximum number of actors
-; @return cf Set if no empty slot was found, otherwise reset
+; @param    hl  Pointer to actor data
+; @param    b   Maximum number of actors
+; @return   cf  Set if no empty slot was found, otherwise reset
 FindEmptyActorSlot::
     ; Clear carry (no instructions in the loop affect the carry)
     and     a, a
@@ -67,10 +67,10 @@ FindEmptyActorSlot::
     ret
 
 ; Use an index to active actors and return it in de
-; @param a  N - the index to active actors
-; @param c  Maximum number of actors
-; @param de Pointer to actor position table
-; @return de Pointer to Nth active actor
+; @param    a   N - the index to active actors
+; @param    c   Maximum number of actors
+; @param    de  Pointer to actor position table
+; @return   de  Pointer to Nth active actor
 PointDEToNthActiveActor::
     inc     a
     ld      b, a

@@ -65,10 +65,10 @@ DrawAllPowerUps::
     ; Fallthrough
 
 ; Draw a power-up slot
-; @param a  Power-up type
-; @param b  Power-up index (0-2)
-; @param hl Pointer to destination on map
-; @param de SCRN_VX_B
+; @param    a   Power-up type
+; @param    b   Power-up index (0-2)
+; @param    hl  Pointer to destination on map
+; @param    de  SCRN_VX_B
 DrawPowerUp::
     ; Get tiles with power-up type
     ASSERT POWER_UP_TILE_COUNT == 4
@@ -177,10 +177,10 @@ UpdateStatusBar::
 
 ; Draw a BCD number onto the background map with an arbitrary tile
 ; ID offset, even if the LCD is on
-; @param de Pointer to most significant byte of BCD number
-; @param hl Pointer to destination on map
-; @param c  Number of bytes to draw
-; @param b  Tile ID offset
+; @param    de  Pointer to most significant byte of BCD number
+; @param    hl  Pointer to destination on map
+; @param    c   Number of bytes to draw
+; @param    b   Tile ID offset
 LCDDrawBCDWithOffset::
     ldh     a, [rSTAT]
     and     a, STATF_BUSY
