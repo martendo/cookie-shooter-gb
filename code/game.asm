@@ -227,7 +227,8 @@ InGame::
     ld      d, MAX_COOKIE_COUNT
 .clearCookiesLoop
     ld      a, [hl]
-    and     a, a
+    ASSERT NO_ACTOR == -1
+    inc     a
     jr      z, :+
     push    hl
     call    BlastCookie
