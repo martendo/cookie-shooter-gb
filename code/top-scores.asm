@@ -99,10 +99,7 @@ TopScores::
     ; Reset game
     ld      b, SFX_OK
     call    SFX_Play
-    
-    ld      a, GAME_STATE_IN_GAME
-    call    StartFade
-    jp      Main
+    jr      .done
 
 .viewing
     bit     PADB_B, a
@@ -111,7 +108,7 @@ TopScores::
     ; Return to mode select screen
     ld      b, SFX_MENU_BACK
     call    SFX_Play
-    
+.done
     ld      a, GAME_STATE_MODE_SELECT
     call    StartFade
     jp      Main
