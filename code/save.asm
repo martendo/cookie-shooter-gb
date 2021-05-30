@@ -53,7 +53,9 @@ sSuperTopScoresCopy::
     DS TOP_SCORE_COUNT * SCORE_BYTE_COUNT
 .end::
 
-SECTION "Save Data Checksum", SRAM
+SECTION "Save Data Checksums", SRAM
 
 sChecksum::
+    DS 1
+sCopyChecksum::
     DS 1

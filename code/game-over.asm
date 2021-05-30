@@ -121,6 +121,7 @@ LoadGameOverScreen::
     ; Update checksum of top scores
     call    CalcTopScoresChecksum
     ld      [sChecksum], a
+    ld      [sCopyChecksum], a
     
     ; Save a copy of the top scores
     ASSERT LOW(sClassicTopScores) == LOW(sSuperTopScores)

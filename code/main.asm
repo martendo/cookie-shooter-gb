@@ -71,7 +71,7 @@ Initialize::
     
     ; Check copy's checksum
     call    CalcTopScoresChecksum.copy
-    ld      hl, sChecksum
+    ld      hl, sCopyChecksum
     cp      a, [hl]
     jr      nz, .initSRAM
     
@@ -84,7 +84,9 @@ Initialize::
     ld      hl, sSuperTopScores
     ld      b, sSuperTopScores.end - sSuperTopScores
     call    MemcopySmall
-    jr      .doneCheckingSaveData
+    ld      a, [sCopyChecksum]
+    ld      [sChecksum], a
+    jr      :+
     
 .initSRAM
     ; Clear top scores
@@ -96,6 +98,8 @@ Initialize::
     ld      b, sSuperTopScores.end - sSuperTopScores
     ; a = 0
     call    MemsetSmall
+    ; a = 0
+    ld      [sChecksum], a
     ld      hl, sClassicTopScoresCopy
     ld      b, sClassicTopScoresCopy.end - sClassicTopScoresCopy
     ; a = 0
@@ -105,12 +109,13 @@ Initialize::
     ; a = 0
     call    MemsetSmall
     ; a = 0
-    ld      [sChecksum], a
-    jr      :+
+    ld      [sCopyChecksum], a
+    jr      :++
     
 .doneCheckingSaveData
     ; Seed random number with top scores
     ld      a, [sChecksum]
+:
     swap    a
 :
     xor     a, "C"
