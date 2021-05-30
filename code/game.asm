@@ -386,6 +386,15 @@ InGame::
     ld      hl, PowerUpPointRateTable
     ld      c, POWER_UPS_START
 .getPowerUpLoop
+    and     a, a
+    jr      nz, :+
+    ; Multiple of 100 000 points, assume 100 000 and start in double
+    ; digits
+    ld      b, [hl]     ; b = power-up point rate
+    sub     a, b        ; a = score (thousands)
+    daa
+    DB      $16         ; ld d, d8 to consume the next byte
+:
     ld      b, [hl]     ; b = power-up point rate
 .modulo
     sub     a, b        ; a = score (thousands)
