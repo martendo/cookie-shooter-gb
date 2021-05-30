@@ -7,8 +7,8 @@ Based on Cookie Shooter, one of the first games I've made.
 
 ## Building
 Requirements:
-- [RGBDS](https://github.com/gbdev/rgbds)
-- [SuperFamiconv](https://github.com/Optiroc/SuperFamiconv)
+- [RGBDS](https://github.com/gbdev/rgbds) v0.5.0 or later
+- [SuperFamiconv](https://github.com/Optiroc/SuperFamiconv) `f4b4254` or later
 - GNU Make
 
 Run `make` in the root directory of the repository to produce `bin/cookie-shooter.gb`, along with its map and symbol files.
@@ -23,10 +23,12 @@ GBSoundSystem and the modifications made to it as part of this project are licen
 
 ## How to Play
 You're a spaceship flying through space with cookies coming at you!
-Press the A button to shoot a laser and get points for blasting a cookie.
-Try not to get hit by the cookies, though; you can only take 3 hits!
 
-The smaller the cookie, the more points you get for hitting it &mdash; from 25 to 125 points.
+Use the left and right buttons on the D-Pad to move.
+Press the A button to shoot a laser and get points for blasting a cookie.
+Try not to get hit by the cookies, though; once you run out of lives, it's game over!
+
+The smaller the cookie, the more points you get for hitting it &mdash; 25, 50, 75, 100, or 125 points.
 
 As your score climbs, the game gets harder: more and more cookies will be on screen at once!
 
@@ -34,7 +36,7 @@ As your score climbs, the game gets harder: more and more cookies will be on scr
 The action selection screen will appear after the title screen.
 You can choose whether you want to play a game ("Play") or just to view your top scores ("Top Scores").
 
-You will see the game mode selection screen after selecting one of the options, more on that below...
+You will see the game mode selection screen after selecting one of the actions.
 
 ## Game Modes
 There are 2 game modes: Classic and Super.
@@ -98,6 +100,19 @@ Power-ups are given to you once your score passes a multiple of their point rate
     </tr>
   </tbody>
 </table>
+
+## Game Over!
+After losing all of your lives, the game will end. You will be shown the top scores, and if you made it to the top, a little "NEW" sticker will be shown next to your new top score.
+
+![Screenshot of top scores screen](screenshots/top-scores.png)
+
+## Pause
+While in-game, pressing START will pause the game. The "paused" strip will appear on-screen when paused:
+
+![Screenshot of a paused game](screenshots/paused.png)
+
+From there, the game can be unpaused by pressing START again, or you can quit the game by pressing START with SELECT held down.
+Quitting the game will send you back to the mode select screen.
 
 ## In-Game Controls
 <table>
