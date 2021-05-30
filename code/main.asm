@@ -39,6 +39,12 @@ Initialize::
     ld      bc, SpriteTiles.end - SpriteTiles
     call    Memcopy
     
+    ; Draw "paused" strip
+    ld      de, PausedStripMap
+    ld      hl, vPausedStrip
+    ld      c, PAUSED_STRIP_TILE_HEIGHT
+    rst     LCDMemcopyMap
+    
     ; Clear OAM
     ld      hl, _OAMRAM
     call    HideAllObjectsAtAddress

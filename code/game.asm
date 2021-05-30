@@ -159,12 +159,6 @@ InGame::
     call    SFX_Stop
     ld      b, SFX_PAUSE
     call    SFX_Play
-    
-    ; Draw "paused" strip
-    ld      de, PausedStripMap
-    ld      hl, vPausedStrip
-    ld      c, PAUSED_STRIP_TILE_HEIGHT
-    rst     LCDMemcopyMap
     jp      Main
     
 :

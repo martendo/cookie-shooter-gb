@@ -145,6 +145,8 @@ STATHandler:
     ; End of "paused" strip
     ld      a, STATUS_BAR_HEIGHT - 1
     ldh     [rLYC], a
+    ; Switch back tilemap
+    res     LCDCB_BGMAP, [hl]
     jr      .enableObj
 .endOfStatusBar
     ldh     a, [hGameState]
@@ -162,6 +164,8 @@ STATHandler:
     ldh     [rLYC], a
     ; Disable objects - start of "paused" strip
     res     LCDCB_OBJ, [hl]
+    ; Switch tilemap
+    set     LCDCB_BGMAP, [hl]
 .finished
     pop     hl
 .doNothing
