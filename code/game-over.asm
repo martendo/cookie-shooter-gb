@@ -52,8 +52,8 @@ LoadGameOverScreen::
     and     a, a
     jr      z, :+
     ASSERT GAME_MODE_COUNT - 1 == 1
-    ASSERT sSuperTopScores == sClassicTopScores + (1 << 8)
-    inc     d
+    ASSERT LOW(sSuperTopScores) == LOW(sClassicTopScores)
+    ld      d, HIGH(sSuperTopScores)
 :
     ld      hl, hScore
     lb      bc, SCORE_BYTE_COUNT, 0
@@ -121,6 +121,19 @@ LoadGameOverScreen::
     ; Update checksum of top scores
     call    CalcTopScoresChecksum
     ld      [sChecksum], a
+    
+    ; Save a copy of the top scores
+    ASSERT LOW(sClassicTopScores) == LOW(sSuperTopScores)
+    ld      e, LOW(sClassicTopScores)
+    ASSERT LOW(sClassicTopScoresCopy) == LOW(sClassicTopScores)
+    ASSERT LOW(sSuperTopScoresCopy) == LOW(sSuperTopScores)
+    ld      l, e
+    ASSERT HIGH(sClassicTopScoresCopy) == HIGH(sClassicTopScores) + 1
+    ASSERT HIGH(sSuperTopScoresCopy) == HIGH(sSuperTopScores) + 1
+    ld      h, d
+    inc     h
+    ld      b, sClassicTopScores.end - sClassicTopScores
+    call    MemcopySmall
     
     ; Save the index of the new top score for the top scores screen
     ld      a, c

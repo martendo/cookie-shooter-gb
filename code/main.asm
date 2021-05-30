@@ -84,8 +84,23 @@ Initialize::
     cp      a, [hl]
     ; Checksum is correct
     jr      z, .doneCheckingSaveData
-    ; No need to rewrite header
-    jr      .initTopScores
+    
+    ; Check copy's checksum
+    call    CalcTopScoresChecksum.copy
+    ld      hl, sChecksum
+    cp      a, [hl]
+    jr      nz, .initTopScores
+    
+    ; Copy is valid, use it instead
+    ld      de, sClassicTopScoresCopy
+    ld      hl, sClassicTopScores
+    ld      b, sClassicTopScores.end - sClassicTopScores
+    call    MemcopySmall
+    ld      de, sSuperTopScoresCopy
+    ld      hl, sSuperTopScores
+    ld      b, sSuperTopScores.end - sSuperTopScores
+    call    MemcopySmall
+    jr      .doneCheckingSaveData
 .initSRAM
     ; Write save data header
     ASSERT HIGH(SaveDataHeader.end - 1) == HIGH(SaveDataHeader)
@@ -107,6 +122,14 @@ Initialize::
     call    MemsetSmall
     ld      hl, sSuperTopScores
     ld      b, sSuperTopScores.end - sSuperTopScores
+    ; a = 0
+    call    MemsetSmall
+    ld      hl, sClassicTopScoresCopy
+    ld      b, sClassicTopScoresCopy.end - sClassicTopScoresCopy
+    ; a = 0
+    call    MemsetSmall
+    ld      hl, sSuperTopScoresCopy
+    ld      b, sSuperTopScoresCopy.end - sSuperTopScoresCopy
     ; a = 0
     call    MemsetSmall
     ; a = 0

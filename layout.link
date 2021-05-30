@@ -7,3 +7,13 @@ WRAM0
     "Cookie Speed Fractional Accumulator Table"
     ALIGN 8
     "Cookie Size Type Table"
+
+SRAM 0
+    ALIGN 8
+    "Classic Mode Top Scores"
+    ALIGN 8
+    "Classic Mode Top Scores Copy"
+    ALIGN 8
+    "Super Mode Top Scores"
+    ALIGN 8
+    "Super Mode Top Scores Copy"

@@ -67,8 +67,8 @@ LoadTopScoresScreen::
     and     a, a
     jr      z, :+
     ASSERT GAME_MODE_COUNT - 1 == 1
-    ASSERT sSuperTopScores == sClassicTopScores + (1 << 8)
-    inc     d
+    ASSERT LOW(sSuperTopScores) == LOW(sClassicTopScores)
+    ld      d, HIGH(sSuperTopScores)
 :
     DEF OFFSET = 0
     ld      hl, vGameOverTopScores

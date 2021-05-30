@@ -20,6 +20,15 @@ CalcTopScoresChecksum::
     jr      nz, .loop
     ret
 
+.copy::
+    xor     a, a
+    
+    ld      hl, sClassicTopScoresCopy
+    call    .calcChecksum
+    
+    ld      hl, sSuperTopScoresCopy
+    jr      .calcChecksum
+
 SECTION "Save Data Header String", ROM0
 
 SaveDataHeader::
@@ -40,9 +49,21 @@ sClassicTopScores::
     DS TOP_SCORE_COUNT * SCORE_BYTE_COUNT
 .end::
 
+SECTION "Classic Mode Top Scores Copy", SRAM, ALIGN[8]
+
+sClassicTopScoresCopy::
+    DS TOP_SCORE_COUNT * SCORE_BYTE_COUNT
+.end::
+
 SECTION "Super Mode Top Scores", SRAM, ALIGN[8]
 
 sSuperTopScores::
+    DS TOP_SCORE_COUNT * SCORE_BYTE_COUNT
+.end::
+
+SECTION "Super Mode Top Scores Copy", SRAM, ALIGN[8]
+
+sSuperTopScoresCopy::
     DS TOP_SCORE_COUNT * SCORE_BYTE_COUNT
 .end::
 
