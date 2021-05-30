@@ -8,15 +8,15 @@ LoadTitleScreen::
     ld      de, TitleScreen9000Tiles
     ld      hl, _VRAM9000
     ld      bc, TitleScreen9000Tiles.end - TitleScreen9000Tiles
-    call    LCDMemcopy
+    rst     LCDMemcopy
     ASSERT TitleScreen8800Tiles == TitleScreen9000Tiles.end
     ld      hl, _VRAM8800
     ld      bc, TitleScreen8800Tiles.end - TitleScreen8800Tiles
-    call    LCDMemcopy
+    rst     LCDMemcopy
     ASSERT TitleScreenMap == TitleScreen8800Tiles.end
     ld      hl, _SCRN0
     ld      c, SCRN_Y_B
-    call    LCDMemcopyMap
+    rst     LCDMemcopyMap
     
     ; Start menu music if not already playing
     ld      a, [wMusicPlayState]

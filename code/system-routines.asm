@@ -7,14 +7,20 @@ SECTION "System Routines", ROM0
 ; @param    hl  Pointer to destination
 ; @param    bc  Number of bytes to copy
 Memcopy::
+    ; Increment B if C is non-zero
+    dec     bc
+    inc     c
+    inc     b
+.loop
     ld      a, [de]
     ld      [hli], a
     inc     de
-    dec     bc
-    ld      a, c
-    or      a, b
-    jr      nz, Memcopy
+    dec     c
+    jr      nz, .loop
+    dec     b
+    jr      nz, .loop
     ret
+
 ; @param    de  Pointer to beginning of block to copy
 ; @param    hl  Pointer to destination
 ; @param    b   Number of bytes to copy
@@ -26,23 +32,34 @@ MemcopySmall::
     jr      nz, MemcopySmall
     ret
 
+PUSHS
+
+SECTION "RST $00", ROM0[$0000]
+
 ; Copy a block of memory from one place to another, even if the LCD is
 ; on
 ; @param    de  Pointer to beginning of block to copy
 ; @param    hl  Pointer to destination
 ; @param    bc  Number of bytes to copy
 LCDMemcopy::
+    ; Increment B if C is non-zero
+    dec     bc
+    inc     c
+    inc     b
+.loop
     ldh     a, [rSTAT]
     and     a, STATF_BUSY
-    jr      nz, LCDMemcopy
+    jr      nz, .loop
     ld      a, [de]
     ld      [hli], a
     inc     de
-    dec     bc
-    ld      a, c
-    or      a, b
-    jr      nz, LCDMemcopy
+    dec     c
+    jr      nz, .loop
+    dec     b
+    jr      nz, .loop
     ret
+
+SECTION "RST $18", ROM0[$0018]
 
 ; Copy an arbitrary number of rows of map data to the visible background
 ; map, even if the LCD is on
@@ -50,15 +67,20 @@ LCDMemcopy::
 ; @param    hl  Pointer to destination
 ; @param    c   Number of rows to copy
 LCDMemcopyMap::
-    ld      b, SCRN_X_B
+    DEF UNROLL = 2
+    ASSERT UNROLL * (2 + 2 + 1) <= 16
+    ASSERT SCRN_X_B % UNROLL == 0
+    ld      b, SCRN_X_B / UNROLL
 .rowLoop
     ldh     a, [rSTAT]
     and     a, STATF_BUSY
     jr      nz, .rowLoop
     
-    ld      a, [de]
-    ld      [hli], a
-    inc     de
+    REPT UNROLL
+    ld      a, [de]     ; 2 cycles
+    ld      [hli], a    ; 2 cycles
+    inc     de          ; 1 cycle
+    ENDR
     dec     b
     jr      nz, .rowLoop
     
@@ -70,6 +92,8 @@ LCDMemcopyMap::
     jr      nz, LCDMemcopyMap
     ret
 
+POPS
+
 ; @param    hl  Pointer to destination
 ; @param    a   Byte value to use
 ; @param    b   Number of bytes to set
@@ -79,33 +103,32 @@ MemsetSmall::
     jr      nz, MemsetSmall
     ret
 
-; @param    hl  Pointer to destination
-; @param    b   Byte value to use
-; @param    c   Number of bytes to set
-LCDMemsetSmall::
-    ldh     a, [rSTAT]
-    and     a, STATF_BUSY
-    jr      nz, LCDMemsetSmall
-    ld      a, b
-    ld      [hli], a
-    dec     c
-    jr      nz, LCDMemsetSmall
-    ret
-
 ; Fill an arbitrary number of rows of the background map, even if the
 ; LCD is on
 ; @param    hl  Pointer to destination
 ; @param    b   Byte value to use
 ; @param    d   Number of rows to fill
 LCDMemsetMap::
-    ld      e, SCRN_VX_B - SCRN_X_B
-.loop
-    ld      c, SCRN_X_B
-    call    LCDMemsetSmall
+    ld      e, LOW(SCRN_VX_B - SCRN_X_B)
+.rowLoop
+    DEF UNROLL = 16 / (1 + 2)
+    ASSERT SCRN_X_B % UNROLL == 0
+    ld      c, SCRN_X_B / UNROLL
+.tileLoop
+    ldh     a, [rSTAT]
+    and     a, STATF_BUSY
+    jr      nz, .tileLoop
+    REPT UNROLL
+    ld      a, b        ; 1 cycle
+    ld      [hli], a    ; 2 cycles
+    ENDR
+    dec     c
+    jr      nz, .tileLoop
+    
     ld      a, d
-    ld      d, 0
+    ld      d, HIGH(SCRN_VX_B - SCRN_X_B)
     add     hl, de
     ld      d, a
     dec     d
-    jr      nz, .loop
+    jr      nz, .rowLoop
     ret

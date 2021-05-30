@@ -8,11 +8,11 @@ LoadGameOverScreen::
     ld      de, GameOverTiles
     ld      hl, _VRAM8800
     ld      bc, GameOverTiles.end - GameOverTiles
-    call    LCDMemcopy
+    rst     LCDMemcopy
     ld      de, GameOverMap
     ld      hl, _SCRN0 + (STATUS_BAR_TILE_HEIGHT * SCRN_VX_B)
     ld      c, SCRN_Y_B - STATUS_BAR_TILE_HEIGHT
-    call    LCDMemcopyMap
+    rst     LCDMemcopyMap
     
     ; Remove current power-up
     ldh     a, [hGameMode]

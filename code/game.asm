@@ -37,7 +37,7 @@ SetUpGame::
     ld      de, InGameTiles
     ld      hl, _VRAM9000
     ld      bc, InGameTiles.end - InGameTiles
-    call    LCDMemcopy
+    rst     LCDMemcopy
     ; Background map
     ld      hl, _SCRN0 + (STATUS_BAR_TILE_HEIGHT * SCRN_VX_B)
     ld      b, IN_GAME_BACKGROUND_TILE
@@ -47,7 +47,7 @@ SetUpGame::
     ld      de, StatusBarMap
     ld      hl, _SCRN0
     ld      c, STATUS_BAR_TILE_HEIGHT
-    call    LCDMemcopyMap
+    rst     LCDMemcopyMap
     
     call    HideAllActors
     ; Set up player
@@ -164,7 +164,7 @@ InGame::
     ld      de, PausedStripMap
     ld      hl, vPausedStrip
     ld      c, PAUSED_STRIP_TILE_HEIGHT
-    call    LCDMemcopyMap
+    rst     LCDMemcopyMap
     jp      Main
     
 :

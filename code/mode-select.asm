@@ -6,11 +6,11 @@ LoadModeSelectScreen::
     ld      de, ModeSelectTiles
     ld      hl, _VRAM9000
     ld      bc, ModeSelectTiles.end - ModeSelectTiles
-    call    LCDMemcopy
+    rst     LCDMemcopy
     ld      de, ModeSelectMap
     ld      hl, _SCRN0
     ld      c, SCRN_Y_B
-    call    LCDMemcopyMap
+    rst     LCDMemcopyMap
     
     ; May be coming from exiting a game
     call    HideAllActors

@@ -11,11 +11,11 @@ LoadActionSelectScreen::
     ld      de, ActionSelectTiles
     ld      hl, _VRAM9000
     ld      bc, ActionSelectTiles.end - ActionSelectTiles
-    call    LCDMemcopy
+    rst     LCDMemcopy
     ld      de, ActionSelectMap
     ld      hl, _SCRN0
     ld      c, SCRN_Y_B
-    call    LCDMemcopyMap
+    rst     LCDMemcopyMap
     
     ; Selection cursor - a cookie!
     ; Object 1

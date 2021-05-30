@@ -6,11 +6,11 @@ LoadTopScoresScreen::
     ld      de, TopScoresTiles
     ld      hl, _VRAM9000
     ld      bc, TopScoresTiles.end - TopScoresTiles
-    call    LCDMemcopy
+    rst     LCDMemcopy
     ld      de, TopScoresMap
     ld      hl, _SCRN0
     ld      c, SCRN_Y_B
-    call    LCDMemcopyMap
+    rst     LCDMemcopyMap
     
     ldh     a, [hActionSelection]
     ASSERT ACTION_COUNT - 1 == 1 && ACTION_TOP_SCORES != 0
