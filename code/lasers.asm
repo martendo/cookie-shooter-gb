@@ -46,12 +46,10 @@ ShootLaser::
     ld      [hld], a            ; X position
     ld      [hl], LASER_START_Y - LASER_VISUAL_HEIGHT ; Y position
 .noSecondLaser
-    lb      bc, SFX_LASER, SFX_LASER_FAST_NOTE
-    jr      :+
-    
+    ld      b, SFX_FAST_LASER
+    DB      $11     ; ld de, d16 to consume the next 2 bytes
 .playSoundEffect
-    lb      bc, SFX_LASER, SFX_LASER_NOTE
-:
+    ld      b, SFX_LASER
     call    SFX_Play
     
     ; Generate a random number
