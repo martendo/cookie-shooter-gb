@@ -59,24 +59,8 @@ Initialize::
     ld      b, OAMDMA.end - OAMDMA
     call    MemcopySmall
     
-    ; Check save data header
     ld      a, CART_SRAM_ENABLE
     ld      [rRAMG], a
-    ld      de, SaveDataHeader
-    ld      hl, sSaveDataHeader
-    ld      b, STRLEN(SAVE_DATA_HEADER)
-.checkSaveDataHeaderLoop
-    ld      a, [de]
-    cp      a, [hl]
-    jr      nz, .initSRAM
-    ASSERT HIGH(SaveDataHeader.end - 1) == HIGH(SaveDataHeader)
-    inc     e
-    ASSERT HIGH(sSaveDataHeader.end - 1) == HIGH(sSaveDataHeader)
-    inc     l
-    dec     b
-    jr      nz, .checkSaveDataHeaderLoop
-    
-    ; Save header is correct
     
     ; Check top scores checksum
     call    CalcTopScoresChecksum
@@ -89,7 +73,7 @@ Initialize::
     call    CalcTopScoresChecksum.copy
     ld      hl, sChecksum
     cp      a, [hl]
-    jr      nz, .initTopScores
+    jr      nz, .initSRAM
     
     ; Copy is valid, use it instead
     ld      de, sClassicTopScoresCopy
@@ -101,20 +85,8 @@ Initialize::
     ld      b, sSuperTopScores.end - sSuperTopScores
     call    MemcopySmall
     jr      .doneCheckingSaveData
+    
 .initSRAM
-    ; Write save data header
-    ASSERT HIGH(SaveDataHeader.end - 1) == HIGH(SaveDataHeader)
-    ld      e, LOW(SaveDataHeader)
-    ASSERT HIGH(sSaveDataHeader.end - 1) == HIGH(sSaveDataHeader)
-    ld      l, LOW(sSaveDataHeader)
-    REPT STRLEN(SAVE_DATA_HEADER) - 1
-    ld      a, [de]
-    ld      [hli], a
-    inc     e
-    ENDR
-    ld      a, [de]
-    ld      [hl], a
-.initTopScores
     ; Clear top scores
     ld      hl, sClassicTopScores
     ld      b, sClassicTopScores.end - sClassicTopScores

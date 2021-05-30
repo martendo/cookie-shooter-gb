@@ -29,20 +29,6 @@ CalcTopScoresChecksum::
     ld      hl, sSuperTopScoresCopy
     jr      .calcChecksum
 
-SECTION "Save Data Header String", ROM0
-
-SaveDataHeader::
-    DB SAVE_DATA_HEADER
-.end::
-
-; Save Data
-
-SECTION "Save Data Header", SRAM
-
-sSaveDataHeader::
-    DS STRLEN(SAVE_DATA_HEADER)
-.end::
-
 SECTION "Classic Mode Top Scores", SRAM, ALIGN[8]
 
 sClassicTopScores::
