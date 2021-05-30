@@ -58,9 +58,6 @@ SetUpGame::
     ld      c, PLAYER_TILE
     call    DrawPlayer
     
-    xor     a, a
-    ldh     [hNextAvailableOAMSlot], a
-    
     ; Clear actor tables
     ld      hl, wLaserPosTable
     ld      b, MAX_LASER_COUNT
