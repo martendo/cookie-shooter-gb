@@ -4,7 +4,7 @@ PADVALUE := 0xFF
 
 LDFLAGS += -d -t -l layout.link
 
-VERSION := 0
+VERSION := 1
 MFRCODE := MART
 TITLE := COOKIESHOOT
 LICENSEE := HB
