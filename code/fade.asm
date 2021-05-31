@@ -40,17 +40,24 @@ Fade::
 
 UpdateFade:
     dec     a       ; Undo inc
-    ASSERT FADE_MIDWAY_BIT == 7
-    add     a, a    ; Move bit 7 into carry
-    jr      c, .midway
+    bit     FADE_MIDWAY_BIT, a
     ; Midway through fade, set up next screen
+    jr      nz, .midway
     
-    ld      a, [hl]
     ; Decrement countdown
     and     a, FADE_COUNTDOWN_MASK
     dec     a
-    jr      nz, .noChange
+    jr      z, .nextPhase
     
+    ; Update fade state, but preserve direction bit
+    ld      b, a
+    ld      a, [hl]
+    and     a, FADE_DIRECTION_MASK
+    or      a, b
+    ld      [hl], a
+    jr      Fade.wait
+
+.nextPhase
     ; Move on to the next fade phase
     
     ; Fade in the correct direction
@@ -111,12 +118,6 @@ UpdateFade:
     jr      .finished
 .fadeOutFinished
     ld      a, FADE_OUT | FADE_PHASE_FRAMES
-    jr      .finished
-.noChange
-    ld      b, a
-    ld      a, [hl]
-    and     a, FADE_DIRECTION_MASK
-    or      a, b
 .finished
     ld      l, LOW(hFadeState)
     ld      [hl], a
@@ -128,7 +129,7 @@ UpdateFade:
     ld      [hl], FADE_IN | FADE_PHASE_FRAMES
     ; Set new game state
     ld      l, LOW(hFadeNewGameState)
-    ld      a, [hli]
+    ld      a, [hl]
     ldh     [hGameState], a
     
     ; Jump to midway subroutine

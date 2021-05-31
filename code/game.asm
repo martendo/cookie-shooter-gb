@@ -128,13 +128,11 @@ SetUpGame::
     ldh     a, [hGameMode]
     ASSERT GAME_MODE_CLASSIC == 0
     and     a, a
-    jr      z, .noPowerUps
     ASSERT GAME_MODE_COUNT - 1 == 1
     
     ; If in Super mode, draw power-ups
-    call    DrawAllPowerUps
+    call    nz, DrawAllPowerUps
     
-.noPowerUps
     ; Reset cookie count
     xor     a, a
     ldh     [hCookieCount], a
@@ -439,16 +437,14 @@ InGame::
     ld      hl, PowerUpPointRateTable
     ld      c, POWER_UPS_START
 .getPowerUpLoop
+    ld      b, [hl]     ; b = power-up point rate
+    
     and     a, a
-    jr      nz, :+
+    jr      nz, .modulo
     ; Multiple of 100 000 points, assume 100 000 and start in double
     ; digits
-    ld      b, [hl]     ; b = power-up point rate
     sub     a, b        ; a = score (thousands)
     daa
-    DB      $16         ; ld d, d8 to consume the next byte
-:
-    ld      b, [hl]     ; b = power-up point rate
 .modulo
     sub     a, b        ; a = score (thousands)
     daa

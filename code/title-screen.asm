@@ -10,12 +10,12 @@ LoadTitleScreen::
     ld      hl, _VRAM9000
     ld      bc, TitleScreen9000Tiles.end - TitleScreen9000Tiles
     rst     LCDMemcopy
-    ASSERT TitleScreen8800Tiles == TitleScreen9000Tiles.end
+    ld      de, TitleScreen8800Tiles
     ld      hl, _VRAM8800
     ld      bc, TitleScreen8800Tiles.end - TitleScreen8800Tiles
     rst     LCDMemcopy
     ; Load background map
-    ASSERT TitleScreenMap == TitleScreen8800Tiles.end
+    ld      de, TitleScreenMap
     ld      hl, _SCRN0
     ld      c, SCRN_Y_B
     rst     LCDMemcopyMap

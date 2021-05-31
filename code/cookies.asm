@@ -58,10 +58,8 @@ PointHLToCookieHitbox::
     add     a, a        ; * 4: Y, H, X, W
     add     a, LOW(CookieHitboxTable)
     ld      l, a
-    ; ASSERT HIGH(CookieHitboxTable.end - 1) != HIGH(CookieHitboxTable)
-    adc     a, HIGH(CookieHitboxTable)
-    sub     a, l
-    ld      h, a
+    ASSERT HIGH(CookieHitboxTable.end - 1) == HIGH(CookieHitboxTable)
+    ld      h, HIGH(CookieHitboxTable)
     ret
 
 CreateCookie::
@@ -243,13 +241,8 @@ UpdateCookies::
     adc     a, [hl]     ; Add integer speed + fractional carry to position
     
     cp      a, SCRN_Y
-    jr      c, .onscreenY
     ; Past bottom of screen, destroy
-    ld      [hl], NO_ACTOR
-    inc     l
-    inc     l
-    jp      .destroyed
-.onscreenY
+    jp      nc, .destroy
     ld      [hli], a
     inc     e
     
@@ -291,10 +284,7 @@ UpdateCookies::
     jr      nc, .onscreenX
     ; Past left/right sides of screen, destroy
     dec     l
-    ld      [hl], NO_ACTOR
-    inc     l
-    inc     l
-    jr      .destroyed
+    jr      .destroy
 .onscreenX
     ld      [hld], a
     ld      e, a
@@ -379,7 +369,10 @@ UpdateCookies::
     jp      nz, .loop
     ret
 
-.destroyed
+.destroy
+    ld      [hl], NO_ACTOR
+    inc     l
+    inc     l
     ; Cookie has been removed, update cookie count
     ldh     a, [hCookieCount]
     dec     a

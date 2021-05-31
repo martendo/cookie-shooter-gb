@@ -174,7 +174,6 @@ STATHandler:
     and     a, STAT_MODE_MASK
     jr      nz, :-
     
-    di          ; Don't let another interrupt mess up the timing
 :
     ; Wait for HBlank -> ensured the beginning of HBlank by above
     ldh     a, [rSTAT]
