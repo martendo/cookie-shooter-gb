@@ -31,24 +31,24 @@ StartFade::
 UpdateFade::
     ld      hl, hFadeState
     ld      a, [hl]
-    ASSERT NOT_FADING == -1
-    inc     a       ; a = -1
-    ret     z       ; Not fading, nothing to do
+    ASSERT FADE_MIDWAY_BIT == 7
+    add     a, a        ; Move bit 7 into carry
+    jr      c, .midway
     
-    dec     a       ; Undo inc
-    and     a, FADE_COUNTDOWN
+    ld      a, [hl]
+    and     a, FADE_COUNTDOWN_MASK
     dec     a
     jr      nz, .noChange
     
     ; Next phase
     bit     FADE_DIRECTION_BIT, [hl]
-    ld      l, LOW(rOBP0)
+    ld      l, LOW(hOBP0)
     jr      nz, .fadeIn
     
     ; Fade out: shift all colours; darken each one
     sra     [hl]
     sra     [hl]
-    ASSERT rBGP == rOBP0 - 1
+    ASSERT hBGP == hOBP0 - 1
     dec     l
     sra     [hl]
     sra     [hl]
@@ -56,30 +56,14 @@ UpdateFade::
     inc     a       ; a = $FF = all black
     jr      nz, .fadeOutFinished
     
-    ; Midway through fade
-    ; Set new game state
-    ld      l, LOW(hFadeNewGameState)
-    ld      a, [hli]
-    ldh     [hGameState], a
-    ; Switch to fade in
-    ASSERT hFadeState == hFadeNewGameState + 1
-    ld      [hl], FADE_IN | FADE_PHASE_FRAMES
-    
-    ; Jump to midway subroutine
-    ; a = game state
-    add     a, a
-    add     a, LOW(FadeMidwayRoutineTable)
-    ld      l, a
-    ASSERT HIGH(FadeMidwayRoutineTable.end - 1) == HIGH(FadeMidwayRoutineTable)
-    ld      h, HIGH(FadeMidwayRoutineTable)
-    ld      a, [hli]
-    ld      h, [hl]
-    ld      l, a
-    jp      hl
+    ; Set midway bit (delay a frame for shadow registers to be copied)
+    ld      l, LOW(hFadeState)
+    set     FADE_MIDWAY_BIT, [hl]
+    ret
     
 .fadeIn
     ; Fade in: Shift colours, add lighter colour to end
-    ld      a, [hl] ; rOBP0
+    ld      a, [hl] ; hOBP0
     dec     a
     and     a, %11  ; a = new lighter colour to shift in
     ld      b, a
@@ -90,7 +74,7 @@ UpdateFade::
     or      a, b
     ld      [hl], a
     
-    ASSERT rBGP == rOBP0 - 1
+    ASSERT hBGP == hOBP0 - 1
     dec     l
     ld      a, [hl]
     dec     a
@@ -119,9 +103,30 @@ UpdateFade::
 .noChange
     ld      b, a
     ld      a, [hl]
-    and     a, FADE_DIRECTION
+    and     a, FADE_DIRECTION_MASK
     or      a, b
 .finished
     ld      l, LOW(hFadeState)
     ld      [hl], a
     ret
+
+.midway
+    ; Midway through fade
+    ; Switch to fade in
+    ld      [hl], FADE_IN | FADE_PHASE_FRAMES
+    ; Set new game state
+    ld      l, LOW(hFadeNewGameState)
+    ld      a, [hli]
+    ldh     [hGameState], a
+    
+    ; Jump to midway subroutine
+    ; a = game state
+    add     a, a
+    add     a, LOW(FadeMidwayRoutineTable)
+    ld      l, a
+    ASSERT HIGH(FadeMidwayRoutineTable.end - 1) == HIGH(FadeMidwayRoutineTable)
+    ld      h, HIGH(FadeMidwayRoutineTable)
+    ld      a, [hli]
+    ld      h, [hl]
+    ld      l, a
+    jp      hl

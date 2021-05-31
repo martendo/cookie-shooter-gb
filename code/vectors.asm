@@ -2,12 +2,18 @@ INCLUDE "defines.inc"
 
 SECTION "VBlank Interrupt", ROM0[$0040]
 
-    jp      VBlankHandler
+    push    af              ; 1 byte
+    ldh     a, [hBGP]       ; 2 bytes
+    ldh     [rBGP], a       ; 2 bytes
+    jp      VBlankHandler   ; 3 bytes
+    ; Total 8 bytes
 
 SECTION "VBlank Handler", ROM0
 
 VBlankHandler:
-    push    af
+    ldh     a, [hOBP0]
+    ldh     [rOBP0], a
+    
     push    bc
     push    de
     push    hl
@@ -32,12 +38,7 @@ VBlankHandler:
     ld      l, LOW(hVBlankFlag)
     ld      [hl], h     ; Non-zero
     
-    call    SoundSystem_Process
-    
-    ; Graphics loading may be done by a subroutine called by UpdateFade,
-    ; so don't let that delay the above
-    ei
-    call    UpdateFade
+    ei      ; Timing-insensitive stuff follows
     
     ; Read joypad
     ld      a, P1F_GET_DPAD
@@ -63,46 +64,8 @@ VBlankHandler:
     pop     hl
     pop     de
     pop     bc
-    
-    ; SoundSystem_Process may take too long and this may be outside of
-    ; VBlank
-    ldh     a, [rLY]
-    cp      a, SCRN_Y
-    jr      nc, .finished
-    
-    ; Return at the start of HBlank for any code that waits for VRAM to
-    ; become accessible, since this interrupt handler might be called
-    ; while waiting
-:
-    ; Wait for mode 3, which comes before HBlank
-    ldh     a, [rSTAT]
-    ; (%11 + 1) & %11 == 0
-    inc     a
-    and     a, STAT_MODE_MASK
-    jr      nz, :-
-    
-:
-    ; Wait for HBlank -> ensured the beginning of HBlank by above
-    ldh     a, [rSTAT]
-    and     a, STAT_MODE_MASK
-    jr      nz, :-
-    
-    ; This interrupt handler should return with at least 16 cycles left
-    ; of accessible VRAM, which is what any VRAM accessibility-waiting
-    ; code would assume it has
-    
-    ; Remaining time = Minimum HBlank time - Loop above + Mode 2 time
-    ;                = 21 cycles - 4 cycles + 20 cycles
-    ;                = 37 cycles
-.finished
-    pop     af  ; 3 cycles
-    ret         ; 4 cycles  Interrupts enabled above
-    
-    ; 30 remaining VRAM-accessible cycles
-    
-    ; Not waiting for specifically the beginning of HBlank (i.e. just
-    ; waiting for HBlank) would result in 16 - 7 (pop + ret) = only 9
-    ; cycles!!!
+    pop     af
+    ret         ; Interrupts enabled above
 
 ; @param    a   Byte to write to rP1
 ; @return   a   Reading from rP1, ignoring non-input bits
@@ -121,54 +84,75 @@ SECTION "STAT Interrupt", ROM0[$0048]
 
 STATHandler:
     push    af
+    push    hl
+    
+    ; Update sound on LY 0
+    ldh     a, [rLYC]
+    and     a, a
+    jr      nz, .notSound
+    
+    push    bc
+    push    de
+    call    SoundSystem_Process
+    pop     de
+    pop     bc
     
     ldh     a, [hGameState]
     cp      a, GAME_STATE_IN_GAME
     jr      z, :+
     cp      a, GAME_STATE_PAUSED
-    ; Nothing to do
-    jr      nz, .doNothing
+    ; No status bar or "paused" strip or anything, return
+    jr      nz, .finished
 :
-    push    hl
-.waitHBL
+    ; Next: Bottom of status bar
+    ld      a, STATUS_BAR_HEIGHT - 1
+    ldh     [rLYC], a
+    jr      .finished
+    
+.notSound
     ldh     a, [rSTAT]
     and     a, STAT_MODE_MASK
-    jr      nz, .waitHBL    ; Mode 0 - HBlank
+    jr      nz, .notSound   ; Mode 0 - HBlank
     
     ld      hl, rLCDC
-    ldh     a, [rLY]
+    ldh     a, [rLYC]
     cp      a, STATUS_BAR_HEIGHT - 1
     jr      z, .endOfStatusBar
     cp      a, PAUSED_STRIP_Y - 1
     jr      z, .startOfPausedStrip
     
-    ; End of "paused" strip
-    ld      a, STATUS_BAR_HEIGHT - 1
-    ldh     [rLYC], a
-    ; Switch back tilemap
+    ; End of "paused" strip: Switch back tilemap
     res     LCDCB_BGMAP, [hl]
-    jr      .enableObj
+    ; Next: Sound update
+    jr      .nextUpdateSound
+
 .endOfStatusBar
     ldh     a, [hGameState]
     cp      a, GAME_STATE_PAUSED
-    jr      nz, .enableObj
+    jr      nz, .nextUpdateSound
     ; Game is paused, set rLYC for "paused" strip
     ld      a, PAUSED_STRIP_Y - 1
+    DB      $20     ; jr nz, e8 to consume the next byte
+.nextUpdateSound
+    ; Set rLYC for sound update
+    xor     a, a
     ldh     [rLYC], a
-.enableObj
-    ; Enable objects - end of status bar or "paused" strip
+    
+    ; Enable objects (end of status bar or "paused" strip)
     set     LCDCB_OBJ, [hl]
     jr      .finished
+
 .startOfPausedStrip
     ld      a, PAUSED_STRIP_Y + PAUSED_STRIP_HEIGHT - 1
     ldh     [rLYC], a
+    
     ; Disable objects - start of "paused" strip
     res     LCDCB_OBJ, [hl]
     ; Switch tilemap
     set     LCDCB_BGMAP, [hl]
+
 .finished
     pop     hl
-.doNothing
     
     ; Return at the start of HBlank for any code that waits for VRAM to
     ; become accessible, since this interrupt handler might be called
@@ -181,13 +165,14 @@ STATHandler:
     and     a, STAT_MODE_MASK
     jr      nz, :-
     
+    di          ; Don't let another interrupt mess up the timing
 :
     ; Wait for HBlank -> ensured the beginning of HBlank by above
     ldh     a, [rSTAT]
-    and     a, STAT_MODE_MASK
+    and     a, STAT_MODE_MASK   ; HBlank = Mode 0
     jr      nz, :-
     
-    ; This interrupt handler should return with at least 16 cycles left
+    ; This interrupt handler should return with at least 20 cycles left
     ; of accessible VRAM, which is what any VRAM accessibility-waiting
     ; code would assume it has
     
@@ -201,5 +186,5 @@ STATHandler:
     ; 30 remaining VRAM-accessible cycles
     
     ; Not waiting for specifically the beginning of HBlank (i.e. just
-    ; waiting for HBlank) would result in 16 - 7 (pop + ret) = only 9
+    ; waiting for HBlank) would result in 20 - 7 (pop + ret) = only 13
     ; cycles!!!

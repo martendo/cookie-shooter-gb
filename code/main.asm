@@ -138,13 +138,15 @@ Initialize::
     ; Set palettes
     ld      a, %11100100
     ldh     [rBGP], a
+    ldh     [hBGP], a
     ld      a, %10010011
     ldh     [rOBP0], a
+    ldh     [hOBP0], a
     
     call    LoadTitleScreen
     
     ; Set up interrupts
-    ld      a, STATUS_BAR_HEIGHT - 1
+    xor     a, a
     ldh     [rLYC], a
     ld      a, STATF_LYC
     ldh     [rSTAT], a
@@ -171,8 +173,8 @@ Main::
     ldh     a, [hFadeState]
     ASSERT NOT_FADING == -1
     inc     a       ; a = -1
-    ; Currently fading, don't do anything
-    jr      nz, Main
+    ; Currently fading
+    jr      nz, .updateFade
     
     ldh     a, [hGameState]
     ASSERT GAME_STATE_TITLE_SCREEN == 0
@@ -198,6 +200,10 @@ Main::
     
     ASSERT GAME_STATE_COUNT == GAME_STATE_PAUSED + 1
 
+.updateFade
+    call    UpdateFade
+    jr      Main
+
 SECTION "Stack", WRAM0[$E000 - STACK_SIZE]
 
     DS STACK_SIZE
@@ -216,6 +222,9 @@ hNewKeys::     DS 1
 hGameState::   DS 1
 
 hVBlankFlag::  DS 1
+
+hBGP::  DS 1
+hOBP0:: DS 1
 
 ASSERT SCORE_BYTE_COUNT == 3
 hScore::
