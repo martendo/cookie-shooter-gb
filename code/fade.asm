@@ -6,10 +6,12 @@ SECTION "Fade Variables", HRAM
 hFadeNewGameState:
     DS 1
 ; Current fade state
-; Bit 0-2: Phase countdown
-; Bit 6:   Fade direction (0: Out, 1: In)
-; Bit 7:   Midway flag, used to tell when to set up the next screen
-hFadeState::
+; Bit 7: Fade direction (0: Out, 1: In)
+hFadeState:
+    DS 1
+; Countdown of frames until the next fade "phase", where the palette is
+; updated
+hFadeCountdown:
     DS 1
 
 SECTION "Fade Code", ROM0
@@ -19,48 +21,32 @@ SECTION "Fade Code", ROM0
 ; @param    a   New game state to set midway through the fade
 Fade::
     ldh     [hFadeNewGameState], a
-    ld      a, FADE_OUT | FADE_PHASE_FRAMES
+    ld      a, FADE_PHASE_FRAMES
+    ldh     [hFadeCountdown], a
+    ld      a, FADE_OUT
     ldh     [hFadeState], a
-    
-.wait
+
+.loop
     ; Wait for VBlank
     halt
     ldh     a, [hVBlankFlag]
     and     a, a
-    jr      z, .wait
+    jr      z, .loop
     xor     a, a
     ldh     [hVBlankFlag], a
     
-    ld      hl, hFadeState
-    ld      a, [hl]
-    ASSERT NOT_FADING == -1
-    inc     a       ; a = -1
-    ; No longer fading, give control to the current game state's loop
-    jr      z, EndFade
-
-UpdateFade:
-    dec     a       ; Undo inc
-    bit     FADE_MIDWAY_BIT, a
-    ; Midway through fade, set up next screen
-    jr      nz, .midway
+    ; Update fade
     
     ; Decrement countdown
-    and     a, FADE_COUNTDOWN_MASK
-    dec     a
-    jr      z, .nextPhase
+    ld      hl, hFadeCountdown
+    dec     [hl]
+    jr      nz, .loop
     
-    ; Update fade state, but preserve direction bit
-    ld      b, a
-    ld      a, [hl]
-    and     a, FADE_DIRECTION_MASK
-    or      a, b
-    ld      [hl], a
-    jr      Fade.wait
-
-.nextPhase
     ; Move on to the next fade phase
     
     ; Fade in the correct direction
+    ASSERT hFadeState == hFadeCountdown - 1
+    dec     l
     bit     FADE_DIRECTION_BIT, [hl]
     ld      l, LOW(hOBP0)
     jr      nz, .fadeIn
@@ -74,12 +60,39 @@ UpdateFade:
     sra     [hl]
     ld      a, [hl]
     inc     a       ; a = $FF = all black
-    jr      nz, .fadeOutFinished
+    jr      nz, .nextPhase
     
-    ; Set midway bit (delay a frame for shadow registers to be copied)
-    ld      l, LOW(hFadeState)
-    set     FADE_MIDWAY_BIT, [hl]
-    jr      Fade.wait
+    ; Midway through fade
+    ; Set new game state
+    ld      l, LOW(hFadeNewGameState)
+    ld      a, [hli]
+    ldh     [hGameState], a
+    ; Switch to fade in
+    ASSERT hFadeState == hFadeNewGameState + 1
+    ld      [hl], FADE_IN
+    ASSERT hFadeCountdown == hFadeState + 1
+    inc     l
+    ld      [hl], FADE_PHASE_FRAMES
+    
+    ; Jump to midway subroutine
+    ; a = game state
+    add     a, a
+    add     a, LOW(SetupRoutineTable)
+    ld      l, a
+    ASSERT HIGH(SetupRoutineTable.end - 1) == HIGH(SetupRoutineTable)
+    ld      h, HIGH(SetupRoutineTable)
+    
+    ; Delay a frame to allow shadow palette registers to be copied
+:
+    halt
+    ldh     a, [hVBlankFlag]
+    and     a, a
+    jr      z, :-
+    xor     a, a
+    ldh     [hVBlankFlag], a
+    
+    call    JumpToPointerAtHL
+    jr      .loop
 
 .fadeIn
     ; Fade in: Shift colours left, shifting in lighter colour to end
@@ -108,41 +121,16 @@ UpdateFade:
     ld      [hl], a
     
     cp      a, %11100100    ; Palette is back to normal?
-    jr      nz, .fadeInFinished
-    
-    ld      a, NOT_FADING   ; Finished fading
-    jr      .finished
-    
-.fadeInFinished
-    ld      a, FADE_IN | FADE_PHASE_FRAMES
-    jr      .finished
-.fadeOutFinished
-    ld      a, FADE_OUT | FADE_PHASE_FRAMES
-.finished
-    ld      l, LOW(hFadeState)
-    ld      [hl], a
-    jr      Fade.wait
+    ; Completely finished fading, give control to the new game state's
+    ; loop
+    jr      z, .end
 
-.midway
-    ; Midway through fade
-    ; Switch to fade in
-    ld      [hl], FADE_IN | FADE_PHASE_FRAMES
-    ; Set new game state
-    ld      l, LOW(hFadeNewGameState)
-    ld      a, [hl]
-    ldh     [hGameState], a
-    
-    ; Jump to midway subroutine
-    ; a = game state
-    add     a, a
-    add     a, LOW(SetupRoutineTable)
-    ld      l, a
-    ASSERT HIGH(SetupRoutineTable.end - 1) == HIGH(SetupRoutineTable)
-    ld      h, HIGH(SetupRoutineTable)
-    call    JumpToPointerAtHL
-    jr      Fade.wait
+.nextPhase
+    ld      l, LOW(hFadeCountdown)
+    ld      [hl], FADE_PHASE_FRAMES
+    jr      .loop
 
-EndFade:
+.end
     ; Jump into the appropriate loop
     ldh     a, [hGameState]
     add     a, a
