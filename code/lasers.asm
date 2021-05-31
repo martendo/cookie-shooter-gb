@@ -2,6 +2,7 @@ INCLUDE "defines.inc"
 
 SECTION "Laser Table", WRAM0, ALIGN[8]
 
+; Positions of lasers (Y, X) in pixels, relative to screen
 wLaserPosTable::
     DS MAX_LASER_COUNT * ACTOR_SIZE
 .end::
@@ -9,7 +10,8 @@ wLaserPosTable::
 SECTION "Laser Variables", HRAM
 
 ; Index of first laser to add to OAM
-hLaserRotationIndex:: DS 1
+hLaserRotationIndex::
+    DS 1
 
 SECTION "Laser Code", ROM0
 
@@ -19,16 +21,19 @@ ShootLaser::
     call    FindEmptyActorSlot
     ret     c       ; No empty slots
     
+    ; Laser positions are different if using double lasers power-up
     ldh     a, [hCurrentPowerUp]
     cp      a, POWER_UP_DOUBLE_LASERS
-    ; [hl] = X position
     ldh     a, [hPlayerX]
     jr      z, .doubleLasers
     
+    ; Single laser -> right in the middle of the spaceship
+    ; [hl] = X position
     add     a, (PLAYER_WIDTH / 2) - (LASER_WIDTH / 2)
     ld      [hld], a            ; X position
     ld      [hl], LASER_START_Y ; Y position
     
+    ; Add second laser if using fast lasers power-up
     ldh     a, [hCurrentPowerUp]
     ASSERT POWER_UP_FAST_LASERS - 1 == 0
     dec     a
@@ -40,39 +45,44 @@ ShootLaser::
     call    FindEmptyActorSlot
     jr      c, .noSecondLaser   ; No empty slots
     
-    ; [hl] = X position
     ldh     a, [hPlayerX]
+    ; [hl] = X position
     add     a, (PLAYER_WIDTH / 2) - (LASER_WIDTH / 2)
     ld      [hld], a            ; X position
     ld      [hl], LASER_START_Y - LASER_VISUAL_HEIGHT ; Y position
 .noSecondLaser
+    ; Play a different (higher-pitched) sound effect for fast lasers
     ld      b, SFX_FAST_LASER
     DB      $11     ; ld de, d16 to consume the next 2 bytes
 .playSoundEffect
+    ; Play laser ("pew") sound effect
     ld      b, SFX_LASER
     call    SFX_Play
     
-    ; Generate a random number
+    ; Generate a random number for more entropy
     jp      GenerateRandomNumber
 
 .doubleLasers
+    ; Double lasers -> shoot one from either side of the spaceship
+    ; [hl] = X position
     add     a, (PLAYER_WIDTH / 2) - DOUBLE_LASER_X_OFFSET - LASER_WIDTH + 1
     ld      [hld], a            ; X position
     ld      [hl], LASER_START_Y ; Y position
     
+    ; Second laser
     ld      l, LOW(wLaserPosTable)
     ld      b, MAX_LASER_COUNT
     call    FindEmptyActorSlot
     jr      c, .playSoundEffect ; No empty slots
     
-    ; [hl] = X position
     ldh     a, [hPlayerX]
+    ; [hl] = X position
     add     a, (PLAYER_WIDTH / 2) + DOUBLE_LASER_X_OFFSET
     ld      [hld], a            ; X position
     ld      [hl], LASER_START_Y ; Y position
     jr      .playSoundEffect
 
-; Update lasers' positions
+; Update lasers' positions and check for collision with cookies
 UpdateLasers::
     ; Update laser rotation index
     ldh     a, [hLaserRotationIndex]
@@ -86,6 +96,7 @@ UpdateLasers::
     
     ld      hl, wLaserPosTable
     lb      bc, MAX_LASER_COUNT, LASER_SPEED
+    ; If using fast lasers power-up, use a faster laser speed
     ldh     a, [hCurrentPowerUp]
     ASSERT POWER_UP_FAST_LASERS - 1 == 0
     dec     a
@@ -102,6 +113,7 @@ UpdateLasers::
     jr      .next
     
 .update
+    ; Add laser speed to its position
     ld      a, c
     add     a, [hl]     ; Y position
     ASSERT (STATUS_BAR_HEIGHT - LASER_HEIGHT) == 0
@@ -119,6 +131,7 @@ UpdateLasers::
 .checkCollide
     ; Check for collision between this laser and a cookie
     
+    ; Get this laser's hitbox dimensions
     add     a, LASER_HITBOX_Y
     ld      d, a        ; d = laser.hitbox.top
     ld      a, [hld]
@@ -127,6 +140,8 @@ UpdateLasers::
     
     push    bc
     push    hl          ; Laser Y position
+    
+    ; Loop over all cookies and check for collision
     ld      hl, wCookiePosTable
     ld      c, MAX_COOKIE_COUNT
 .checkCollideLoop
@@ -137,21 +152,22 @@ UpdateLasers::
     
     dec     a           ; Undo inc
     ld      b, a
-    ld      a, [hld]
+    ld      a, [hld]    ; cookie.x
     ldh     [hScratch], a
     push    hl          ; Cookie Y position
     
+    ; Get cookie's hitbox dimensions
     call    PointHLToCookieHitbox
     ASSERT HIGH(CookieHitboxTable.end - 1) == HIGH(CookieHitboxTable)
     ld      a, b        ; cookie.y
     add     a, [hl]     ; cookie.hitbox.y
-    ld      b, a
+    ld      b, a        ; b = cookie.hitbox.top
     inc     l
     add     a, [hl]     ; cookie.hitbox.height
     cp      a, d        ; cookie.hitbox.bottom < laser.hitbox.top
     jr      c, .noCollision
     
-    ld      a, d
+    ld      a, d        ; laser.hitbox.top
     add     a, LASER_HITBOX_HEIGHT
     cp      a, b        ; laser.hitbox.bottom < cookie.hitbox.top
     jr      c, .noCollision
@@ -159,25 +175,29 @@ UpdateLasers::
     ldh     a, [hScratch]   ; cookie.x
     inc     l
     add     a, [hl]     ; cookie.hitbox.x
-    ld      b, a
+    ld      b, a        ; b = cookie.hitbox.left
     inc     l
     add     a, [hl]     ; cookie.hitbox.width
     cp      a, e        ; cookie.hitbox.right < laser.hitbox.left
     jr      c, .noCollision
     
-    ld      a, e
+    ld      a, e        ; laser.hitbox.left
     add     a, LASER_HITBOX_WIDTH
     cp      a, b        ; laser.hitbox.right < cookie.hitbox.left
     jr      c, .noCollision
     
     ; Laser and cookie are colliding!
+    
+    ; Play cookie blasted sound effect
     ld      b, SFX_COOKIE_BLASTED
     call    SFX_Play
     
+    ; Blast cookie and update score and cookies blasted on status bar
     pop     hl          ; Cookie Y position
     call    BlastCookie
     call    UpdateStatusBar
     pop     hl          ; Laser Y position
+    
     ; Destroy laser
     ld      [hl], NO_ACTOR
     jr      .resume
@@ -201,7 +221,7 @@ UpdateLasers::
     jr      nz, .loop
     ret
 
-; Use actor data to make objects and put them in OAM
+; Add lasers to shadow OAM
 DrawLasers::
     ldh     a, [hLaserRotationIndex]
     ld      de, wLaserPosTable
@@ -221,6 +241,7 @@ DrawLasers::
     ASSERT NO_ACTOR == -1
     inc     a           ; No laser, skip
     jr      z, .skip
+    
     add     a, 16 - 1   ; Undo inc
     ld      [hli], a
     inc     e

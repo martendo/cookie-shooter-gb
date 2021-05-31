@@ -8,10 +8,12 @@ hActionSelection::
 SECTION "Action Select Screen", ROM0
 
 LoadActionSelectScreen::
+    ; Load tiles
     ld      de, ActionSelectTiles
     ld      hl, _VRAM9000
     ld      bc, ActionSelectTiles.end - ActionSelectTiles
     rst     LCDMemcopy
+    ; Load background map
     ld      de, ActionSelectMap
     ld      hl, _SCRN0
     ld      c, SCRN_Y_B
@@ -67,6 +69,7 @@ ActionSelect::
     jr      Fade
     
 :
+    ; Update selection
     ldh     a, [hNewKeys]
     bit     PADB_UP, a
     call    nz, MoveSelectionUp
@@ -74,11 +77,12 @@ ActionSelect::
     bit     PADB_DOWN, a
     call    nz, MoveSelectionDown
     
+    ; Select action
     ldh     a, [hNewKeys]
     and     a, PADF_A | PADF_START
     jr      z, ActionSelect
     
-    ; Move on to the next screen!
+    ; Move on to the mode select screen
     ld      b, SFX_MENU_START
     call    SFX_Play
     
@@ -95,6 +99,7 @@ MoveSelectionUp:
     
     ASSERT ACTION_COUNT - 1 == 1
 .setPos
+    ; Update cursor position
     ld      a, ACTION_SELECT_PLAY_CURSOR_Y
     ld      [wShadowOAM + ACTION_SELECT_CURSOR_Y1_OFFSET], a
     ld      [wShadowOAM + ACTION_SELECT_CURSOR_Y2_OFFSET], a
@@ -113,11 +118,12 @@ MoveSelectionDown:
     
     ASSERT ACTION_COUNT - 1 == 1
 .setPos
+    ; Update cursor position
     ld      a, ACTION_SELECT_TOP_SCORES_CURSOR_Y
     ld      [wShadowOAM + ACTION_SELECT_CURSOR_Y1_OFFSET], a
     ld      [wShadowOAM + ACTION_SELECT_CURSOR_Y2_OFFSET], a
     
-    ; Fallthrough
+    ; Fall through
 
 PlaySelectionSfx:
     ld      b, SFX_MENU_SELECT

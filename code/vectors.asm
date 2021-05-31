@@ -35,22 +35,27 @@ VBlankHandler:
     DB      $01         ; ld bc, d16 to consume the next 2 bytes
 .noStatusBar
     set     LCDCB_OBJ, [hl]
+    
+    ; Signal that VBlank has occurred
     ld      l, LOW(hVBlankFlag)
     ld      [hl], h     ; Non-zero
     
     ei      ; Timing-insensitive stuff follows
     
     ; Read joypad
+    ; Read D-Pad
     ld      a, P1F_GET_DPAD
     call    .readPadNibble
     swap    a           ; Move directions to high nibble
     ld      b, a
     
+    ; Read buttons
     ld      a, P1F_GET_BTN
     call    .readPadNibble
     xor     a, b        ; Combine buttons and directions + complement
     ld      b, a
     
+    ; Update hNewKeys
     ld      a, [hPressedKeys]
     xor     a, b        ; a = keys that changed state
     and     a, b        ; a = keys that changed to pressed
@@ -58,6 +63,7 @@ VBlankHandler:
     ld      a, b
     ld      [hPressedKeys], a
     
+    ; Done reading
     ld      a, P1F_GET_NONE
     ldh     [rP1], a
     
@@ -110,11 +116,13 @@ STATHandler:
     jr      .finished
     
 .notSound
+    ; Wait for HBlank to apply updates
     ldh     a, [rSTAT]
     and     a, STAT_MODE_MASK
     jr      nz, .notSound   ; Mode 0 - HBlank
     
     ld      hl, rLCDC
+    ; Figure out what to do on this scanline
     ldh     a, [rLYC]
     cp      a, STATUS_BAR_HEIGHT - 1
     jr      z, .endOfStatusBar
@@ -123,7 +131,7 @@ STATHandler:
     
     ; End of "paused" strip: Switch back tilemap
     res     LCDCB_BGMAP, [hl]
-    ; Next: Sound update
+    ; Next: Update sound
     jr      .nextUpdateSound
 
 .endOfStatusBar
@@ -143,6 +151,7 @@ STATHandler:
     jr      .finished
 
 .startOfPausedStrip
+    ; Next: End of "paused" strip
     ld      a, PAUSED_STRIP_Y + PAUSED_STRIP_HEIGHT - 1
     ldh     [rLYC], a
     

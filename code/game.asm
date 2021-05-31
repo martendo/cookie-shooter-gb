@@ -2,6 +2,8 @@ INCLUDE "defines.inc"
 
 SECTION "In-Game Variables", HRAM
 
+; Countdown to pause the creation of cookies
+; Used at the very beginning of a game and after a bomb power-up
 hWaitCountdown:
     DS 1
 
@@ -12,7 +14,7 @@ hWaitCountdown:
 hLastScoreThousands:
     DS 1
 
-; Player's power-up slots
+; Player's 3 power-up slots
 hPowerUps:
 ASSERT MAX_POWER_UP_COUNT == 3
 .0:: DS 1
@@ -33,17 +35,17 @@ hPowerUpDuration::
 SECTION "In-Game Code", ROM0
 
 SetUpGame::
-    ; Tiles
+    ; Load tiles
     ld      de, InGameTiles
     ld      hl, _VRAM9000
     ld      bc, InGameTiles.end - InGameTiles
     rst     LCDMemcopy
-    ; Background map
+    ; Load background map
     ld      hl, _SCRN0 + (STATUS_BAR_TILE_HEIGHT * SCRN_VX_B)
     ld      b, IN_GAME_BACKGROUND_TILE
     ld      d, SCRN_Y_B - STATUS_BAR_TILE_HEIGHT
     call    LCDMemsetMap
-    ; Status bar
+    ; Load status bar tilemap
     ld      de, StatusBarMap
     ld      hl, _SCRN0
     ld      c, STATUS_BAR_TILE_HEIGHT
@@ -62,27 +64,29 @@ SetUpGame::
     ld      hl, wLaserPosTable
     ld      b, MAX_LASER_COUNT
     ld      a, NO_ACTOR
-:
+.clearLasersLoop
     ld      [hli], a
     inc     l
     dec     b
-    jr      nz, :-
+    jr      nz, .clearLasersLoop
     
     ld      hl, wCookiePosTable
     ld      b, MAX_COOKIE_COUNT
-:
+.clearCookiesLoop
     ; a = NO_ACTOR
     ld      [hli], a
     inc     l
     dec     b
-    jr      nz, :-
+    jr      nz, .clearCookiesLoop
     
     ; Reset variables
     xor     a, a
+    ; Reset score
     ld      hl, hScore
     REPT SCORE_BYTE_COUNT
     ld      [hli], a
     ENDR
+    ; Reset number of cookies blasted
     ASSERT hScore.end == hCookiesBlasted
     REPT COOKIES_BLASTED_BYTE_COUNT
     ld      [hli], a
@@ -90,15 +94,21 @@ SetUpGame::
     
     ld      l, LOW(hLastScoreThousands)
     ld      [hli], a
+    
+    ; Clear power-up slots
     ASSERT hPowerUps == hLastScoreThousands + 1
     ASSERT NO_POWER_UP == 0
     REPT MAX_POWER_UP_COUNT
     ld      [hli], a
     ENDR
+    ; Reset currently selected power-up
     ASSERT hPowerUpSelection == hPowerUps.end
     ld      [hli], a
+    ; Clear currently in-use power-up
     ASSERT hCurrentPowerUp == hPowerUpSelection + 1
+    ASSERT NO_POWER_UP == 0
     ld      [hli], a
+    ; Reset power-up duration
     ASSERT hPowerUpDuration == hCurrentPowerUp + 1
     ASSERT NO_POWER_UP_DURATION == HIGH(-1)
     dec     a       ; a = -1
@@ -108,6 +118,7 @@ SetUpGame::
     ; Draw score and cookies blasted
     call    UpdateStatusBar
     
+    ; Set initial player life count
     ld      a, PLAYER_START_LIVES
     ldh     [hPlayerLives], a
     
@@ -120,24 +131,30 @@ SetUpGame::
     jr      z, .noPowerUps
     ASSERT GAME_MODE_COUNT - 1 == 1
     
-    ; Draw power-ups
+    ; If in Super mode, draw power-ups
     call    DrawAllPowerUps
     
 .noPowerUps
+    ; Reset cookie count
     xor     a, a
     ldh     [hCookieCount], a
+    ; Reset rotation of actors
     ldh     [hCookieRotationIndex], a
     ldh     [hLaserRotationIndex], a
+    ; Reset player invincibility
     ASSERT PLAYER_NOT_INV == -1
     dec     a            ; a = -1
     ldh     [hPlayerInvCountdown], a
     
+    ; Set initial target cookie count
     ld      a, START_TARGET_COOKIE_COUNT
     ldh     [hTargetCookieCount], a
     
+    ; Delay the cookies for a little bit
     ld      a, GAME_START_DELAY_FRAMES
     ldh     [hWaitCountdown], a
     
+    ; Start in-game music
     ld      de, Inst_InGame
     call    Music_PrepareInst
     ld      de, Music_InGame
@@ -160,10 +177,13 @@ InGame::
     ld      a, GAME_STATE_PAUSED
     ldh     [hGameState], a
     
+    ; Pause music, stop all sound effects
     call    Music_Pause
     call    SFX_Stop
+    ; Play pause sound effect
     ld      b, SFX_PAUSE
     call    SFX_Play
+    ; Go to paused loop
     jp      Paused
     
 :
@@ -173,7 +193,7 @@ InGame::
     jp      z, .noPowerUps
     
     ASSERT GAME_MODE_COUNT - 1 == 1
-    ; Power-up selection
+    ; Change power-up selection
     ldh     a, [hNewKeys]
     bit     PADB_UP, a
     jr      nz, :+
@@ -184,7 +204,7 @@ InGame::
     ; Move power-up selection down
     ldh     a, [hPowerUpSelection]
     cp      a, MAX_POWER_UP_COUNT - 1
-    jr      nc, .noPowerUpSelectionChange
+    jr      nc, .noPowerUpSelectionChange   ; Don't go past bottom
     inc     a
     jr      .selectPowerUp
 
@@ -192,20 +212,21 @@ InGame::
     ; Move power-up selection up
     ldh     a, [hPowerUpSelection]
     and     a, a
-    jr      z, .noPowerUpSelectionChange
+    jr      z, .noPowerUpSelectionChange    ; Don't go past top
     dec     a
 
 .selectPowerUp
     ldh     [hPowerUpSelection], a
+    ; Play power-up selection sound effect
     ld      b, SFX_POWER_UP_SELECT
     call    SFX_Play
 .noPowerUpSelectionChange
-    
+    ; Use a power-up
     ldh     a, [hNewKeys]
     bit     PADB_B, a
     jr      z, .notUsingPowerUp
     
-    ; Use a power-up
+    ; Get selected power-up
     ldh     a, [hPowerUpSelection]
     add     a, LOW(hPowerUps)
     ld      l, a
@@ -214,8 +235,10 @@ InGame::
     ld      a, [hl]
     ASSERT NO_POWER_UP == 0
     and     a, a
+    ; No power-up in this slot, nothing to use
     jr      z, .notUsingPowerUp
     
+    ; Handle "immediate" power-ups
     cp      a, POWER_UP_BOMB
     jr      nz, .notBombPowerUp
     
@@ -238,17 +261,20 @@ InGame::
     dec     d
     jr      nz, .clearCookiesLoop
     
+    ; Score and cookies blasted has changed
     call    UpdateStatusBar
     
     ; Don't create any new cookies for a while after the bomb
     ld      a, POWER_UP_BOMB_WAIT_FRAMES
     ldh     [hWaitCountdown], a
     
+    ; Play special bomb sound effect
     ld      b, SFX_BOMB
     call    SFX_Play
     jr      .notUsingPowerUp
     
 .notBombPowerUp
+    ; Not the Bomb, is it Extra Life?
     cp      a, POWER_UP_EXTRA_LIFE
     jr      nz, .normalPowerUp
     
@@ -265,10 +291,12 @@ InGame::
     jr      .usedPowerUp
     
 .normalPowerUp
+    ; Not an immediate power-up
     ; Set power-up as current and remove
     ldh     [hCurrentPowerUp], a
     ld      [hl], NO_POWER_UP
     
+    ; Get the duration of the power-up
     ASSERT POWER_UPS_START - 1 == 0
     dec     a
     add     a, a    ; 1 entry = 2 bytes
@@ -279,25 +307,31 @@ InGame::
     ld      a, [hli]
     ld      b, [hl]
     
+    ; Set the power-up duration
     ld      hl, hPowerUpDuration
     ld      [hli], a
     ld      [hl], b
     
 .usedPowerUp
+    ; Play use power-up sound effect
     ld      b, SFX_POWER_UP_USE
     call    SFX_Play
 .notUsingPowerUp
+    ; Check power-up duration
     ld      hl, hPowerUpDuration.hi
     ld      a, [hld]
     ASSERT NO_POWER_UP_DURATION == HIGH(-1)
     inc     a       ; a = -1
+    ; No currently in-use power-up
     jr      z, .noPowerUps
     
+    ; Decrement duration countdown
     ld      e, [hl]
     inc     l
     ld      d, [hl]
     
     dec     de
+    ; Check for zero
     ld      a, e
     or      a, d
     
@@ -311,6 +345,7 @@ InGame::
     xor     a, a
     ldh     [hCurrentPowerUp], a
     
+    ; Play power-up end sound effect
     ld      b, SFX_POWER_UP_END
     call    SFX_Play
 
@@ -341,22 +376,30 @@ InGame::
     ; Update target cookie count based on score
     ld      hl, hScore.2
     ld      a, [hli]
+    ; 1 in MSB (byte 3) = 10 000 points
     ASSERT 01_00_00 / ADD_COOKIE_RATE == 2
+    ; 10 000 points (1 in MSB) = 2 cookies
     add     a, a    ; * 2
     ld      b, a
+    
     ld      a, [hl] ; hScore.1
+    
     ASSERT ADD_COOKIE_RATE / 10_00 < 10 && ADD_COOKIE_RATE / 10_00 > 0
+    ; Add an extra cookie if >= ADD_COOKIE_RATE
     cp      a, (ADD_COOKIE_RATE / 10_00) << 4   ; hScore.1 = hundreds
-    ccf             ; Add an extra cookie if >= ADD_COOKIE_RATE
+    ccf
+    
     ld      a, START_TARGET_COOKIE_COUNT
     adc     a, b
+    
+    ; Clamp cookie count to MAX_COOKIE_COUNT
     cp      a, MAX_COOKIE_COUNT + 1
     jr      c, :+   ; a <= MAX_COOKIE_COUNT
     ld      a, MAX_COOKIE_COUNT
 :
     ld      l, LOW(hTargetCookieCount)
     ld      [hld], a
-    ; Cookie count is too low, create a new cookie
+    ; If cookie count is too low, create a new cookie
     ASSERT hCookieCount == hTargetCookieCount - 1
     dec     a       ; `>` and not `>=`
     cp      a, [hl]
@@ -374,6 +417,7 @@ InGame::
     jr      z, .donePowerUps
     
     ASSERT GAME_MODE_COUNT - 1 == 1
+    ; Check if needed to give power-ups
     ldh     a, [hScore.2]
     swap    a
     and     a, $F0
@@ -391,6 +435,7 @@ InGame::
     ldh     [hLastScoreThousands], a
     jr      z, .noNewPowerUps
     
+    ; Yes, check which power-ups to give
     ld      hl, PowerUpPointRateTable
     ld      c, POWER_UPS_START
 .getPowerUpLoop
@@ -415,11 +460,13 @@ InGame::
     
 .nextPowerUp
     ; score % rate != 0
+    ; Move on to next power-up
     inc     c
     ld      a, c
-    cp      a, POWER_UP_COUNT
+    cp      a, POWER_UP_COUNT   ; Finished?
     jr      nc, .noNewPowerUps
     
+    ; Get next power-up's point rate
     ASSERT HIGH(PowerUpPointRateTable.end - 1) == HIGH(PowerUpPointRateTable)
     inc     l
     ldh     a, [hLastScoreThousands]
@@ -436,13 +483,15 @@ InGame::
     ASSERT PLAYER_NOT_INV == -1
     inc     a       ; a = -1
     ld      c, PLAYER_TILE
+    ; Not invincible
     jr      z, .drawPlayer
     
-    dec     [hl]
+    dec     [hl]    ; Decrement countdown
     
     ; Flash player to show invincibility
     bit     PLAYER_INV_FLASH_BIT, [hl]
     jr      nz, .drawPlayer
+    ; Hide player (invincible tiles are empty tiles)
     ASSERT PLAYER_INV_TILE == LOW(-1)
     dec     c   ; c = -1
 .drawPlayer
@@ -458,6 +507,7 @@ InGame::
     and     a, a
     jp      nz, InGame
     
+    ; Set up game over screen
     ld      a, GAME_STATE_GAME_OVER
     jp      Fade
 
@@ -476,13 +526,15 @@ GetPowerUp:
     ld      a, [de]
     ASSERT NO_POWER_UP == 0
     and     a, a
-    ; No more room for a power-up left
+    ; No more room for a power-up left; all slots taken
     ret     nz
     
 .foundEmptySlot
+    ; Add power-up to slot
     ld      a, c
     ld      [de], a
     
+    ; Play get power-up sound effect
     push    bc
     push    hl
     ld      b, SFX_POWER_UP_GET

@@ -3,10 +3,12 @@ INCLUDE "defines.inc"
 SECTION "Mode Select Screen", ROM0
 
 LoadModeSelectScreen::
+    ; Load tiles
     ld      de, ModeSelectTiles
     ld      hl, _VRAM9000
     ld      bc, ModeSelectTiles.end - ModeSelectTiles
     rst     LCDMemcopy
+    ; Load background map
     ld      de, ModeSelectMap
     ld      hl, _SCRN0
     ld      c, SCRN_Y_B
@@ -132,7 +134,7 @@ MoveSelectionDown:
     ld      [wShadowOAM + MODE_SELECT_CURSOR_Y1_OFFSET], a
     ld      [wShadowOAM + MODE_SELECT_CURSOR_Y2_OFFSET], a
     
-    ; Fallthrough
+    ; Fall through
 
 PlaySelectionSfx:
     ld      b, SFX_MENU_SELECT

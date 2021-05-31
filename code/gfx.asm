@@ -24,8 +24,10 @@ DrawHearts::
     ret     z       ; None, done
     
     lb      bc, IN_GAME_BACKGROUND_TILE, IN_GAME_BACKGROUND_TILE
-    ; Fallthrough
+    ; Fall through
 
+; @param    b   Top tile
+; @param    c   Bottom tile
 .draw
     ldh     [hScratch], a
 :
@@ -62,15 +64,15 @@ DrawAllPowerUps::
     ld      hl, vCurrentPowerUp
     ldh     a, [hCurrentPowerUp]
     ld      b, -1
-    ; Fallthrough
+    ; Fall through
 
 ; Draw a power-up slot
 ; @param    a   Power-up type
-; @param    b   Power-up index (0-2)
+; @param    b   Power-up index (0-2 or -1 for current power-up on status bar)
 ; @param    hl  Pointer to destination on map
 ; @param    de  SCRN_VX_B
 DrawPowerUp::
-    ; Get tiles with power-up type
+    ; Get tiles for the power-up using power-up type
     ASSERT POWER_UP_TILE_COUNT == 4
     add     a, a    ; * 2
     add     a, a    ; * 4
@@ -82,7 +84,7 @@ DrawPowerUp::
     cp      a, b
     ld      a, c
     jr      nz, :+
-    
+    ; Currently selected power-up, use special selection cursor tiles
     add     a, POWER_UP_SELECTED_TILES_START - POWER_UP_TILES_START
     jr      .saveAndDraw
 :
@@ -101,24 +103,28 @@ DrawPowerUp::
     cp      a, LOW(POWER_UP_END_FLASH_FAST_START)
     jr      nc, .flashSlow
     
+    ; Power-up just about finished, flash fast
     bit     POWER_UP_END_FLASH_FAST_BIT, a
     jr      z, .flashFastOn
     ; Flash off
     ld      b, NO_POWER_UP + POWER_UP_CURRENT_TILES_START
     jr      .draw
 .flashFastOn
-    cpl
+    ; If just flashed back on, play tick sound effect
+    cpl     ; Just underflowed from POWER_UP_END_FLASH_FAST_BIT?
     and     a, POWER_UP_END_FLASH_FAST_MASK
     jr      nz, .currentNormal
     jr      .playSoundEffect
 .flashSlow
+    ; Still a little bit of time left, flash slowly
     bit     POWER_UP_END_FLASH_BIT, a
     jr      z, .flashSlowOn
     ; Flash off
     ld      b, NO_POWER_UP + POWER_UP_CURRENT_TILES_START
     jr      .draw
 .flashSlowOn
-    cpl
+    ; If just flashed back on, play tick sound effect
+    cpl     ; Just underflowed from POWER_UP_END_FLASH_BIT?
     and     a, POWER_UP_END_FLASH_MASK
     jr      nz, .currentNormal
 .playSoundEffect
@@ -131,9 +137,11 @@ DrawPowerUp::
     pop     hl
     pop     de
     pop     bc
-    ; Fallthrough
+    ; Fall through
 
 .currentNormal
+    ; Draw currently in-use power-up with special status bar-background
+    ; tiles
     ld      a, b
     add     a, POWER_UP_CURRENT_TILES_START - POWER_UP_TILES_START
 .saveAndDraw
@@ -165,19 +173,21 @@ DrawPowerUp::
 
 ; Redraw the score and number of cookies blasted on the status bar
 UpdateStatusBar::
+    ; Draw score
     ld      de, hScore
     ld      hl, vScore
     lb      bc, NUMBER_TILES_START, SCORE_BYTE_COUNT
     call    LCDDrawBCDWithOffset
     
+    ; Draw number of cookies blasted
     ASSERT hCookiesBlasted == hScore.end
     ld      hl, vCookiesBlasted
     lb      bc, NUMBER_TILES_START, COOKIES_BLASTED_BYTE_COUNT
-    ; Fallthrough
+    ; Fall through
 
 ; Draw a BCD number onto the background map with an arbitrary tile
 ; ID offset, even if the LCD is on
-; @param    de  Pointer to most significant byte of BCD number
+; @param    de  Pointer to most significant byte of big-endian BCD number
 ; @param    hl  Pointer to destination on map
 ; @param    c   Number of bytes to draw
 ; @param    b   Tile ID offset
@@ -186,14 +196,14 @@ LCDDrawBCDWithOffset::
     and     a, STATF_BUSY
     jr      nz, LCDDrawBCDWithOffset
     
-    ld      a, [de]     ; 2 cycles
     ; High nibble
+    ld      a, [de]     ; 2 cycles
     swap    a           ; 2 cycles
     and     a, $0F      ; 2 cycles
-    add     a, b        ; 1 cycle (Add tile ID offset)
+    add     a, b        ; 1 cycle   Add tile ID offset
     ld      [hli], a    ; 2 cycles
-    ld      a, [de]     ; 2 cycles
     ; Low nibble
+    ld      a, [de]     ; 2 cycles
     and     a, $0F      ; 2 cycles
     add     a, b        ; 1 cycle
     ld      [hli], a    ; 2 cycles

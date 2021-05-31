@@ -5,6 +5,7 @@ SECTION "Title Screen", ROM0
 LoadTitleScreen::
     call    HideAllObjects
     
+    ; Load tiles
     ld      de, TitleScreen9000Tiles
     ld      hl, _VRAM9000
     ld      bc, TitleScreen9000Tiles.end - TitleScreen9000Tiles
@@ -13,6 +14,7 @@ LoadTitleScreen::
     ld      hl, _VRAM8800
     ld      bc, TitleScreen8800Tiles.end - TitleScreen8800Tiles
     rst     LCDMemcopy
+    ; Load background map
     ASSERT TitleScreenMap == TitleScreen8800Tiles.end
     ld      hl, _SCRN0
     ld      c, SCRN_Y_B

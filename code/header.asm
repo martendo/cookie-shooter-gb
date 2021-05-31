@@ -7,4 +7,4 @@ EntryPoint:
 SECTION "Cartridge Header", ROM0[$0104]
 
 CartridgeHeader:
-    DS      $0150 - @, 0
+    DS $0150 - $0104, 0

@@ -9,7 +9,7 @@ CalcTopScoresChecksum::
     call    .calcChecksum
     
     ld      hl, sSuperTopScores
-    ; Fallthrough
+    ; Fall through
 
 .calcChecksum
     ld      b, TOP_SCORE_COUNT * SCORE_BYTE_COUNT

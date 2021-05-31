@@ -5,16 +5,18 @@ SECTION "Game Over Screen", ROM0
 LoadGameOverScreen::
     call    HideAllObjects
     
+    ; Load tiles
     ld      de, GameOverTiles
     ld      hl, _VRAM8800
     ld      bc, GameOverTiles.end - GameOverTiles
     rst     LCDMemcopy
+    ; Load background map
     ld      de, GameOverMap
     ld      hl, _SCRN0 + (STATUS_BAR_TILE_HEIGHT * SCRN_VX_B)
     ld      c, SCRN_Y_B - STATUS_BAR_TILE_HEIGHT
     rst     LCDMemcopyMap
     
-    ; Remove current power-up
+    ; Erase the current power-up if in Super mode
     ldh     a, [hGameMode]
     ASSERT GAME_MODE_CLASSIC == 0
     and     a, a
@@ -52,14 +54,18 @@ LoadGameOverScreen::
     and     a, a
     jr      z, :+
     ASSERT GAME_MODE_COUNT - 1 == 1
+    ; In Super mode, so use the Super mode top scores
     ASSERT LOW(sSuperTopScores) == LOW(sClassicTopScores)
     ld      d, HIGH(sSuperTopScores)
 :
+    ; Loop over all top scores
     ld      hl, hScore
     lb      bc, SCORE_BYTE_COUNT, 0
+    ; c = new top score index
 .checkHighScoreLoop
     ld      a, [de]
     cp      a, [hl]
+    ; If new score >= top score, insert the new score before it
     jr      c, .insertTopScore  ; Top score < Score
     jr      nz, .nextTopScore   ; Top score > Score
     dec     b
@@ -69,12 +75,14 @@ LoadGameOverScreen::
     jr      .checkHighScoreLoop
     
 .nextTopScore
+    ; c = new top score index
     inc     c
     ld      a, c
     cp      a, TOP_SCORE_COUNT
-    ; Not a new top score
+    ; Gone through all top scores -> not a new top score
     jr      nc, .notNewTopScore
     
+    ; Move to next top score
     ASSERT SCORE_BYTE_COUNT == 3
     add     a, a
     add     a, c
@@ -84,6 +92,7 @@ LoadGameOverScreen::
     jr      .checkHighScoreLoop
     
 .insertTopScore
+    ; Shift all top scores below the new one down a spot
     ASSERT LOW(sClassicTopScores.end - 1 - SCORE_BYTE_COUNT) == LOW(sSuperTopScores.end - 1 - SCORE_BYTE_COUNT)
     ld      e, LOW(sClassicTopScores.end - 1 - SCORE_BYTE_COUNT)
     ld      h, d
@@ -103,6 +112,7 @@ LoadGameOverScreen::
     dec     b
     jr      nz, .shiftTopScoresLoop
 .saveScore
+    ; c = new top score index
     ld      a, c
     ASSERT SCORE_BYTE_COUNT == 3
     add     a, a
@@ -123,7 +133,7 @@ LoadGameOverScreen::
     ld      [sChecksum], a
     ld      [sCopyChecksum], a
     
-    ; Save a copy of the top scores
+    ; Update the copy of the top scores
     ASSERT LOW(sClassicTopScores) == LOW(sSuperTopScores)
     ld      e, LOW(sClassicTopScores)
     ASSERT LOW(sClassicTopScoresCopy) == LOW(sClassicTopScores)

@@ -2,6 +2,7 @@ INCLUDE "defines.inc"
 
 SECTION "Actor Variables", HRAM
 
+; The index of the next available OAM slot
 hNextAvailableOAMSlot::
     DS 1
 
@@ -46,7 +47,7 @@ HideUnusedObjects::
     
     jr      HideObjects
 
-; Find an empty slot to in an actor table
+; Find an empty slot in an actor table
 ; @param    hl  Pointer to actor data
 ; @param    b   Maximum number of actors
 ; @return   cf  Set if no empty slot was found, otherwise reset

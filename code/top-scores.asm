@@ -3,10 +3,12 @@ INCLUDE "defines.inc"
 SECTION "Top Scores Screen", ROM0
 
 LoadTopScoresScreen::
+    ; Load tiles
     ld      de, TopScoresTiles
     ld      hl, _VRAM9000
     ld      bc, TopScoresTiles.end - TopScoresTiles
     rst     LCDMemcopy
+    ; Load background map
     ld      de, TopScoresMap
     ld      hl, _SCRN0
     ld      c, SCRN_Y_B

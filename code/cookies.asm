@@ -2,32 +2,42 @@ INCLUDE "defines.inc"
 
 SECTION "Cookie Position Table", WRAM0, ALIGN[8]
 
+; Positions of cookies (Y, X) in pixels, relative to screen
 wCookiePosTable::
     DS MAX_COOKIE_COUNT * ACTOR_SIZE
 .end::
 
 SECTION "Cookie Speed Table", WRAM0, ALIGN[8]
 
+; Speeds of cookies, (Y, X) in 16ths subpixels (4.4 fixed point)
 wCookieSpeedTable:
     DS MAX_COOKIE_COUNT * ACTOR_SIZE
 
 SECTION "Cookie Speed Fractional Accumulator Table", WRAM0, ALIGN[8]
 
+; Fractional accumulator of cookie speeds
+; Fractional part of speeds << 4 added here, overflow from here added to
+; integer part of position
 wCookieSpeedAccTable:
     DS MAX_COOKIE_COUNT * ACTOR_SIZE
 
 SECTION "Cookie Size Type Table", WRAM0, ALIGN[8]
 
+; Size types of cookies (1 byte, 2nd byte unused)
+; See constants/cookies.inc for possible values
 wCookieSizeTable::
     DS MAX_COOKIE_COUNT * ACTOR_SIZE
 
+; Set placement and order of tables for optimizations (e.g. `inc h`)
 ASSERT wCookieSpeedTable == wCookiePosTable + (1 << 8)
 ASSERT wCookieSpeedAccTable == wCookieSpeedTable + (1 << 8)
 ASSERT wCookieSizeTable == wCookieSpeedAccTable + (1 << 8)
 
 SECTION "Cookie Variables", HRAM
 
+; Current number of cookies on-screen
 hCookieCount::       DS 1
+; Number of cookies there should be on-screen based on the current score
 hTargetCookieCount:: DS 1
 
 ; Index of first cookie to add to OAM
@@ -126,6 +136,7 @@ BlastCookie::
     ; Destroy cookie
     ld      [hl], NO_ACTOR
     
+    ; Find number of points to award based on the size of this cookie
     ld      h, HIGH(wCookieSizeTable)
     ld      a, [hl]     ; a = cookie size
     add     a, a        ; 1 entry = 2 bytes
@@ -137,6 +148,7 @@ BlastCookie::
     ld      b, [hl]
     ld      c, a        ; bc = points
     
+    ; Update cookie count
     ld      hl, hCookieCount
     dec     [hl]
     
@@ -173,7 +185,7 @@ BlastCookie::
     ld      [hl], a
     ret
 
-; Update cookies and their positions
+; Update cookies' positions and check for collision with the player
 UpdateCookies::
     ; Update cookie rotation index
     ldh     a, [hCookieRotationIndex]
@@ -198,6 +210,7 @@ UpdateCookies::
     jp      .next
     
 .update
+    ; Add cookie's speed to its position
     ld      e, l
     ld      d, h
     inc     d           ; wCookieSpeedTable
@@ -296,6 +309,7 @@ UpdateCookies::
     
     push    hl
     push    bc
+    ; Get cookie's hitbox dimensions
     call    PointHLToCookieHitbox
     ASSERT HIGH(CookieHitboxTable.end - 1) == HIGH(CookieHitboxTable)
     ld      a, d
@@ -303,22 +317,22 @@ UpdateCookies::
     ld      d, a        ; d = cookie.hitbox.top
     inc     l
     ld      a, [hli]    ; cookie.hitbox.height
-    ld      b, a
+    ld      b, a        ; b = cookie.hitbox.height
     ld      a, e
     add     a, [hl]     ; cookie.hitbox.x
     ld      e, a        ; e = cookie.hitbox.left
     inc     l
     ld      a, [hl]     ; cookie.hitbox.width
-    ld      c, a
+    ld      c, a        ; c = cookie.hitbox.width
     
     ldh     a, [hPlayerY]
     add     a, PLAYER_HITBOX_Y
-    ld      l, a
+    ld      l, a        ; l = player.hitbox.top
     add     a, PLAYER_HITBOX_HEIGHT
     cp      a, d        ; player.hitbox.bottom < cookie.hitbox.top
     jr      c, .noCollision
     
-    ld      a, d
+    ld      a, d        ; cookie.hitbox.top
     add     a, b        ; cookie.hitbox.height
     cp      a, l        ; cookie.hitbox.bottom < player.hitbox.top
     jr      c, .noCollision
@@ -326,27 +340,31 @@ UpdateCookies::
     ldh     a, [hPlayerX]
     ASSERT PLAYER_HITBOX_X == 1
     inc     a
-    ld      l, a
+    ld      l, a        ; l = player.hitbox.left
     add     a, PLAYER_HITBOX_WIDTH
     cp      a, e        ; player.hitbox.right < cookie.hitbox.left
     jr      c, .noCollision
     
     ld      a, c        ; cookie.hitbox.width
-    add     a, e
+    add     a, e        ; cookie.hitbox.left
     cp      a, l        ; cookie.hitbox.right < player.hitbox.left
     jr      c, .noCollision
     
     ; Cookie and player are colliding!
+    
+    ; Play player hit sound effect
     ld      b, SFX_PLAYER_HIT
     call    SFX_Play
     
+    ; Take away one of the player's lives
     ld      hl, hPlayerLives
     dec     [hl]
+    ; Give player brief invincibility
     ASSERT hPlayerInvCountdown == hPlayerLives + 1
     inc     l           ; hPlayerInvCountdown
     ld      [hl], PLAYER_INV_FRAMES
     
-    ; Draw hearts (player's lives)
+    ; Update hearts (player's lives)
     call    DrawHearts
     
 .noCollision
@@ -362,11 +380,13 @@ UpdateCookies::
     ret
 
 .destroyed
+    ; Cookie has been removed, update cookie count
     ldh     a, [hCookieCount]
     dec     a
     ldh     [hCookieCount], a
     jr      .next
 
+; Add cookies to shadow OAM
 DrawCookies::
     ldh     a, [hCookieRotationIndex]
     ld      de, wCookiePosTable
@@ -393,8 +413,8 @@ DrawCookies::
     ld      d, HIGH(wCookieSizeTable)
     ld      a, [de]     ; a = cookie size
     ASSERT COOKIE_TILE_COUNT == 4
-    add     a, a
-    add     a, a
+    add     a, a        ; * 2
+    add     a, a        ; * 4
     add     a, COOKIE_TILES_START
     ld      c, a
     add     a, 2
@@ -402,6 +422,7 @@ DrawCookies::
     ; c = first tile, b = second tile
     ld      d, HIGH(wCookiePosTable)
     
+    ; Object 1
     ld      a, [de]     ; Y position
     add     a, 16
     ld      [hli], a
@@ -415,6 +436,7 @@ DrawCookies::
     inc     l
     
     dec     e
+    ; Object 2
     ld      a, [de]     ; Y position
     add     a, 16
     ld      [hli], a

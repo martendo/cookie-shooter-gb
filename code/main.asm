@@ -48,6 +48,7 @@ Initialize::
     ; Clear OAM
     ld      hl, _OAMRAM
     call    HideAllObjectsAtAddress
+    ; Clear shadow OAM
     ld      hl, wShadowOAM
     ; a = 0
     ld      b, OAM_COUNT * sizeof_OAM_ATTRS
@@ -66,10 +67,10 @@ Initialize::
     call    CalcTopScoresChecksum
     ld      hl, sChecksum
     cp      a, [hl]
-    ; Checksum is correct
+    ; Checksum is correct, carry on
     jr      z, .doneCheckingSaveData
     
-    ; Check copy's checksum
+    ; Checksum is incorrect, check copy's checksum
     call    CalcTopScoresChecksum.copy
     ld      hl, sCopyChecksum
     cp      a, [hl]
@@ -115,12 +116,11 @@ Initialize::
 .doneCheckingSaveData
     ; Seed random number with top scores
     ld      a, [sChecksum]
-:
-    swap    a
-:
-    xor     a, "C"
+    ; Do some funky stuff with the checksum
+:   swap    a
+:   xor     a, "C"
     ld      b, a
-    ; Use the 2nd bytes because they're the most interesting
+    ; Use the 2nd bytes of scores because they're the most interesting
     ld      a, [sClassicTopScores + 1]
     and     a, b
     ld      a, [sSuperTopScores + 1]
@@ -131,6 +131,7 @@ Initialize::
     xor     a, a
     ld      [rRAMG], a
     
+    ; Initialize SoundSystem and prepare sound effects
     call    SoundSystem_Init
     ld      de, SFX_Table
     call    SFX_Prepare
@@ -143,28 +144,35 @@ Initialize::
     ldh     [rOBP0], a
     ldh     [hOBP0], a
     
+    ; Set up the title screen (displayed first)
     call    LoadTitleScreen
     
     ; Set up interrupts
+    ; Set up LYC STAT interrupt - LY of 0 for sound update
     xor     a, a
     ldh     [rLYC], a
     ld      a, STATF_LYC
     ldh     [rSTAT], a
     
+    ; Clear any pending interrupts
     xor     a, a
     ldh     [rIF], a
+    ; Enable interrupts
     ld      a, IEF_VBLANK | IEF_STAT
     ldh     [rIE], a
-    
     ei
     
+    ; Turn on the LCD
     ld      a, LCDCF_ON | LCDCF_WINOFF | LCDCF_BG8800 | LCDCF_BG9800 | LCDCF_OBJ16 | LCDCF_OBJON | LCDCF_BGON
     ldh     [rLCDC], a
     
+    ; Start with the title screen
     jp      TitleScreen
 
 SECTION "Game State Routine Tables", ROM0
 
+; Setup routines for each game state, called when midway through a fade
+; (screen is all black)
 SetupRoutineTable::
     DW LoadTitleScreen          ; GAME_STATE_TITLE_SCREEN
     DW LoadActionSelectScreen   ; GAME_STATE_ACTION_SELECT
@@ -174,6 +182,9 @@ SetupRoutineTable::
     DW LoadGameOverScreen       ; GAME_STATE_GAME_OVER
 .end::
 
+; Loops for each game state
+; This table is used to jump into the appropriate loop once a fade has
+; completed
 LoopTable::
     DW TitleScreen  ; GAME_STATE_TITLE_SCREEN
     DW ActionSelect ; GAME_STATE_ACTION_SELECT
@@ -185,26 +196,38 @@ LoopTable::
 
 SECTION "Stack", WRAM0[$E000 - STACK_SIZE]
 
+; Allocate some space for the stack
     DS STACK_SIZE
 wStackBottom:
 
 SECTION "Shadow OAM", WRAM0, ALIGN[8]
 
+; Shadow OAM, copied to OAM via OAM DMA each VBlank
 wShadowOAM::
     DS OAM_COUNT * sizeof_OAM_ATTRS
 
 SECTION "Global Variables", HRAM
 
+; Bitfield of all inputs, updated every frame
+; 1 = Pressed
 hPressedKeys:: DS 1
+; Keys that have just gone from low to high (just pressed)
 hNewKeys::     DS 1
 
-hGameState::   DS 1
+; Current game state and mode
+; See constants/game.inc for possible values
+hGameState:: DS 1
+hGameMode::  DS 1
 
-hVBlankFlag::  DS 1
+; Flag to signal that VBlank has occurred, check this after `halt`ing to
+; tell if the last interrupt was for VBlank
+hVBlankFlag:: DS 1
 
+; Shadow palette registers, copied to the real registers each VBlank
 hBGP::  DS 1
 hOBP0:: DS 1
 
+; Current score, 3-byte big-endian BCD
 ASSERT SCORE_BYTE_COUNT == 3
 hScore::
 .2:: DS 1
@@ -212,18 +235,23 @@ hScore::
 .0:: DS 1
 .end::
 
+; Number of cookies blasted, 2-byte big-endian BCD
 ASSERT COOKIES_BLASTED_BYTE_COUNT == 2
 hCookiesBlasted::
 .hi:: DS 1
 .lo:: DS 1
 .end::
 
-hGameMode:: DS 1
-
+; Scratch/Temporary value
 hScratch:: DS 1
 
 SECTION "OAM DMA Routine", ROM0
 
+; Initiate an OAM DMA
+; This routine is copied to HRAM (hOAMDMA)
+; @param    a   HIGH(wShadowOAM)
+; @param    c   LOW(rDMA)
+; @param    b   (OAM_COUNT * sizeof_OAM_ATTRS) / DMA_LOOP_CYCLES + 1
 OAMDMA:
     ldh     [c], a
 .wait
@@ -236,5 +264,6 @@ ASSERT DMA_LOOP_CYCLES == 1 + 3
 
 SECTION "OAM DMA", HRAM
 
+; HRAM location of OAMDMA routine above
 hOAMDMA::
     DS OAMDMA.end - OAMDMA

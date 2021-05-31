@@ -2,14 +2,20 @@ INCLUDE "defines.inc"
 
 SECTION "Fade Variables", HRAM
 
+; New game state to switch to after fade
 hFadeNewGameState:
     DS 1
+; Current fade state
+; Bit 0-2: Phase countdown
+; Bit 6:   Fade direction (0: Out, 1: In)
+; Bit 7:   Midway flag, used to tell when to set up the next screen
 hFadeState::
     DS 1
 
 SECTION "Fade Code", ROM0
 
-; Start a fade to black and back, and wait for it to complete
+; Start a fade to black and back and wait for it to complete
+; The next screen will be set up when the screen is fully black
 ; @param    a   New game state to set midway through the fade
 Fade::
     ldh     [hFadeNewGameState], a
@@ -29,7 +35,7 @@ Fade::
     ld      a, [hl]
     ASSERT NOT_FADING == -1
     inc     a       ; a = -1
-    ; Currently fading
+    ; No longer fading, give control to the current game state's loop
     jr      z, EndFade
 
 UpdateFade:
@@ -37,18 +43,22 @@ UpdateFade:
     ASSERT FADE_MIDWAY_BIT == 7
     add     a, a    ; Move bit 7 into carry
     jr      c, .midway
+    ; Midway through fade, set up next screen
     
     ld      a, [hl]
+    ; Decrement countdown
     and     a, FADE_COUNTDOWN_MASK
     dec     a
     jr      nz, .noChange
     
-    ; Next phase
+    ; Move on to the next fade phase
+    
+    ; Fade in the correct direction
     bit     FADE_DIRECTION_BIT, [hl]
     ld      l, LOW(hOBP0)
     jr      nz, .fadeIn
     
-    ; Fade out: shift all colours; darken each one
+    ; Fade out: shift all colours right -> darken each one
     sra     [hl]
     sra     [hl]
     ASSERT hBGP == hOBP0 - 1
@@ -63,9 +73,9 @@ UpdateFade:
     ld      l, LOW(hFadeState)
     set     FADE_MIDWAY_BIT, [hl]
     jr      Fade.wait
-    
+
 .fadeIn
-    ; Fade in: Shift colours, add lighter colour to end
+    ; Fade in: Shift colours left, shifting in lighter colour to end
     ld      a, [hl] ; hOBP0
     dec     a
     and     a, %11  ; a = new lighter colour to shift in
@@ -99,7 +109,6 @@ UpdateFade:
 .fadeInFinished
     ld      a, FADE_IN | FADE_PHASE_FRAMES
     jr      .finished
-    
 .fadeOutFinished
     ld      a, FADE_OUT | FADE_PHASE_FRAMES
     jr      .finished
@@ -140,7 +149,7 @@ EndFade:
     ld      l, a
     ASSERT HIGH(LoopTable.end - 1) == HIGH(LoopTable)
     ld      h, HIGH(LoopTable)
-    ; Fallthrough
+    ; Fall through
 
 JumpToPointerAtHL:
     ld      a, [hli]
