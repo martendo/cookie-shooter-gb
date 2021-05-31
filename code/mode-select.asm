@@ -52,6 +52,14 @@ LoadModeSelectScreen::
     jp      Music_Play
 
 ModeSelect::
+    ; Wait for VBlank
+    halt
+    ldh     a, [hVBlankFlag]
+    and     a, a
+    jr      z, ModeSelect
+    xor     a, a
+    ldh     [hVBlankFlag], a
+    
     ldh     a, [hNewKeys]
     bit     PADB_B, a
     jr      z, :+
@@ -61,8 +69,7 @@ ModeSelect::
     call    SFX_Play
     
     ld      a, GAME_STATE_ACTION_SELECT
-    call    StartFade
-    jp      Main
+    jp      Fade
     
 :
     ldh     a, [hNewKeys]
@@ -74,7 +81,10 @@ ModeSelect::
     
     ldh     a, [hNewKeys]
     and     a, PADF_A | PADF_START
-    jp      z, Main
+    jr      z, ModeSelect
+    
+    ld      b, SFX_MENU_START
+    call    SFX_Play
     
     ldh     a, [hActionSelection]
     ASSERT ACTION_PLAY == 0
@@ -88,11 +98,7 @@ ModeSelect::
     DB      $01     ; ld bc, d16 to consume the next 2 bytes
 :
     ld      a, GAME_STATE_TOP_SCORES
-    call    StartFade
-    ld      b, SFX_MENU_START
-    call    SFX_Play
-    
-    jp      Main
+    jp      Fade
 
 MoveSelectionUp:
     ldh     a, [hGameMode]

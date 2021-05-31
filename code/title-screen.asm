@@ -30,14 +30,21 @@ LoadTitleScreen::
     jp      Music_Play
 
 TitleScreen::
+    ; Wait for VBlank
+    halt
+    ldh     a, [hVBlankFlag]
+    and     a, a
+    jr      z, TitleScreen
+    xor     a, a
+    ldh     [hVBlankFlag], a
+    
     ldh     a, [hNewKeys]
     and     a, PADF_A | PADF_START
-    jp      z, Main
+    jr      z, TitleScreen
     
     ; Move on to the game mode select screen
     ld      b, SFX_TITLE_START
     call    SFX_Play
     
     ld      a, GAME_STATE_ACTION_SELECT
-    call    StartFade
-    jp      Main
+    jp      Fade

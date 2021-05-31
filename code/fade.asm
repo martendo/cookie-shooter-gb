@@ -7,32 +7,35 @@ hFadeNewGameState:
 hFadeState::
     DS 1
 
-SECTION "Fade Midway Subroutine Table", ROM0
-
-FadeMidwayRoutineTable:
-    DW LoadTitleScreen          ; GAME_STATE_TITLE_SCREEN
-    DW LoadActionSelectScreen   ; GAME_STATE_ACTION_SELECT
-    DW LoadModeSelectScreen     ; GAME_STATE_MODE_SELECT
-    DW SetUpGame                ; GAME_STATE_IN_GAME
-    DW LoadTopScoresScreen      ; GAME_STATE_TOP_SCORES
-    DW LoadGameOverScreen       ; GAME_STATE_GAME_OVER
-.end
-
 SECTION "Fade Code", ROM0
 
-; Start a fade to black and back
+; Start a fade to black and back, and wait for it to complete
 ; @param    a   New game state to set midway through the fade
-StartFade::
+Fade::
     ldh     [hFadeNewGameState], a
     ld      a, FADE_OUT | FADE_PHASE_FRAMES
     ldh     [hFadeState], a
-    ret
-
-UpdateFade::
+    
+.wait
+    ; Wait for VBlank
+    halt
+    ldh     a, [hVBlankFlag]
+    and     a, a
+    jr      z, .wait
+    xor     a, a
+    ldh     [hVBlankFlag], a
+    
     ld      hl, hFadeState
     ld      a, [hl]
+    ASSERT NOT_FADING == -1
+    inc     a       ; a = -1
+    ; Currently fading
+    jr      z, EndFade
+
+UpdateFade:
+    dec     a       ; Undo inc
     ASSERT FADE_MIDWAY_BIT == 7
-    add     a, a        ; Move bit 7 into carry
+    add     a, a    ; Move bit 7 into carry
     jr      c, .midway
     
     ld      a, [hl]
@@ -59,7 +62,7 @@ UpdateFade::
     ; Set midway bit (delay a frame for shadow registers to be copied)
     ld      l, LOW(hFadeState)
     set     FADE_MIDWAY_BIT, [hl]
-    ret
+    jr      Fade.wait
     
 .fadeIn
     ; Fade in: Shift colours, add lighter colour to end
@@ -108,7 +111,7 @@ UpdateFade::
 .finished
     ld      l, LOW(hFadeState)
     ld      [hl], a
-    ret
+    jr      Fade.wait
 
 .midway
     ; Midway through fade
@@ -122,10 +125,24 @@ UpdateFade::
     ; Jump to midway subroutine
     ; a = game state
     add     a, a
-    add     a, LOW(FadeMidwayRoutineTable)
+    add     a, LOW(SetupRoutineTable)
     ld      l, a
-    ASSERT HIGH(FadeMidwayRoutineTable.end - 1) == HIGH(FadeMidwayRoutineTable)
-    ld      h, HIGH(FadeMidwayRoutineTable)
+    ASSERT HIGH(SetupRoutineTable.end - 1) == HIGH(SetupRoutineTable)
+    ld      h, HIGH(SetupRoutineTable)
+    call    JumpToPointerAtHL
+    jr      Fade.wait
+
+EndFade:
+    ; Jump into the appropriate loop
+    ldh     a, [hGameState]
+    add     a, a
+    add     a, LOW(LoopTable)
+    ld      l, a
+    ASSERT HIGH(LoopTable.end - 1) == HIGH(LoopTable)
+    ld      h, HIGH(LoopTable)
+    ; Fallthrough
+
+JumpToPointerAtHL:
     ld      a, [hli]
     ld      h, [hl]
     ld      l, a

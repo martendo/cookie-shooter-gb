@@ -46,6 +46,14 @@ LoadActionSelectScreen::
     ret
 
 ActionSelect::
+    ; Wait for VBlank
+    halt
+    ldh     a, [hVBlankFlag]
+    and     a, a
+    jr      z, ActionSelect
+    xor     a, a
+    ldh     [hVBlankFlag], a
+    
     ldh     a, [hNewKeys]
     bit     PADB_B, a
     jr      z, :+
@@ -56,8 +64,7 @@ ActionSelect::
     
     ASSERT GAME_STATE_TITLE_SCREEN == 0
     xor     a, a
-    call    StartFade
-    jp      Main
+    jr      Fade
     
 :
     ldh     a, [hNewKeys]
@@ -69,15 +76,14 @@ ActionSelect::
     
     ldh     a, [hNewKeys]
     and     a, PADF_A | PADF_START
-    jp      z, Main
+    jr      z, ActionSelect
     
     ; Move on to the next screen!
     ld      b, SFX_MENU_START
     call    SFX_Play
     
     ld      a, GAME_STATE_MODE_SELECT
-    call    StartFade
-    jp      Main
+    jr      Fade
 
 MoveSelectionUp:
     ldh     a, [hActionSelection]

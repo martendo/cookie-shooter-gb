@@ -150,14 +150,21 @@ LoadGameOverScreen::
     jp      Music_Pause
 
 GameOver::
+    ; Wait for VBlank
+    halt
+    ldh     a, [hVBlankFlag]
+    and     a, a
+    jr      z, GameOver
+    xor     a, a
+    ldh     [hVBlankFlag], a
+    
     ldh     a, [hNewKeys]
     and     a, PADF_A | PADF_START
-    jp      z, Main
+    jr      z, GameOver
     
     ; Move on to the top scores screen
     ld      b, SFX_OK
     call    SFX_Play
     
     ld      a, GAME_STATE_TOP_SCORES
-    call    StartFade
-    jp      Main
+    jp      Fade

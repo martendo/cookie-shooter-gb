@@ -160,49 +160,28 @@ Initialize::
     
     ld      a, LCDCF_ON | LCDCF_WINOFF | LCDCF_BG8800 | LCDCF_BG9800 | LCDCF_OBJ16 | LCDCF_OBJON | LCDCF_BGON
     ldh     [rLCDC], a
+    
+    jp      TitleScreen
 
-Main::
-    ; Wait for VBlank
-    halt
-    ldh     a, [hVBlankFlag]
-    and     a, a
-    jr      z, Main
-    xor     a, a
-    ldh     [hVBlankFlag], a
-    
-    ldh     a, [hFadeState]
-    ASSERT NOT_FADING == -1
-    inc     a       ; a = -1
-    ; Currently fading
-    jr      nz, .updateFade
-    
-    ldh     a, [hGameState]
-    ASSERT GAME_STATE_TITLE_SCREEN == 0
-    and     a, a
-    jp      z, TitleScreen
-    ASSERT GAME_STATE_ACTION_SELECT == GAME_STATE_TITLE_SCREEN + 1
-    dec     a
-    jp      z, ActionSelect
-    ASSERT GAME_STATE_MODE_SELECT == GAME_STATE_ACTION_SELECT + 1
-    dec     a
-    jp      z, ModeSelect
-    ASSERT GAME_STATE_IN_GAME == GAME_STATE_MODE_SELECT + 1
-    dec     a
-    jp      z, InGame
-    ASSERT GAME_STATE_TOP_SCORES == GAME_STATE_IN_GAME + 1
-    dec     a
-    jp      z, TopScores
-    ASSERT GAME_STATE_GAME_OVER == GAME_STATE_TOP_SCORES + 1
-    dec     a
-    jp      z, GameOver
-    ASSERT GAME_STATE_PAUSED == GAME_STATE_GAME_OVER + 1
-    jp      Paused
-    
-    ASSERT GAME_STATE_COUNT == GAME_STATE_PAUSED + 1
+SECTION "Game State Routine Tables", ROM0
 
-.updateFade
-    call    UpdateFade
-    jr      Main
+SetupRoutineTable::
+    DW LoadTitleScreen          ; GAME_STATE_TITLE_SCREEN
+    DW LoadActionSelectScreen   ; GAME_STATE_ACTION_SELECT
+    DW LoadModeSelectScreen     ; GAME_STATE_MODE_SELECT
+    DW SetUpGame                ; GAME_STATE_IN_GAME
+    DW LoadTopScoresScreen      ; GAME_STATE_TOP_SCORES
+    DW LoadGameOverScreen       ; GAME_STATE_GAME_OVER
+.end::
+
+LoopTable::
+    DW TitleScreen  ; GAME_STATE_TITLE_SCREEN
+    DW ActionSelect ; GAME_STATE_ACTION_SELECT
+    DW ModeSelect   ; GAME_STATE_MODE_SELECT
+    DW InGame       ; GAME_STATE_IN_GAME
+    DW TopScores    ; GAME_STATE_TOP_SCORES
+    DW GameOver     ; GAME_STATE_GAME_OVER
+.end::
 
 SECTION "Stack", WRAM0[$E000 - STACK_SIZE]
 

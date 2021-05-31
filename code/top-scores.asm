@@ -87,6 +87,14 @@ LoadTopScoresScreen::
     ret
 
 TopScores::
+    ; Wait for VBlank
+    halt
+    ldh     a, [hVBlankFlag]
+    and     a, a
+    jr      z, TopScores
+    xor     a, a
+    ldh     [hVBlankFlag], a
+    
     ldh     a, [hActionSelection]
     ASSERT ACTION_PLAY == 0
     and     a, a
@@ -94,7 +102,7 @@ TopScores::
     jr      nz, .viewing
     
     and     a, PADF_A | PADF_START
-    jp      z, Main
+    jr      z, TopScores
     
     ; Reset game
     ld      b, SFX_OK
@@ -103,12 +111,11 @@ TopScores::
 
 .viewing
     bit     PADB_B, a
-    jp      z, Main
+    jr      z, TopScores
     
     ; Return to mode select screen
     ld      b, SFX_MENU_BACK
     call    SFX_Play
 .done
     ld      a, GAME_STATE_MODE_SELECT
-    call    StartFade
-    jp      Main
+    jp      Fade

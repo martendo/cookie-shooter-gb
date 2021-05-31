@@ -144,6 +144,14 @@ SetUpGame::
     jp      Music_Play
 
 InGame::
+    ; Wait for VBlank
+    halt
+    ldh     a, [hVBlankFlag]
+    and     a, a
+    jr      z, InGame
+    xor     a, a
+    ldh     [hVBlankFlag], a
+    
     ; Pause the game
     ldh     a, [hNewKeys]
     bit     PADB_START, a
@@ -156,7 +164,7 @@ InGame::
     call    SFX_Stop
     ld      b, SFX_PAUSE
     call    SFX_Play
-    jp      Main
+    jp      Paused
     
 :
     ldh     a, [hGameMode]
@@ -448,11 +456,10 @@ InGame::
     ; Check for game over - no more lives left
     ldh     a, [hPlayerLives]
     and     a, a
-    jp      nz, Main
+    jp      nz, InGame
     
     ld      a, GAME_STATE_GAME_OVER
-    call    StartFade
-    jp      Main
+    jp      Fade
 
 ; Add a power-up to an empty power-up slot
 ; @param    c   Power-up type

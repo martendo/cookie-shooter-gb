@@ -3,9 +3,17 @@ INCLUDE "defines.inc"
 SECTION "Paused Game Code", ROM0
 
 Paused::
+    ; Wait for VBlank
+    halt
+    ldh     a, [hVBlankFlag]
+    and     a, a
+    jr      z, Paused
+    xor     a, a
+    ldh     [hVBlankFlag], a
+    
     ldh     a, [hNewKeys]
     bit     PADB_START, a
-    jp      z, Main
+    jr      z, Paused
     
     ; Resuming or quitting the game? (SELECT)
     ldh     a, [hPressedKeys]
@@ -19,7 +27,7 @@ Paused::
     call    Music_Resume
     ld      b, SFX_RESUME
     call    SFX_Play
-    jp      Main
+    jp      InGame
 
 .quitGame
     ; Return to game mode select screen
@@ -27,5 +35,4 @@ Paused::
     call    SFX_Play
     
     ld      a, GAME_STATE_MODE_SELECT
-    call    StartFade
-    jp      Main
+    jp      Fade
